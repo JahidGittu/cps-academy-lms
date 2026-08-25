@@ -9,6 +9,15 @@ import { caller, roleName, seesEveryRow } from '../../../utils/caller';
 
 const UID = 'api::course.course';
 
+// What a course read says about the things inside it. Lesson bodies and quiz questions are missing
+// on purpose: those come from /api/lessons/:id and /api/quizzes/:id, which check enrollment and
+// strip the answer key, and populating them through the course walks past both. Written here rather
+// than read off ctx.query, because a shape the client picks is a shape the client can widen.
+const INSIDE = {
+  lessons: { fields: 'title,order', sort: 'order:asc' },
+  quiz: { fields: 'title' },
+} as const;
+
 // Relation ids are string or number in Strapi's own types, so the roster is keyed on whatever came
 // back rather than converted to one of them.
 type Enrolled = { student?: { id: string | number; username?: string | null } | null };
@@ -46,6 +55,26 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     });
 
     ctx.status = 201;
+
+    return super.transformResponse(await super.sanitizeOutput(course, ctx));
+  },
+
+  async find(ctx: Context) {
+    await super.validateQuery(ctx);
+    const query = await super.sanitizeQuery(ctx);
+
+    const { results, pagination } = await strapi.service(UID).find({ ...query, populate: INSIDE });
+
+    return super.transformResponse(await super.sanitizeOutput(results, ctx), { pagination });
+  },
+
+  async findOne(ctx: Context) {
+    const course = await strapi.documents(UID).findOne({
+      documentId: ctx.params.id,
+      populate: INSIDE,
+    });
+
+    if (!course) return ctx.notFound();
 
     return super.transformResponse(await super.sanitizeOutput(course, ctx));
   },
