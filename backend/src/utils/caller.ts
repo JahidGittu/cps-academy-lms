@@ -18,7 +18,10 @@ export const caller = (ctx: Context) => {
   return user;
 };
 
-export const roleName = (ctx: Context) => caller(ctx).role?.name ?? '';
+// Deliberately does not throw the way caller does. Blog posts are readable by the Public role,
+// which has no user on the request at all, and asking which role is asking is a fair question to
+// answer with "none" — where an id is actually needed, caller is the one that insists on it.
+export const roleName = (ctx: Context) => (ctx.state.user as Caller | undefined)?.role?.name ?? '';
 
 export const seesEveryRow = (ctx: Context) => SEES_EVERY_ROW.includes(roleName(ctx));
 
