@@ -38,7 +38,9 @@ const matrix: Record<string, Record<string, string[]>> = {
   Instructor: {
     'api::course.course': [...MANAGE, 'progress'],
     'api::lesson.lesson': MANAGE,
-    'api::quiz.quiz': MANAGE,
+    // answers is the route in api/quiz/routes/answers.ts, which hands back the key a quiz is
+    // authored against. Students hold quiz read and not this, so taking a quiz never sees it.
+    'api::quiz.quiz': [...MANAGE, 'answers'],
     'api::blog-post.blog-post': READ,
     'api::enrollment.enrollment': READ,
     'api::lesson-progress.lesson-progress': READ,
@@ -50,7 +52,7 @@ const matrix: Record<string, Record<string, string[]>> = {
   'Content Manager': {
     'api::course.course': [...MANAGE, 'progress'],
     'api::lesson.lesson': MANAGE,
-    'api::quiz.quiz': MANAGE,
+    'api::quiz.quiz': [...MANAGE, 'answers'],
     'api::blog-post.blog-post': MANAGE,
     'api::enrollment.enrollment': READ,
     'api::lesson-progress.lesson-progress': READ,
@@ -64,7 +66,7 @@ const matrix: Record<string, Record<string, string[]>> = {
   Admin: {
     'api::course.course': [...MANAGE, 'progress'],
     'api::lesson.lesson': MANAGE,
-    'api::quiz.quiz': MANAGE,
+    'api::quiz.quiz': [...MANAGE, 'answers'],
     'api::blog-post.blog-post': MANAGE,
     'api::enrollment.enrollment': ['find', 'findOne', 'delete'],
     'api::lesson-progress.lesson-progress': ['find', 'findOne', 'delete'],

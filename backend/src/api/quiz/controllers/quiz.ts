@@ -37,4 +37,29 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     return super.findOne(ctx);
   },
+
+  // The edit screen has to show which option is currently marked correct, and no ordinary read can
+  // carry that: private strips the field on the way out for everybody, the author included. So the
+  // key has a route of its own, behind the same ownership policy as the writes.
+  async answers(ctx: Context) {
+    const quiz = await strapi.documents(UID).findOne({
+      documentId: ctx.params.id,
+      populate: { questions: true },
+    });
+
+    if (!quiz) return ctx.notFound();
+
+    // Neither sanitizeOutput nor transformResponse: the first is what removes correctIndex, and this
+    // is an answer key rather than a document for a page to render.
+    return {
+      data: {
+        title: quiz.title,
+        questions: (quiz.questions ?? []).map((question) => ({
+          text: question.text,
+          options: question.options,
+          correctIndex: question.correctIndex,
+        })),
+      },
+    };
+  },
 }));
