@@ -4,8 +4,10 @@ const READ = ['find', 'findOne'];
 const MANAGE = ['find', 'findOne', 'create', 'update', 'delete'];
 
 // The type is what Advanced Settings stores as the role for new signups, so it is
-// written out here instead of letting Strapi derive it from the name.
-const roles = [
+// written out here instead of letting Strapi derive it from the name. Exported because the
+// stats endpoint counts accounts per role and should ask one place which roles exist, rather
+// than reading them back out of the database and finding Strapi's own unused ones in there.
+export const roles = [
   { name: 'Admin', type: 'admin', description: 'Full control of the platform.' },
   { name: 'Content Manager', type: 'content_manager', description: 'Builds the course library and writes the blog.' },
   { name: 'Instructor', type: 'instructor', description: 'Manages their own courses, lessons and quizzes.' },
@@ -70,6 +72,8 @@ const matrix: Record<string, Record<string, string[]>> = {
     'plugin::users-permissions.user': ['me', 'find', 'findOne', 'count', 'create', 'update', 'destroy'],
     'plugin::users-permissions.role': READ,
     'plugin::users-permissions.auth': ['logout'],
+    // Nobody else gets this box, so the stats controller has no role check of its own.
+    'api::stats.stats': ['find'],
   },
 };
 
