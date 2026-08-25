@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { api, errorMessage } from './api';
+import { api, errorMessage, errorStatus } from './api';
 
 // Every page reads from the API the same way: ask on mount, say so while it is in flight, then show
 // what came back or why it did not. Written once here instead of as the same useEffect on ten pages.
@@ -11,6 +11,7 @@ import { api, errorMessage } from './api';
 export const useApi = <T>(path: string | null) => {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState('');
+  const [status, setStatus] = useState<number>();
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
@@ -27,8 +28,10 @@ export const useApi = <T>(path: string | null) => {
 
       setData(response.data);
       setError('');
+      setStatus(response.status);
     } catch (caught) {
       setError(errorMessage(caught));
+      setStatus(errorStatus(caught));
     } finally {
       setLoading(false);
     }
@@ -38,5 +41,5 @@ export const useApi = <T>(path: string | null) => {
     void reload();
   }, [reload]);
 
-  return { data, error, loading, reload };
+  return { data, error, status, loading, reload };
 };

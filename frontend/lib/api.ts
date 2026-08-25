@@ -107,3 +107,8 @@ export const errorMessage = (error: unknown, fallback = 'Something went wrong') 
 
   return fallback;
 };
+
+// Some pages have something better to say about one particular status than the message the server
+// sent, so the code travels alongside the message rather than only the text.
+export const errorStatus = (error: unknown) =>
+  error instanceof AxiosError ? error.response?.status : undefined;
