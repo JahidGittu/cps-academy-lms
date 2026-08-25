@@ -17,8 +17,13 @@ export type Course = {
   description?: string | null;
   coverImageUrl?: string | null;
   owner?: User | null;
+  // A course read only carries the syllabus, so these lessons have a title and an order and no
+  // body. The body comes from GET /api/lessons/:id, which is where the enrollment check lives.
   lessons?: Lesson[];
   quiz?: Quiz | null;
+  // Answered by the server, because the owner relation it would otherwise be compared against is
+  // stripped from the response for every role below Admin.
+  owned?: boolean;
 };
 
 export type Lesson = {
