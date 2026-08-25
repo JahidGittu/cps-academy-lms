@@ -5,7 +5,7 @@
 import { factories } from '@strapi/strapi';
 import type { Context } from 'koa';
 
-import { caller, roleName, seesEveryRow } from '../../../utils/caller';
+import { caller, narrow, roleName, seesEveryRow } from '../../../utils/caller';
 
 const UID = 'api::course.course';
 
@@ -16,11 +16,20 @@ const UID = 'api::course.course';
 const INSIDE = {
   lessons: { fields: 'title,order', sort: 'order:asc' },
   quiz: { fields: 'title' },
+  owner: { fields: 'username' },
 } as const;
+
+// The line is-course-owner draws on a write. The client needs the same answer to decide whether to
+// offer an edit button, and it cannot work it out for itself: the sanitizer removes the owner
+// relation for every role below Admin. So the answer travels rather than the ids.
+const mayEdit = (ctx: Context, ownerId?: string | number | null) =>
+  seesEveryRow(ctx) || ownerId === caller(ctx).id;
 
 // Relation ids are string or number in Strapi's own types, so the roster is keyed on whatever came
 // back rather than converted to one of them.
 type Enrolled = { student?: { id: string | number; username?: string | null } | null };
+
+type Owned = { documentId: string; owner?: { id: string | number } | null };
 
 // One row per completion, so the number of rows a student has is the number of lessons they have
 // finished. Counting them together keeps this to one query for the whole roster.
@@ -60,12 +69,34 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
   },
 
   async find(ctx: Context) {
+    // Taken off the query before validateQuery sees it, which rejects any key that is not part of
+    // Strapi's own query language. Asking for the caller's own courses as filters[owner] is not an
+    // option either: validateQuery also rejects a filter on a relation the caller may not read,
+    // and the user collection is one of those for every role below Admin.
+    const mine = ctx.query.mine === 'true';
+
+    delete ctx.query.mine;
+
     await super.validateQuery(ctx);
     const query = await super.sanitizeQuery(ctx);
 
+    // Whose courses these are is a different question from which courses the caller may change, and
+    // it is the second one a manage screen is asking. For an instructor that is the courses they
+    // own; for the two roles that run the library it is all of them, so nothing is narrowed.
+    if (mine && !seesEveryRow(ctx)) narrow(query, { owner: { id: caller(ctx).id } });
+
     const { results, pagination } = await strapi.service(UID).find({ ...query, populate: INSIDE });
 
-    return super.transformResponse(await super.sanitizeOutput(results, ctx), { pagination });
+    const editable = new Set(
+      (results as Owned[]).filter((row) => mayEdit(ctx, row.owner?.id)).map((row) => row.documentId)
+    );
+
+    const rows = await super.sanitizeOutput(results, ctx);
+
+    return super.transformResponse(
+      rows.map((row: Owned) => ({ ...row, owned: editable.has(row.documentId) })),
+      { pagination }
+    );
   },
 
   async findOne(ctx: Context) {
@@ -76,7 +107,9 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     if (!course) return ctx.notFound();
 
-    return super.transformResponse(await super.sanitizeOutput(course, ctx));
+    const row = await super.sanitizeOutput(course, ctx);
+
+    return super.transformResponse({ ...row, owned: mayEdit(ctx, course.owner?.id) });
   },
 
   // Percentages are counted per request instead of stored, so they cannot drift away from the
