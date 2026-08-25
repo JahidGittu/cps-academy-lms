@@ -1,0 +1,28 @@
+node_modules/
+
+# secrets, never committed
+.env
+.env.local
+.env.production
+
+# next.js
+.next/
+out/
+
+# strapi
+.strapi/
+build/
+dist/
+.tmp/
+*.db
+*.sqlite
+*.sqlite3
+
+# local tooling and editor config
+.claude/
+.vscode/
+.idea/
+
+# os
+.DS_Store
+Thumbs.db
