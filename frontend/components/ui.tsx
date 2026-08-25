@@ -61,3 +61,9 @@ export const Empty = ({ children }: { children: React.ReactNode }) => (
     {children}
   </p>
 );
+
+export const ProgressBar = ({ percent }: { percent: number }) => (
+  <div className="h-2 w-full overflow-hidden rounded bg-slate-100">
+    <div className="h-full bg-slate-900" style={{ width: `${percent}%` }} />
+  </div>
+);
