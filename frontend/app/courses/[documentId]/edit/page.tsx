@@ -11,6 +11,7 @@ import type { Course, Single } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
 import { Alert, Button, Empty } from '@/components/ui';
 import { CourseForm } from '@/components/course-form';
+import { LessonManager } from './lesson-manager';
 
 const Delete = ({ course }: { course: Course }) => {
   const router = useRouter();
@@ -77,6 +78,8 @@ const Edit = ({ documentId }: { documentId: string }) => {
           await course.reload();
         }}
       />
+
+      <LessonManager course={documentId} />
 
       <Delete course={detail} />
     </div>
