@@ -29,3 +29,14 @@ export const seesEveryRow = (ctx: Context) => SEES_EVERY_ROW.includes(roleName(c
 export const narrow = (query: Record<string, unknown>, mine: Record<string, unknown>) => {
   query.filters = query.filters ? { $and: [query.filters, mine] } : mine;
 };
+
+// Lessons and quizzes are only ever read from inside a course, so there is no catalogue of either
+// to browse and the checkbox that grants find is wider than the matrix intends. Students get the
+// ones belonging to courses they enrolled in, instructors the ones belonging to courses they own.
+export const courseScope = (ctx: Context) => {
+  const me = caller(ctx).id;
+
+  return roleName(ctx) === 'Student'
+    ? { course: { enrollments: { student: { id: me } } } }
+    : { course: { owner: { id: me } } };
+};
