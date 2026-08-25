@@ -475,6 +475,7 @@ export interface ApiCourseCourse extends Struct.CollectionTypeSchema {
       'plugin::users-permissions.user'
     >;
     publishedAt: Schema.Attribute.DateTime;
+    quiz: Schema.Attribute.Relation<'oneToOne', 'api::quiz.quiz'>;
     title: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -580,6 +581,33 @@ export interface ApiLessonLesson extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     videoUrl: Schema.Attribute.String;
+  };
+}
+
+export interface ApiQuizQuiz extends Struct.CollectionTypeSchema {
+  collectionName: 'quizzes';
+  info: {
+    displayName: 'Quiz';
+    pluralName: 'quizzes';
+    singularName: 'quiz';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    course: Schema.Attribute.Relation<'oneToOne', 'api::course.course'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::quiz.quiz'> &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    questions: Schema.Attribute.Component<'quiz.question', true>;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -1106,6 +1134,7 @@ declare module '@strapi/strapi' {
       'api::enrollment.enrollment': ApiEnrollmentEnrollment;
       'api::lesson-progress.lesson-progress': ApiLessonProgressLessonProgress;
       'api::lesson.lesson': ApiLessonLesson;
+      'api::quiz.quiz': ApiQuizQuiz;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;
