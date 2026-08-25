@@ -31,6 +31,11 @@ type Enrolled = { student?: { id: string | number; username?: string | null } | 
 
 type Owned = { documentId: string; owner?: { id: string | number } | null };
 
+// Everything a course form may set. The rest of the schema is either derived (owner) or filled in
+// through another route (lessons, quiz), and both writes below name these three rather than passing
+// the body along, so a field left out here is a field no client can reach.
+type Writable = { title?: string; description?: string; coverImageUrl?: string };
+
 // One row per completion, so the number of rows a student has is the number of lessons they have
 // finished. Counting them together keeps this to one query for the whole roster.
 const completionsPerStudent = (rows: Enrolled[]) => {
@@ -48,12 +53,8 @@ const completionsPerStudent = (rows: Enrolled[]) => {
 export default factories.createCoreController(UID, ({ strapi }) => ({
   // The owner is the account that made the request. Sent in the body it would let one instructor
   // file a course under another's name, and the ownership policy would then hand them the course.
-  // The three writable fields are named rather than taken from the body wholesale, so a field the
-  // client should not be setting cannot arrive by being added to the schema later.
   async create(ctx: Context) {
-    const body = ctx.request.body as {
-      data?: { title?: string; description?: string; coverImageUrl?: string };
-    };
+    const body = ctx.request.body as { data?: Writable };
 
     const { title, description, coverImageUrl } = body.data ?? {};
 
@@ -64,6 +65,24 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     });
 
     ctx.status = 201;
+
+    return super.transformResponse(await super.sanitizeOutput(course, ctx));
+  },
+
+  // is-course-owner has already said the caller may change this course. What it cannot say is which
+  // fields, and the core update writes whatever the body holds: owner would move the course to
+  // another account, and lessons would pull another course's lessons into this one.
+  async update(ctx: Context) {
+    const body = ctx.request.body as { data?: Writable };
+
+    const { title, description, coverImageUrl } = body.data ?? {};
+
+    const course = await strapi.documents(UID).update({
+      documentId: ctx.params.id,
+      data: { title, description, coverImageUrl },
+    });
+
+    if (!course) return ctx.notFound();
 
     return super.transformResponse(await super.sanitizeOutput(course, ctx));
   },
