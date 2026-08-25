@@ -2,6 +2,7 @@ import type { Core } from '@strapi/strapi';
 
 import applyRolesAndPermissions from './permissions';
 import seedDemoAccounts from './seed';
+import seedDemoContent from './seed-content';
 
 export default {
   register() {},
@@ -12,5 +13,6 @@ export default {
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
     await applyRolesAndPermissions({ strapi });
     await seedDemoAccounts({ strapi });
+    await seedDemoContent({ strapi });
   },
 };

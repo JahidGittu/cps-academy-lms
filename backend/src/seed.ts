@@ -8,6 +8,9 @@ const accounts = [
   { username: 'manager', email: 'manager@demo.test', roleType: 'content_manager' },
   { username: 'instructor', email: 'instructor@demo.test', roleType: 'instructor' },
   { username: 'student', email: 'student@demo.test', roleType: 'student' },
+  // A second student so the progress numbers on a shared course differ, which is the only way to
+  // show that a percentage belongs to one student rather than to the course.
+  { username: 'student2', email: 'student2@demo.test', roleType: 'student' },
 ];
 
 export default async ({ strapi }: { strapi: Core.Strapi }) => {
