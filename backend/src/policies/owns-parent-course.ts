@@ -26,8 +26,11 @@ export default async (
   if (MANAGES_THE_LIBRARY.includes(user.role?.name ?? '')) return true;
 
   // On create the course arrives in the body; on update and delete it has to be read off the row
-  // being changed, because the request only carries that row's id.
-  let courseId: unknown;
+  // being changed, because the request only carries that row's id. An update can be both at once:
+  // moving a lesson means owning the course it is leaving and the course it is arriving at, or an
+  // instructor could push their own lesson into somebody else's syllabus.
+  const body = policyContext.request.body as { data?: { course?: unknown } } | undefined;
+  const courseIds = new Set<unknown>();
 
   if (policyContext.params.id) {
     const row = (await strapi.documents(config.contentType).findOne({
@@ -35,19 +38,23 @@ export default async (
       populate: ['course'],
     })) as ParentRow;
 
-    courseId = row?.course?.documentId;
-  } else {
-    const body = policyContext.request.body as { data?: { course?: unknown } };
-
-    courseId = body?.data?.course;
+    courseIds.add(row?.course?.documentId);
   }
 
-  if (typeof courseId !== 'string') return false;
+  if (body?.data?.course !== undefined) courseIds.add(body.data.course);
 
-  const course = await strapi.documents('api::course.course').findOne({
-    documentId: courseId,
-    populate: ['owner'],
-  });
+  if (!courseIds.size) return false;
 
-  return course?.owner?.id === user.id;
+  for (const courseId of courseIds) {
+    if (typeof courseId !== 'string') return false;
+
+    const course = await strapi.documents('api::course.course').findOne({
+      documentId: courseId,
+      populate: ['owner'],
+    });
+
+    if (course?.owner?.id !== user.id) return false;
+  }
+
+  return true;
 };
