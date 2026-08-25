@@ -4,4 +4,15 @@
 
 import { factories } from '@strapi/strapi';
 
-export default factories.createCoreRouter('api::lesson.lesson');
+const ownsCourse = {
+  name: 'global::owns-parent-course',
+  config: { contentType: 'api::lesson.lesson' },
+};
+
+export default factories.createCoreRouter('api::lesson.lesson', {
+  config: {
+    create: { policies: [ownsCourse] },
+    update: { policies: [ownsCourse] },
+    delete: { policies: [ownsCourse] },
+  },
+});
