@@ -5,27 +5,14 @@
 import { factories } from '@strapi/strapi';
 import type { Context } from 'koa';
 
-import { courseScope, narrow, roleName, seesEveryRow } from '../../../utils/caller';
+import { courseScope, narrow, seesEveryRow } from '../../../utils/caller';
 
 const UID = 'api::quiz.quiz';
 
-type Question = { correctIndex?: number };
-
-// correctIndex is an ordinary component field, so it is returned with the quiz like any other and
-// the answer key ships to whoever asks for the questions. Grading runs on the server, so a student
-// has no use for it. Both find and findOne come through here, hence the array and object handling.
-const hideAnswers = (response: unknown) => {
-  const data = (response as { data?: unknown })?.data;
-
-  for (const row of Array.isArray(data) ? data : [data]) {
-    for (const question of ((row as { questions?: Question[] })?.questions ?? [])) {
-      delete question.correctIndex;
-    }
-  }
-
-  return response;
-};
-
+// This file decides who may read a quiz, not what a quiz says. The answer key is kept out of every
+// response by marking correctIndex private in components/quiz/question.json, because a quiz travels
+// as a populated relation on courses, lessons, enrollments and past results, and a check written
+// here would only have covered the two routes below.
 export default factories.createCoreController(UID, ({ strapi }) => ({
   async find(ctx: Context) {
     await super.validateQuery(ctx);
@@ -35,11 +22,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     const { results, pagination } = await strapi.service(UID).find(query);
 
-    // transformResponse is async, so the answers would be stripped off a pending promise and the
-    // real rows would go out untouched.
-    const response = await super.transformResponse(await super.sanitizeOutput(results, ctx), { pagination });
-
-    return roleName(ctx) === 'Student' ? hideAnswers(response) : response;
+    return super.transformResponse(await super.sanitizeOutput(results, ctx), { pagination });
   },
 
   async findOne(ctx: Context) {
@@ -52,8 +35,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
       if (!visible) return ctx.notFound();
     }
 
-    const response = await super.findOne(ctx);
-
-    return roleName(ctx) === 'Student' ? hideAnswers(response) : response;
+    return super.findOne(ctx);
   },
 }));

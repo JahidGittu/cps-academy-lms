@@ -6,7 +6,9 @@ export interface QuizQuestion extends Struct.ComponentSchema {
     displayName: 'Question';
   };
   attributes: {
-    correctIndex: Schema.Attribute.Integer & Schema.Attribute.Required;
+    correctIndex: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private;
     options: Schema.Attribute.JSON & Schema.Attribute.Required;
     text: Schema.Attribute.String & Schema.Attribute.Required;
   };

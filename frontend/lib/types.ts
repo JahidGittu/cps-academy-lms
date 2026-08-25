@@ -36,7 +36,8 @@ export type Lesson = {
   course?: Course | null;
 };
 
-// correctIndex is stripped by the server for students, so it is optional here for the same reason.
+// correctIndex is private in the Strapi schema, so it never comes back on a read. It is here for
+// the write side, where a quiz is authored.
 export type Question = {
   id: number;
   text: string;

@@ -15,7 +15,8 @@
     },
     "correctIndex": {
       "type": "integer",
-      "required": true
+      "required": true,
+      "private": true
     }
   },
   "config": {}
