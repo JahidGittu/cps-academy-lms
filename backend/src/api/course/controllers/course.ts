@@ -155,6 +155,10 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
       ? await strapi.documents('api::quiz-result.quiz-result').findMany({
           filters: { quiz: { documentId: course.quiz.documentId }, ...mineOnly },
           populate: { student: true },
+          // Newest first, because a quiz can be retaken and the row picked out below is the first
+          // one that matches the student. Without the sort a retake would leave the roster showing
+          // whichever attempt the database happened to hand over.
+          sort: 'createdAt:desc',
         })
       : [];
 
