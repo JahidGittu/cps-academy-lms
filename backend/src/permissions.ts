@@ -20,7 +20,9 @@ const matrix: Record<string, Record<string, string[]>> = {
   },
 
   Student: {
-    'api::course.course': READ,
+    // progress is the custom route in api/course/routes/progress.ts. Anyone who can see a course
+    // can ask how far through it people are; which people is decided in the controller.
+    'api::course.course': [...READ, 'progress'],
     'api::lesson.lesson': READ,
     'api::quiz.quiz': READ,
     'api::blog-post.blog-post': READ,
@@ -32,7 +34,7 @@ const matrix: Record<string, Record<string, string[]>> = {
   },
 
   Instructor: {
-    'api::course.course': MANAGE,
+    'api::course.course': [...MANAGE, 'progress'],
     'api::lesson.lesson': MANAGE,
     'api::quiz.quiz': MANAGE,
     'api::blog-post.blog-post': READ,
@@ -44,7 +46,7 @@ const matrix: Record<string, Record<string, string[]>> = {
   },
 
   'Content Manager': {
-    'api::course.course': MANAGE,
+    'api::course.course': [...MANAGE, 'progress'],
     'api::lesson.lesson': MANAGE,
     'api::quiz.quiz': MANAGE,
     'api::blog-post.blog-post': MANAGE,
@@ -58,7 +60,7 @@ const matrix: Record<string, Record<string, string[]>> = {
   // No create on enrollment or quiz-result: the matrix marks "enroll in a course" and
   // "take quizzes" as things an Admin does not do. The deletes are platform management.
   Admin: {
-    'api::course.course': MANAGE,
+    'api::course.course': [...MANAGE, 'progress'],
     'api::lesson.lesson': MANAGE,
     'api::quiz.quiz': MANAGE,
     'api::blog-post.blog-post': MANAGE,
