@@ -6,6 +6,7 @@ import { factories } from '@strapi/strapi';
 import type { Context } from 'koa';
 
 import { caller, narrow, roleName, seesEveryRow } from '../../../utils/caller';
+import { grade } from '../../../utils/grade';
 
 const UID = 'api::quiz-result.quiz-result';
 
@@ -51,13 +52,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     if (!enrolled) return ctx.forbidden('enroll in the course before taking its quiz');
 
     const questions = (quiz.questions ?? []) as Question[];
-
-    // Positional: answers[i] is the option picked for question i. A missing or out of range pick
-    // counts as wrong rather than failing the whole submission.
-    const score = questions.reduce(
-      (correct, question, index) => correct + (answers[index] === question.correctIndex ? 1 : 0),
-      0
-    );
+    const score = grade(questions, answers);
 
     const result = await strapi.documents(UID).create({
       data: { student: me, quiz: quizId, answers, score, total: questions.length },
