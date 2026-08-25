@@ -1,6 +1,7 @@
 import type { Core } from '@strapi/strapi';
 
 import applyRolesAndPermissions from './permissions';
+import seedDemoAccounts from './seed';
 
 export default {
   register() {},
@@ -10,5 +11,6 @@ export default {
   // with the same matrix as this one without anyone clicking through the panel twice.
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
     await applyRolesAndPermissions({ strapi });
+    await seedDemoAccounts({ strapi });
   },
 };
