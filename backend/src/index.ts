@@ -1,20 +1,14 @@
-// import type { Core } from '@strapi/strapi';
+import type { Core } from '@strapi/strapi';
+
+import applyRolesAndPermissions from './permissions';
 
 export default {
-  /**
-   * An asynchronous register function that runs before
-   * your application is initialized.
-   *
-   * This gives you an opportunity to extend code.
-   */
-  register(/* { strapi }: { strapi: Core.Strapi } */) {},
+  register() {},
 
-  /**
-   * An asynchronous bootstrap function that runs before
-   * your application gets started.
-   *
-   * This gives you an opportunity to set up your data model,
-   * run jobs, or perform some special logic.
-   */
-  bootstrap(/* { strapi }: { strapi: Core.Strapi } */) {},
+  // Roles and their permissions are database rows, so unlike the content types they do not
+  // travel with the code. Applying them on every boot means the deployed instance ends up
+  // with the same matrix as this one without anyone clicking through the panel twice.
+  async bootstrap({ strapi }: { strapi: Core.Strapi }) {
+    await applyRolesAndPermissions({ strapi });
+  },
 };
