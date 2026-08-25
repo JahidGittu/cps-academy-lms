@@ -27,7 +27,10 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin =>
     config: {
       jwtManagement: 'refresh',
       sessions: {
-        httpOnly: true,
+        // The frontend is on a different domain to this API, so a refresh cookie would need
+        // SameSite=None plus credentialed CORS to survive the trip. Off, the refresh endpoint
+        // reads the token from the request body and returns the rotated one the same way.
+        httpOnly: false,
       },
     },
   },
