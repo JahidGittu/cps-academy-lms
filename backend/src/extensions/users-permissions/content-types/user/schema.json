@@ -89,6 +89,12 @@
       "relation": "oneToMany",
       "target": "api::quiz-result.quiz-result",
       "mappedBy": "student"
+    },
+    "blogPosts": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::blog-post.blog-post",
+      "mappedBy": "author"
     }
   }
 }
