@@ -69,10 +69,21 @@ const Detail = ({ documentId }: { documentId: string }) => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{detail.title}</h1>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">{detail.title}</h1>
 
-        {detail.description && <p className="mt-2 text-slate-600">{detail.description}</p>}
+          {detail.description && <p className="mt-2 text-slate-600">{detail.description}</p>}
+        </div>
+
+        {detail.owned && (
+          <Link
+            href={`/courses/${documentId}/edit`}
+            className="shrink-0 text-sm text-slate-900 underline"
+          >
+            Edit
+          </Link>
+        )}
       </div>
 
       <Alert>{actionError}</Alert>

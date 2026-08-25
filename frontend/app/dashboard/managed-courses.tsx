@@ -5,7 +5,7 @@ import { BookOpen } from 'lucide-react';
 
 import { useApi } from '@/lib/use-api';
 import type { Collection, Course } from '@/lib/types';
-import { Alert, Card, Empty } from '@/components/ui';
+import { Alert, buttonStyle, Card, Empty } from '@/components/ui';
 
 // mine=true is the course controller's flag for "courses this account may change". An instructor
 // gets the ones they own; the two roles that run the whole library get all of them, which is what a
@@ -21,18 +21,30 @@ export const ManagedCourses = () => {
 
   return (
     <section>
-      <h2 className="mb-3 text-lg font-medium">Courses you run</h2>
+      <div className="mb-3 flex items-center justify-between gap-4">
+        <h2 className="text-lg font-medium">Courses you run</h2>
+
+        <Link href="/courses/new" className={buttonStyle()}>
+          New course
+        </Link>
+      </div>
 
       {rows.length ? (
         <div className="grid gap-4 sm:grid-cols-2">
           {rows.map((course) => (
             <Card key={course.documentId}>
-              <Link
-                href={`/courses/${course.documentId}`}
-                className="font-medium hover:underline"
-              >
-                {course.title}
-              </Link>
+              <div className="flex items-start justify-between gap-3">
+                <Link href={`/courses/${course.documentId}`} className="font-medium hover:underline">
+                  {course.title}
+                </Link>
+
+                <Link
+                  href={`/courses/${course.documentId}/edit`}
+                  className="shrink-0 text-xs text-slate-500 underline hover:text-slate-900"
+                >
+                  Edit
+                </Link>
+              </div>
 
               <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
                 <BookOpen className="size-3.5" />

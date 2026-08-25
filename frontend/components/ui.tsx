@@ -26,24 +26,24 @@ export const TextField = ({
   </label>
 );
 
+const variants = {
+  primary: 'bg-slate-900 text-white hover:bg-slate-700',
+  plain: 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100',
+  danger: 'border border-red-300 bg-white text-red-700 hover:bg-red-50',
+};
+
+// Exported because some of these actions are navigations, and a link that looks like a button still
+// has to be an anchor for middle click and open in new tab to work.
+export const buttonStyle = (variant: keyof typeof variants = 'primary') =>
+  `rounded px-4 py-2 text-sm disabled:opacity-50 ${variants[variant]}`;
+
 export const Button = ({
   variant = 'primary',
   className = '',
   ...props
-}: { variant?: 'primary' | 'plain' | 'danger' } & ButtonHTMLAttributes<HTMLButtonElement>) => {
-  const styles = {
-    primary: 'bg-slate-900 text-white hover:bg-slate-700',
-    plain: 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100',
-    danger: 'border border-red-300 bg-white text-red-700 hover:bg-red-50',
-  }[variant];
-
-  return (
-    <button
-      {...props}
-      className={`rounded px-4 py-2 text-sm disabled:opacity-50 ${styles} ${className}`}
-    />
-  );
-};
+}: { variant?: keyof typeof variants } & ButtonHTMLAttributes<HTMLButtonElement>) => (
+  <button {...props} className={`${buttonStyle(variant)} ${className}`} />
+);
 
 export const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
   <div className={`rounded-lg border border-slate-200 bg-white p-5 ${className}`}>{children}</div>
