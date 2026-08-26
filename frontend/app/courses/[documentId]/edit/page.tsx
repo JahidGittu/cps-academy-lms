@@ -62,13 +62,22 @@ const Edit = ({ documentId }: { documentId: string }) => {
 
   return (
     <div className="space-y-6">
-      <Link
-        href={`/courses/${documentId}`}
-        className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900"
-      >
-        <ArrowLeft className="size-4" />
-        {detail.title}
-      </Link>
+      <div className="flex items-center justify-between gap-4">
+        <Link
+          href={`/courses/${documentId}`}
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900"
+        >
+          <ArrowLeft className="size-4" />
+          {detail.title}
+        </Link>
+
+        <Link
+          href={`/courses/${documentId}/students`}
+          className="shrink-0 text-sm text-slate-900 underline"
+        >
+          Students
+        </Link>
+      </div>
 
       <CourseForm
         course={detail}

@@ -38,12 +38,21 @@ export const ManagedCourses = () => {
                   {course.title}
                 </Link>
 
-                <Link
-                  href={`/courses/${course.documentId}/edit`}
-                  className="shrink-0 text-xs text-slate-500 underline hover:text-slate-900"
-                >
-                  Edit
-                </Link>
+                <span className="flex shrink-0 gap-3 text-xs text-slate-500">
+                  <Link
+                    href={`/courses/${course.documentId}/students`}
+                    className="underline hover:text-slate-900"
+                  >
+                    Students
+                  </Link>
+
+                  <Link
+                    href={`/courses/${course.documentId}/edit`}
+                    className="underline hover:text-slate-900"
+                  >
+                    Edit
+                  </Link>
+                </span>
               </div>
 
               <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
