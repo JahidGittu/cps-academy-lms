@@ -6,6 +6,7 @@ import { factories } from '@strapi/strapi';
 import type { Context } from 'koa';
 
 import { caller, narrow, roleName, seesEveryRow } from '../../../utils/caller';
+import { unfinishedLessonBefore } from '../../../utils/sequence';
 
 const UID = 'api::lesson-progress.lesson-progress';
 
@@ -39,6 +40,18 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     });
 
     if (!enrolled) return ctx.forbidden('enroll in the course before completing its lessons');
+
+    // The order is enforced on the way in as well as on the read. Without this a student could post
+    // a completion for the last lesson and walk back through the course with everything unlocked,
+    // since unlocking only ever looks at what has been marked done.
+    const blocking = await unfinishedLessonBefore(
+      strapi,
+      me,
+      lesson.course.documentId,
+      lesson.order
+    );
+
+    if (blocking) return ctx.forbidden(`finish "${blocking.title}" first`);
 
     // No pair of fields can be made unique in the schema, so the second row has to be stopped
     // here. Marking a lesson done twice is a double click rather than an error, so the row that
