@@ -14,11 +14,18 @@ const UID = 'api::blog-post.blog-post';
 // them; for everyone else, including anonymous visitors, the query is forced to published.
 const PUBLISHED_ONLY = { publishState: 'published' } as const;
 
+// What the editor screen sends. Named on both writes rather than passing the body through, because
+// the core update would also accept author, and the byline is not the editor's to reassign.
+type Writable = { title?: string; body?: string; coverImageUrl?: string; publishState?: string };
+
+// Anything that is not the word published is a draft. Written once because both writes have to agree
+// on it: the read side hides drafts from everyone outside the two managing roles, so a value that
+// slipped through as something else would leave a post nobody could see and nobody could publish.
+const stateOf = (value?: string) => (value === 'published' ? 'published' : 'draft');
+
 export default factories.createCoreController(UID, ({ strapi }) => ({
   async create(ctx: Context) {
-    const body = ctx.request.body as {
-      data?: { title?: string; body?: string; coverImageUrl?: string; publishState?: string };
-    };
+    const body = ctx.request.body as { data?: Writable };
 
     const { title, body: postBody, coverImageUrl, publishState } = body.data ?? {};
 
@@ -30,12 +37,32 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
         title,
         body: postBody,
         coverImageUrl,
-        publishState: publishState === 'published' ? 'published' : 'draft',
+        publishState: stateOf(publishState),
         author: caller(ctx).id,
       },
     });
 
     ctx.status = 201;
+
+    return super.transformResponse(await super.sanitizeOutput(post, ctx));
+  },
+
+  async update(ctx: Context) {
+    const body = ctx.request.body as { data?: Writable };
+
+    const { title, body: postBody, coverImageUrl, publishState } = body.data ?? {};
+
+    const post = await strapi.documents(UID).update({
+      documentId: ctx.params.id,
+      data: {
+        title,
+        body: postBody,
+        coverImageUrl,
+        publishState: stateOf(publishState),
+      },
+    });
+
+    if (!post) return ctx.notFound();
 
     return super.transformResponse(await super.sanitizeOutput(post, ctx));
   },
