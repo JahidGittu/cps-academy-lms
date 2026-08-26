@@ -29,7 +29,9 @@ export const SiteHeader = () => {
     // Sticky, because the lesson bodies and the course builder are long enough that losing the way
     // back to the dashboard halfway down is annoying.
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/85 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-6xl items-center gap-1 px-4 py-3">
+      {/* Fixed height rather than padding: the course builder has a sticky strip of its own that has
+          to know where this one ends. */}
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-1 px-4">
         <Link href="/" className="mr-auto flex items-center gap-2.5">
           <span className="brand-gradient flex size-9 items-center justify-center rounded-lg text-white">
             <GraduationCap className="size-5" />
