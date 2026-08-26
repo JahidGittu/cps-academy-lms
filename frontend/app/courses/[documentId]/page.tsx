@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Check, ClipboardList } from 'lucide-react';
+import { Check, ClipboardList, Lock } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
 import { hasRole, useAuth } from '@/lib/auth';
@@ -66,6 +66,14 @@ const Detail = ({ documentId }: { documentId: string }) => {
   // roles that run the course read it because it is theirs. For anyone else the title is all there
   // is, so it is not a link to a request that would come back 404.
   const readable = isStudent ? Boolean(enrollment) : Boolean(detail.owned);
+
+  // A student works through the syllabus in order, so the first lesson they have not finished is as
+  // far down the list as the links go. The lesson route refuses the ones past it too; this is so the
+  // page does not offer a link that comes back 403.
+  const nextUp = lessons.findIndex((lesson) => !completed.has(lesson.documentId));
+
+  const isOpen = (index: number) =>
+    readable && (isStudent ? nextUp === -1 || index <= nextUp : true);
 
   return (
     <div className="space-y-6">
@@ -134,7 +142,7 @@ const Detail = ({ documentId }: { documentId: string }) => {
               <li key={lesson.documentId} className="flex items-center gap-3 px-4 py-3 text-sm">
                 <span className="w-5 shrink-0 text-slate-400">{index + 1}</span>
 
-                {readable ? (
+                {isOpen(index) ? (
                   <Link href={`/lessons/${lesson.documentId}`} className="flex-1 hover:underline">
                     {lesson.title}
                   </Link>
@@ -142,12 +150,22 @@ const Detail = ({ documentId }: { documentId: string }) => {
                   <span className="flex-1 text-slate-500">{lesson.title}</span>
                 )}
 
-                {completed.has(lesson.documentId) && <Check className="size-4 shrink-0" />}
+                {completed.has(lesson.documentId) ? (
+                  <Check className="size-4 shrink-0" />
+                ) : (
+                  !isOpen(index) && <Lock className="size-3.5 shrink-0 text-slate-300" />
+                )}
               </li>
             ))}
           </ul>
         ) : (
           <Empty>No lessons yet.</Empty>
+        )}
+
+        {isStudent && readable && nextUp !== -1 && (
+          <p className="mt-2 text-xs text-slate-500">
+            Lessons open one at a time. Mark the open one as complete to unlock the next.
+          </p>
         )}
       </section>
 

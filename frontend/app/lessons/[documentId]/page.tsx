@@ -71,6 +71,12 @@ const Viewer = ({ documentId }: { documentId: string }) => {
     );
   }
 
+  // An enrolled student who skips ahead by editing the URL gets 403, and the message names the
+  // lesson that is still outstanding, so it is worth passing on rather than replacing.
+  if (lesson.status === 403) {
+    return <Empty>This lesson is locked. Go back and {lesson.error}.</Empty>;
+  }
+
   if (lesson.error) return <Alert>{lesson.error}</Alert>;
 
   const detail = lesson.data?.data;
@@ -149,15 +155,22 @@ const Viewer = ({ documentId }: { documentId: string }) => {
           <span />
         )}
 
-        {next && (
-          <Link
-            href={`/lessons/${next.documentId}`}
-            className="flex items-center gap-1.5 text-right text-slate-600 hover:text-slate-900"
-          >
-            {next.title}
-            <ArrowRight className="size-4 shrink-0" />
-          </Link>
-        )}
+        {next &&
+          (isStudent && !completed ? (
+            // The next lesson is a link once this one is marked done. Saying so beats a dead link,
+            // and the route would refuse it anyway.
+            <span className="text-right text-slate-400">
+              {next.title} opens when this one is complete
+            </span>
+          ) : (
+            <Link
+              href={`/lessons/${next.documentId}`}
+              className="flex items-center gap-1.5 text-right text-slate-600 hover:text-slate-900"
+            >
+              {next.title}
+              <ArrowRight className="size-4 shrink-0" />
+            </Link>
+          ))}
       </nav>
     </article>
   );
