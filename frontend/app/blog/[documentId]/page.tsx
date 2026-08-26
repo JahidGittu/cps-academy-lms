@@ -5,11 +5,13 @@ import { useParams } from 'next/navigation';
 import Markdown from 'react-markdown';
 import { ArrowLeft } from 'lucide-react';
 
+import { hasRole, useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { BlogPost, Single } from '@/lib/types';
 import { Alert, Empty } from '@/components/ui';
 
 const Post = ({ documentId }: { documentId: string }) => {
+  const { user } = useAuth();
   const post = useApi<Single<BlogPost>>(`/blog-posts/${documentId}`);
 
   if (post.loading) return <p className="text-sm text-slate-500">Loading post</p>;
@@ -34,13 +36,24 @@ const Post = ({ documentId }: { documentId: string }) => {
         Blog
       </Link>
 
-      <div>
-        <h1 className="text-2xl font-semibold">{detail.title}</h1>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">{detail.title}</h1>
 
-        <p className="mt-2 text-xs text-slate-500">
-          {new Date(detail.createdAt).toLocaleDateString()}
-          {detail.publishState === 'draft' && ' · draft'}
-        </p>
+          <p className="mt-2 text-xs text-slate-500">
+            {new Date(detail.createdAt).toLocaleDateString()}
+            {detail.publishState === 'draft' && ' · draft'}
+          </p>
+        </div>
+
+        {hasRole(user, 'Content Manager', 'Admin') && (
+          <Link
+            href={`/blog/${documentId}/edit`}
+            className="shrink-0 text-sm text-slate-900 underline"
+          >
+            Edit
+          </Link>
+        )}
       </div>
 
       <div className="prose prose-slate max-w-none">

@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 
+import { hasRole, useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { BlogPost, Collection } from '@/lib/types';
-import { Alert, Card, Empty } from '@/components/ui';
+import { Alert, buttonStyle, Card, Empty } from '@/components/ui';
 
 // The list is public, so no sign in wrapper. Whether drafts come back is the server's decision, not
 // a filter sent from here: the blog-post controller pins anyone outside the two managing roles to
@@ -58,9 +59,19 @@ const Posts = () => {
 };
 
 export default function BlogPage() {
+  const { user } = useAuth();
+
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold">Blog</h1>
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold">Blog</h1>
+
+        {hasRole(user, 'Content Manager', 'Admin') && (
+          <Link href="/blog/new" className={buttonStyle()}>
+            New post
+          </Link>
+        )}
+      </div>
 
       <Posts />
     </div>
