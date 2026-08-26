@@ -1,52 +1,23 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { useParams } from 'next/navigation';
 
-import { api, errorMessage } from '@/lib/api';
 import { useApi } from '@/lib/use-api';
 import type { Course, Single } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
-import { Alert, Button, Card, Empty } from '@/components/ui';
-import { CourseForm } from '@/components/course-form';
+import { Alert, Empty } from '@/components/ui';
+import { BuilderHeader } from './builder-header';
+import { BuilderNav, type Section } from './builder-nav';
+import { CourseDetails } from './course-details';
 import { LessonManager } from './lesson-manager';
+import { QuizPanel } from './quiz-panel';
 
-const Delete = ({ course }: { course: Course }) => {
-  const router = useRouter();
-
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-
-  const remove = async () => {
-    if (!window.confirm(`Delete ${course.title}? Its lessons and quiz go with it.`)) return;
-
-    setBusy(true);
-    setError('');
-
-    try {
-      await api.delete(`/courses/${course.documentId}`);
-      router.push('/dashboard');
-    } catch (caught) {
-      setError(errorMessage(caught));
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="border-t border-slate-200 pt-6">
-      <Alert>{error}</Alert>
-
-      <Button variant="danger" disabled={busy} onClick={remove}>
-        Delete course
-      </Button>
-    </div>
-  );
-};
-
-const Edit = ({ documentId }: { documentId: string }) => {
+const Builder = ({ documentId }: { documentId: string }) => {
   const course = useApi<Single<Course>>(`/courses/${documentId}`);
+
+  // Lessons rather than details: the title is typed once and the syllabus is what you come back for.
+  const [section, setSection] = useState<Section>('lessons');
 
   if (course.loading) return <p className="text-sm text-slate-500">Loading course</p>;
 
@@ -62,51 +33,20 @@ const Edit = ({ documentId }: { documentId: string }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <Link
-          href={`/courses/${documentId}`}
-          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900"
-        >
-          <ArrowLeft className="size-4" />
-          {detail.title}
-        </Link>
+      <BuilderHeader course={detail} />
 
-        <Link
-          href={`/courses/${documentId}/students`}
-          className="shrink-0 text-sm text-slate-900 underline"
-        >
-          Students
-        </Link>
+      <div className="grid gap-6 lg:grid-cols-[200px_minmax(0,1fr)] lg:items-start">
+        <BuilderNav
+          section={section}
+          lessons={detail.lessons?.length ?? 0}
+          hasQuiz={Boolean(detail.quiz)}
+          onSelect={setSection}
+        />
+
+        {section === 'details' && <CourseDetails course={detail} onSaved={course.reload} />}
+        {section === 'lessons' && <LessonManager course={documentId} onChanged={course.reload} />}
+        {section === 'quiz' && <QuizPanel course={detail} />}
       </div>
-
-      <CourseForm
-        course={detail}
-        label="Save changes"
-        save={async (values) => {
-          await api.put(`/courses/${documentId}`, { data: values });
-          await course.reload();
-        }}
-      />
-
-      <LessonManager course={documentId} />
-
-      <section>
-        <h2 className="mb-3 text-lg font-medium">Quiz</h2>
-
-        <Card>
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-sm text-slate-600">
-              {detail.quiz ? detail.quiz.title : 'No quiz on this course yet.'}
-            </p>
-
-            <Link href={`/courses/${documentId}/quiz`} className="text-sm text-slate-900 underline">
-              {detail.quiz ? 'Edit quiz' : 'Add a quiz'}
-            </Link>
-          </div>
-        </Card>
-      </section>
-
-      <Delete course={detail} />
     </div>
   );
 };
@@ -115,12 +55,8 @@ export default function EditCoursePage() {
   const params = useParams<{ documentId: string }>();
 
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-semibold">Edit course</h1>
-
-      <RequireAuth roles={['Instructor', 'Content Manager', 'Admin']}>
-        <Edit documentId={params.documentId} />
-      </RequireAuth>
-    </div>
+    <RequireAuth roles={['Instructor', 'Content Manager', 'Admin']}>
+      <Builder documentId={params.documentId} />
+    </RequireAuth>
   );
 }
