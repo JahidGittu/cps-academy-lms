@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 
 import './globals.css';
 import { AuthProvider } from '@/lib/auth';
+import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         <AuthProvider>
           <SiteHeader />
           <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>
+          <SiteFooter />
         </AuthProvider>
       </body>
     </html>
