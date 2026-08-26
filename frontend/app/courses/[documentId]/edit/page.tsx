@@ -9,7 +9,7 @@ import { api, errorMessage } from '@/lib/api';
 import { useApi } from '@/lib/use-api';
 import type { Course, Single } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
-import { Alert, Button, Empty } from '@/components/ui';
+import { Alert, Button, Card, Empty } from '@/components/ui';
 import { CourseForm } from '@/components/course-form';
 import { LessonManager } from './lesson-manager';
 
@@ -80,6 +80,22 @@ const Edit = ({ documentId }: { documentId: string }) => {
       />
 
       <LessonManager course={documentId} />
+
+      <section>
+        <h2 className="mb-3 text-lg font-medium">Quiz</h2>
+
+        <Card>
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm text-slate-600">
+              {detail.quiz ? detail.quiz.title : 'No quiz on this course yet.'}
+            </p>
+
+            <Link href={`/courses/${documentId}/quiz`} className="text-sm text-slate-900 underline">
+              {detail.quiz ? 'Edit quiz' : 'Add a quiz'}
+            </Link>
+          </div>
+        </Card>
+      </section>
 
       <Delete course={detail} />
     </div>

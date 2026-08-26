@@ -53,6 +53,13 @@ export type Quiz = {
   course?: Course | null;
 };
 
+// GET /api/quizzes/:id/answers, which only the roles that may author a quiz can call. The one read
+// on the site that carries correctIndex, and the reason a save can send the questions back whole.
+export type QuizKey = {
+  title: string;
+  questions: { text: string; options: string[]; correctIndex: number }[];
+};
+
 export type Enrollment = {
   id: number;
   documentId: string;

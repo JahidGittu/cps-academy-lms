@@ -3,7 +3,9 @@ import type { ButtonHTMLAttributes, InputHTMLAttributes, TextareaHTMLAttributes 
 // The handful of shapes every form and list on the site reuses. Kept in one file so a change to
 // the input border is one edit rather than fifteen.
 
-const control =
+// Exported because the quiz builder puts an input in a row of its own with a radio beside it, and
+// that box still has to look like every other box on the site.
+export const inputStyle =
   'w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-900';
 
 export const Field = ({
@@ -12,7 +14,7 @@ export const Field = ({
 }: { label: string } & InputHTMLAttributes<HTMLInputElement>) => (
   <label className="block">
     <span className="mb-1 block text-sm font-medium text-slate-700">{label}</span>
-    <input {...props} className={control} />
+    <input {...props} className={inputStyle} />
   </label>
 );
 
@@ -22,7 +24,7 @@ export const TextField = ({
 }: { label: string } & TextareaHTMLAttributes<HTMLTextAreaElement>) => (
   <label className="block">
     <span className="mb-1 block text-sm font-medium text-slate-700">{label}</span>
-    <textarea {...props} className={`${control} min-h-28`} />
+    <textarea {...props} className={`${inputStyle} min-h-28`} />
   </label>
 );
 
