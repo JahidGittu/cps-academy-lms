@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
+import { Image as ImageIcon, Sparkles } from 'lucide-react';
 
 import { errorMessage } from '@/lib/api';
 import type { Course } from '@/lib/types';
@@ -9,9 +10,12 @@ import { Alert, Button, Field, TextField } from '@/components/ui';
 
 export type CourseValues = { title: string; description: string; coverImageUrl: string };
 
-// The new and the edit screen send the same three fields, so the fields live here and the request
-// does not: one of them is a post and the other a put, and the page that knows which also knows
-// where to go afterwards.
+const SAMPLES = [
+  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop&q=80',
+];
+
 export const CourseForm = ({
   course,
   save,
@@ -44,29 +48,75 @@ export const CourseForm = ({
       await save(values);
     } catch (caught) {
       setError(errorMessage(caught));
-      // Only released on failure. A save that worked navigates away, and re-enabling the button
-      // first invites a second click that would create the course twice.
       setBusy(false);
     }
   };
 
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <Field label="Title" value={values.title} onChange={set('title')} required />
-
-      <TextField label="Description" value={values.description} onChange={set('description')} />
-
-      <Field
-        label="Cover image URL"
-        value={values.coverImageUrl}
-        onChange={set('coverImageUrl')}
-        placeholder="https://"
+    <form onSubmit={submit} className="space-y-5">
+      <Field 
+        label="Course Title" 
+        value={values.title} 
+        onChange={set('title')} 
+        placeholder="e.g. Modern Full-Stack Development"
+        required 
       />
+
+      <TextField 
+        label="Course Description" 
+        value={values.description} 
+        onChange={set('description')} 
+        placeholder="Brief summary of syllabus and learning objectives..."
+      />
+
+      <div>
+        <Field
+          label="Thumbnail / Cover Image URL"
+          value={values.coverImageUrl}
+          onChange={set('coverImageUrl')}
+          placeholder="https://images.unsplash.com/..."
+        />
+
+        <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+          <Sparkles className="size-3 text-brand-600" />
+          <span>Quick sample covers:</span>
+          {SAMPLES.map((url, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setValues((prev) => ({ ...prev, coverImageUrl: url }))}
+              className="text-brand-600 underline hover:text-brand-800"
+            >
+              Cover {i + 1}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {values.coverImageUrl && (
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2">
+          <p className="mb-1.5 flex items-center gap-1 text-xs font-semibold text-slate-600">
+            <ImageIcon className="size-3.5" />
+            <span>Thumbnail Preview</span>
+          </p>
+          <div className="relative h-36 w-full overflow-hidden rounded-lg">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={values.coverImageUrl}
+              alt="Preview"
+              className="h-full w-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       <Alert>{error}</Alert>
 
-      <Button type="submit" disabled={busy}>
-        {busy ? 'Saving' : label}
+      <Button type="submit" disabled={busy} className="w-full sm:w-auto">
+        {busy ? 'Saving Course...' : label}
       </Button>
     </form>
   );
