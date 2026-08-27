@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { api, errorMessage, errorStatus } from './api';
 
@@ -14,8 +14,18 @@ export const useApi = <T>(path: string | null) => {
   const [status, setStatus] = useState<number>();
   const [loading, setLoading] = useState(true);
 
+  // The path goes through a ref so that reload is the same function for the life of the component.
+  // It used to close over the path it was made with, which meant a caller holding on to a reload
+  // from before the path was known was holding a function that did nothing: the course page signs
+  // somebody up, and the reload it had captured still thought there was no student to ask about.
+  const latest = useRef(path);
+
+  latest.current = path;
+
   const reload = useCallback(async () => {
-    if (!path) {
+    const target = latest.current;
+
+    if (!target) {
       setLoading(false);
 
       return;
@@ -24,7 +34,7 @@ export const useApi = <T>(path: string | null) => {
     setLoading(true);
 
     try {
-      const response = await api.get<T>(path);
+      const response = await api.get<T>(target);
 
       setData(response.data);
       setError('');
@@ -35,11 +45,11 @@ export const useApi = <T>(path: string | null) => {
     } finally {
       setLoading(false);
     }
-  }, [path]);
+  }, []);
 
   useEffect(() => {
     void reload();
-  }, [reload]);
+  }, [path, reload]);
 
   return { data, error, status, loading, reload };
 };
