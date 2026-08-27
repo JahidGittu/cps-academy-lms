@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, ClipboardList, FileText, Newspaper, PencilLine, Users } from 'lucide-react';
+import { BookOpen, ClipboardList, FileText, Newspaper, Sparkles, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { useApi } from '@/lib/use-api';
@@ -11,29 +11,29 @@ const Tile = ({
   icon: Icon,
   label,
   value,
+  color,
 }: {
   icon: LucideIcon;
   label: string;
   value: number;
+  color: string;
 }) => (
-  <Card className="flex items-center gap-3">
-    <span className="rounded bg-slate-100 p-2 text-slate-600">
-      <Icon className="size-4" />
+  <Card hover className="flex items-center gap-4">
+    <span className={`flex size-12 items-center justify-center rounded-xl ${color} shadow-xs`}>
+      <Icon className="size-6" />
     </span>
 
-    <span>
-      <span className="block text-xl font-semibold">{value}</span>
-      <span className="block text-xs text-slate-500">{label}</span>
-    </span>
+    <div>
+      <span className="block text-2xl font-bold text-slate-900 tracking-tight">{value}</span>
+      <span className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">{label}</span>
+    </div>
   </Card>
 );
 
-// Counted by the server rather than by fetching every collection and reading the lengths here, so
-// the numbers do not depend on how many rows a page happens to have asked for.
 export const PlatformStats = () => {
   const stats = useApi<Single<Stats>>('/stats');
 
-  if (stats.loading) return <p className="text-sm text-slate-500">Loading stats</p>;
+  if (stats.loading) return <p className="text-sm text-slate-500">Loading platform statistics...</p>;
 
   if (stats.error) return <Alert>{stats.error}</Alert>;
 
@@ -45,21 +45,35 @@ export const PlatformStats = () => {
 
   return (
     <section>
-      <h2 className="mb-3 text-lg font-medium">Platform</h2>
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Tile icon={Users} label="accounts" value={users} />
-        <Tile icon={BookOpen} label="courses" value={data.courses} />
-        <Tile icon={FileText} label="lessons" value={data.lessons} />
-        <Tile icon={PencilLine} label="enrollments" value={data.enrollments} />
-        <Tile icon={ClipboardList} label="quiz attempts" value={data.quizAttempts} />
-        <Tile icon={Newspaper} label="published posts" value={data.blogPosts.published} />
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900">Platform Overview</h2>
+          <p className="text-sm text-slate-500">Real-time counts across users, curriculum, enrollments, and content.</p>
+        </div>
       </div>
 
-      <p className="mt-3 text-xs text-slate-500">
-        {data.users.map((row) => `${row.count} ${row.role}`).join(' · ')} ·{' '}
-        {data.blogPosts.drafts} in draft
-      </p>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Tile icon={Users} label="Total Accounts" value={users} color="bg-indigo-50 text-indigo-600 border border-indigo-100" />
+        <Tile icon={BookOpen} label="Total Courses" value={data.courses} color="bg-violet-50 text-violet-600 border border-violet-100" />
+        <Tile icon={FileText} label="Total Lessons" value={data.lessons} color="bg-sky-50 text-sky-600 border border-sky-100" />
+        <Tile icon={Sparkles} label="Active Enrollments" value={data.enrollments} color="bg-emerald-50 text-emerald-600 border border-emerald-100" />
+        <Tile icon={ClipboardList} label="Quiz Submissions" value={data.quizAttempts} color="bg-amber-50 text-amber-600 border border-amber-100" />
+        <Tile icon={Newspaper} label="Published Articles" value={data.blogPosts.published} color="bg-rose-50 text-rose-600 border border-rose-100" />
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 px-4 py-3 border border-slate-200 text-xs text-slate-600">
+        <div className="flex flex-wrap items-center gap-3 font-medium">
+          <span className="font-semibold text-slate-800">User breakdown:</span>
+          {data.users.map((row) => (
+            <span key={row.role} className="rounded-md bg-white px-2 py-0.5 border border-slate-200 shadow-2xs">
+              {row.role}: <strong className="text-slate-900">{row.count}</strong>
+            </span>
+          ))}
+        </div>
+        <div className="text-slate-500 font-medium">
+          Blog Drafts: <strong className="text-slate-800">{data.blogPosts.drafts}</strong>
+        </div>
+      </div>
     </section>
   );
 };
