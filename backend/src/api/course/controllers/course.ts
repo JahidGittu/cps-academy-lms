@@ -22,14 +22,45 @@ const INSIDE = {
 // The line is-course-owner draws on a write. The client needs the same answer to decide whether to
 // offer an edit button, and it cannot work it out for itself: the sanitizer removes the owner
 // relation for every role below Admin. So the answer travels rather than the ids.
-const mayEdit = (ctx: Context, ownerId?: string | number | null) =>
-  seesEveryRow(ctx) || ownerId === caller(ctx).id;
+const mayEdit = (ctx: Context, ownerId?: string | number | null) => {
+  // Anonymous requests reach the two reads below, since the catalogue is public. Nobody signed out
+  // may edit anything, so the answer is no before caller gets a chance to refuse the request.
+  if (!ctx.state.user) return false;
+
+  return seesEveryRow(ctx) || ownerId === caller(ctx).id;
+};
 
 // Relation ids are string or number in Strapi's own types, so the roster is keyed on whatever came
 // back rather than converted to one of them.
 type Enrolled = { student?: { id: string | number; username?: string | null } | null };
 
-type Owned = { documentId: string; owner?: { id: string | number } | null };
+// The shape INSIDE actually asks for, which is narrower than the schema. Written out because the
+// reads below take these off a raw document, before the sanitizer has been anywhere near it.
+type Raw = {
+  documentId: string;
+  owner?: { id: string | number; username?: string | null } | null;
+  lessons?: { id: number; documentId: string; title: string; order: number }[];
+  quiz?: { id: number; documentId: string; title: string } | null;
+};
+
+// What a course read says on top of its own columns, and all of it is an answer rather than a
+// relation. sanitizeOutput removes a relation the calling role may not read, which for a Student is
+// the owner and for a visitor with no account is the syllabus and the quiz as well. Handing Public
+// find on the lessons and quizzes collections to get titles through the sanitizer would be far wider
+// than putting the three titles back here.
+const extras = (ctx: Context, course: Raw) => ({
+  owned: mayEdit(ctx, course.owner?.id),
+  instructor: course.owner?.username ?? null,
+  lessons: (course.lessons ?? []).map(({ id, documentId, title, order }) => ({
+    id,
+    documentId,
+    title,
+    order,
+  })),
+  quiz: course.quiz
+    ? { id: course.quiz.id, documentId: course.quiz.documentId, title: course.quiz.title }
+    : null,
+});
 
 // Everything a course form may set. The rest of the schema is either derived (owner) or filled in
 // through another route (lessons, quiz), and both writes below name these three rather than passing
@@ -106,14 +137,14 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     const { results, pagination } = await strapi.service(UID).find({ ...query, populate: INSIDE });
 
-    const editable = new Set(
-      (results as Owned[]).filter((row) => mayEdit(ctx, row.owner?.id)).map((row) => row.documentId)
+    const added = new Map(
+      (results as Raw[]).map((course) => [course.documentId, extras(ctx, course)])
     );
 
     const rows = await super.sanitizeOutput(results, ctx);
 
     return super.transformResponse(
-      rows.map((row: Owned) => ({ ...row, owned: editable.has(row.documentId) })),
+      rows.map((row: Raw) => ({ ...row, ...added.get(row.documentId) })),
       { pagination }
     );
   },
@@ -128,7 +159,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     const row = await super.sanitizeOutput(course, ctx);
 
-    return super.transformResponse({ ...row, owned: mayEdit(ctx, course.owner?.id) });
+    return super.transformResponse({ ...row, ...extras(ctx, course as Raw) });
   },
 
   // Percentages are counted per request instead of stored, so they cannot drift away from the

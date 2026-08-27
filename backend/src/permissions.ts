@@ -17,7 +17,11 @@ export const roles = [
 // The permission matrix from the project spec. A role holding a box here may call that
 // endpoint at all; narrowing a call to the caller's own rows is the controllers' job.
 const matrix: Record<string, Record<string, string[]>> = {
+  // The catalogue is the shop window. A learner has to see what is on offer before deciding to make
+  // an account, so course reads are open, and a course read carries titles only. The lesson bodies
+  // and the quiz questions come from their own routes, which stay behind the enrollment gate.
   Public: {
+    'api::course.course': READ,
     'api::blog-post.blog-post': READ,
   },
 
