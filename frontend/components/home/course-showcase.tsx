@@ -8,23 +8,16 @@ import type { Collection, Course } from '@/lib/types';
 import { Empty } from '@/components/ui';
 import { CourseTile } from '@/components/course-tile';
 
-// Six fills two rows on a wide screen. Asked for as a page size rather than trimmed in the browser,
-// so the front page does not get slower every time somebody adds a course.
 const listQuery = '/courses?sort=createdAt:desc&pagination[pageSize]=6';
 
 export const CourseShowcase = () => {
   const courses = useApi<Collection<Course>>(listQuery);
   const rows = courses.data?.data ?? [];
 
-  // The count comes off the pagination meta, so it is the whole catalogue rather than the six tiles
-  // below it. Nothing on this page is a figure somebody typed in.
-  const total = courses.data?.meta.pagination.total ?? 0;
+  const total = courses.data?.meta?.pagination?.total ?? rows.length;
 
-  // A landing page has nothing useful to say about a 500, so it says the plain thing and gets out of
-  // the way rather than putting a red error box in front of a visitor who has not asked for anything
-  // yet.
   const body = () => {
-    if (courses.loading) return <p className="text-sm text-slate-500">Loading courses</p>;
+    if (courses.loading) return <p className="text-sm text-slate-500">Loading courses...</p>;
 
     if (courses.error) {
       return <p className="text-sm text-slate-500">The catalogue is not answering right now.</p>;
@@ -33,7 +26,7 @@ export const CourseShowcase = () => {
     if (!rows.length) return <Empty>No courses on the platform yet.</Empty>;
 
     return (
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map((course) => (
           <CourseTile key={course.documentId} course={course} />
         ))}
@@ -42,29 +35,31 @@ export const CourseShowcase = () => {
   };
 
   return (
-    <section className="border-b border-slate-200 bg-slate-50">
-      <div className="mx-auto w-full max-w-6xl px-4 py-16">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+    <section className="border-b border-slate-200/80 bg-white">
+      <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-8">
+        <div className="flex flex-wrap items-end justify-between gap-4 mb-10">
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Courses to start with</h2>
-
-            <p className="mt-2 max-w-xl text-slate-600">
-              {total
-                ? `${total} ${total === 1 ? 'course' : 'courses'} on the platform. The syllabus is open to read; enrolling is what opens the lessons.`
-                : 'The syllabus of every course is open to read. Enrolling is what opens the lessons.'}
+            <span className="inline-block rounded-md bg-brand-50 border border-brand-200 px-3 py-1 text-xs font-semibold text-brand-700 mb-2">
+              Featured Tracks
+            </span>
+            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+              Explore Our Courses
+            </h2>
+            <p className="mt-2 text-base text-slate-600">
+              Structured engineering courses with sequential lessons and auto-graded assessments.
             </p>
           </div>
 
           <Link
             href="/courses"
-            className="group inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:text-brand-600"
+            className="group inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-brand-600 transition"
           >
-            See all courses
-            <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
+            <span>View All ({total})</span>
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
 
-        <div className="mt-8">{body()}</div>
+        {body()}
       </div>
     </section>
   );

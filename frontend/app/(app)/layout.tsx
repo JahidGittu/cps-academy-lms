@@ -10,5 +10,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return <div className="min-h-screen w-full">{children}</div>;
   }
 
-  return <div className="mx-auto w-full max-w-6xl px-4 py-8">{children}</div>;
+  return <div className="mx-auto w-full max-w-7xl px-4 sm:px-8 py-10">{children}</div>;
 }

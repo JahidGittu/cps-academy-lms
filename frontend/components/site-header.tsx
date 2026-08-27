@@ -51,7 +51,7 @@ export const SiteHeader = () => {
 
   return (
     <header className={`sticky top-0 z-40 transition-all duration-200 ${headerStyle}`}>
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-1.5 px-4 sm:px-6">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-1.5 px-4 sm:px-8">
         <Link href="/" className="mr-auto flex items-center gap-2.5 group">
           <span className="brand-gradient flex size-9 items-center justify-center rounded-lg text-white shadow-sm shadow-brand-500/30 transition-transform group-hover:scale-105">
             <GraduationCap className="size-5" />

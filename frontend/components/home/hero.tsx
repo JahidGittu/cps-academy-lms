@@ -4,12 +4,12 @@ import { ArrowRight, BookOpen } from 'lucide-react';
 import { HeroArt } from '@/components/home/hero-art';
 
 export const Hero = () => (
-  <section className="relative overflow-hidden bg-white border-b border-slate-200/80 py-12 lg:py-16">
+  <section className="relative overflow-hidden bg-white border-b border-slate-200/80 py-12 lg:py-20">
     {/* Soft Ambient Background Glows */}
     <div className="pointer-events-none absolute -left-20 top-1/4 size-96 rounded-full bg-brand-500/5 blur-3xl" />
     <div className="pointer-events-none absolute right-1/4 bottom-0 size-96 rounded-full bg-indigo-500/5 blur-3xl" />
 
-    <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-12">
+    <div className="relative mx-auto grid w-full max-w-7xl items-center gap-12 px-4 sm:px-8 lg:grid-cols-12">
       {/* Left Column: Heading & Social Proof */}
       <div className="space-y-6 lg:col-span-6">
         <div>
@@ -86,7 +86,7 @@ export const Hero = () => (
         </div>
       </div>
 
-      {/* Right Column: Hero Visual with Floating Metrics */}
+      {/* Right Column: Hero Visual */}
       <div className="lg:col-span-6">
         <HeroArt />
       </div>

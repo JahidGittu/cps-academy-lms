@@ -28,12 +28,12 @@ const steps = [
 ];
 
 export const HowItWorks = () => (
-  <section className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6">
+  <section className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-8">
     <div className="text-center max-w-2xl mx-auto">
       <span className="inline-block rounded-md bg-brand-50 border border-brand-200 px-3 py-1 text-xs font-semibold text-brand-700">
         Simple 4-Step Process
       </span>
-      <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+      <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
         How Learning Works
       </h2>
       <p className="mt-3 text-slate-600 text-base">

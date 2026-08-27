@@ -24,12 +24,12 @@ export const WhyFinish = () => (
     <div className="pointer-events-none absolute -right-20 top-0 size-80 rounded-full bg-brand-600/15 blur-3xl" />
     <div className="pointer-events-none absolute left-0 bottom-0 size-80 rounded-full bg-violet-600/15 blur-3xl" />
 
-    <div className="relative mx-auto grid w-full max-w-6xl gap-12 px-4 sm:px-6 lg:grid-cols-12 lg:items-center">
+    <div className="relative mx-auto grid w-full max-w-7xl gap-12 px-4 sm:px-8 lg:grid-cols-12 lg:items-center">
       <div className="lg:col-span-5">
         <span className="inline-block rounded-md bg-brand-500/10 border border-brand-500/20 px-3 py-1 text-xs font-semibold text-brand-300">
           Built for Completion
         </span>
-        <h2 className="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+        <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
           Designed to help you <span className="bg-gradient-to-r from-brand-300 to-violet-300 bg-clip-text text-transparent">reach 100%</span>
         </h2>
 
