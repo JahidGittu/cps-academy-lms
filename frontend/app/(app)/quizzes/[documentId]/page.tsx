@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Award, CheckCircle2, Send } from 'lucide-react';
+import { ArrowLeft, Award, CheckCircle2, Send, Lock } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
 import { hasRole, useAuth } from '@/lib/auth';
@@ -61,7 +61,23 @@ const Taking = ({ documentId }: { documentId: string }) => {
   }
 
   if (quiz.status === 404) {
-    return <Empty>This quiz belongs to a course you have not enrolled in.</Empty>;
+    return (
+      <div className="mx-auto max-w-lg rounded-md border border-amber-200 bg-amber-50/80 p-8 text-center shadow-xs">
+        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+          <Lock className="size-6" />
+        </div>
+        <h2 className="text-lg font-bold text-amber-950">Quiz Assessment Locked</h2>
+        <p className="mt-2 text-xs sm:text-sm text-amber-900 leading-relaxed">
+          This quiz belongs to a course you have not enrolled in yet. Please enroll in the course to take the quiz and get auto-graded.
+        </p>
+        <Link
+          href="/courses"
+          className="brand-gradient mt-5 inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-xs font-bold text-white shadow-xs hover:opacity-95"
+        >
+          <span>Explore Course Catalogue →</span>
+        </Link>
+      </div>
+    );
   }
 
   if (quiz.error) return <Alert>{quiz.error}</Alert>;
