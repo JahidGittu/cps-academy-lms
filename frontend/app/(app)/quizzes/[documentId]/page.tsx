@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Check, X } from 'lucide-react';
+import { ArrowLeft, Award, CheckCircle2, Send } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
 import { hasRole, useAuth } from '@/lib/auth';
@@ -14,13 +14,9 @@ import { Alert, Button, Card, Empty } from '@/components/ui';
 
 const optionLabel = 'ABCDEFGH';
 
-// Naming populate at all means naming all of it, so questions has to be asked for even though it is
-// a component rather than a relation. The answer key is not in the response either way: correctIndex
-// is private in the Strapi schema.
 const quizQuery = (documentId: string) =>
   `/quizzes/${documentId}?populate[questions]=true&populate[course][fields]=title`;
 
-// Past attempts, newest first, so the score box below can show the last one.
 const attemptsQuery = (documentId: string) =>
   `/quiz-results?filters[quiz][documentId][$eq]=${documentId}&sort=createdAt:desc`;
 
@@ -28,8 +24,6 @@ const Taking = ({ documentId }: { documentId: string }) => {
   const { user } = useAuth();
   const isStudent = hasRole(user, 'Student');
 
-  // Keyed by question index, because that is the position the server grades against. A Map would
-  // work too but this reads straight into the answers array below.
   const [picked, setPicked] = useState<Record<number, number>>({});
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
@@ -45,8 +39,6 @@ const Taking = ({ documentId }: { documentId: string }) => {
     setActionError('');
 
     try {
-      // Sent as a dense array so answers[i] lines up with question i. A question left blank sends
-      // -1, which cannot match an option index and so is graded wrong rather than skipped.
       const answers = questions.map((_, index) => picked[index] ?? -1);
 
       await api.post('/quiz-results', { data: { quiz: documentId, answers } });
@@ -59,7 +51,7 @@ const Taking = ({ documentId }: { documentId: string }) => {
     }
   };
 
-  if (quiz.loading) return <p className="text-sm text-slate-500">Loading quiz</p>;
+  if (quiz.loading) return <p className="text-sm text-slate-500">Loading quiz...</p>;
 
   if (quiz.status === 404) {
     return <Empty>This quiz belongs to a course you have not enrolled in.</Empty>;
@@ -75,68 +67,91 @@ const Taking = ({ documentId }: { documentId: string }) => {
   const answered = Object.keys(picked).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-3xl mx-auto">
       {course && (
         <Link
           href={`/courses/${course.documentId}`}
-          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900"
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-brand-600 transition-colors"
         >
           <ArrowLeft className="size-4" />
-          {course.title}
+          <span>Back to {course.title}</span>
         </Link>
       )}
 
-      <h1 className="text-2xl font-semibold">{detail.title}</h1>
+      <div>
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{detail.title}</h1>
+        <p className="mt-1 text-sm text-slate-500">{questions.length} MCQ {questions.length === 1 ? 'Question' : 'Questions'} · Instant Auto-Grading</p>
+      </div>
 
       {lastAttempt && (
-        <Card>
-          <p className="text-sm">
-            Last attempt: <span className="font-medium">{lastAttempt.score}</span> out of{' '}
-            {lastAttempt.total}
-          </p>
+        <Card className="brand-gradient-subtle border-brand-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="flex size-10 items-center justify-center rounded-xl bg-brand-600 text-white shadow-xs">
+                <Award className="size-5" />
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">
+                  Latest Score: <span className="text-brand-700 font-bold text-base">{lastAttempt.score} / {lastAttempt.total}</span> ({Math.round((lastAttempt.score / lastAttempt.total) * 100)}%)
+                </p>
+                <p className="text-xs text-slate-500">
+                  Submitted on {new Date(lastAttempt.createdAt).toLocaleString()}
+                </p>
+              </div>
+            </div>
 
-          <p className="mt-1 text-xs text-slate-500">
-            {new Date(lastAttempt.createdAt).toLocaleString()}
-            {attempts.data && attempts.data.data.length > 1
-              ? ` · ${attempts.data.data.length} attempts so far`
-              : ''}
-          </p>
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 border border-emerald-200">
+              <CheckCircle2 className="size-3.5" />
+              <span>Graded</span>
+            </span>
+          </div>
         </Card>
       )}
 
-      {!questions.length && <Empty>This quiz has no questions yet.</Empty>}
+      {!questions.length && <Empty>This quiz has no questions added yet.</Empty>}
 
-      {/* Read only for the roles that write quizzes. They can see the questions from the course they
-          run, but taking a quiz is a Student action and the server refuses the post either way. */}
       {questions.map((question, index) => (
-        <Card key={question.id}>
-          <p className="font-medium">
-            {index + 1}. {question.text}
-          </p>
+        <Card key={question.id} className="space-y-4">
+          <div className="flex items-start gap-3">
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-700">
+              {index + 1}
+            </span>
+            <p className="font-semibold text-slate-900 text-base leading-snug pt-0.5">
+              {question.text}
+            </p>
+          </div>
 
-          <div className="mt-3 space-y-2">
-            {question.options.map((option, choice) => (
-              <label
-                key={choice}
-                className={`flex cursor-pointer items-center gap-3 rounded border px-3 py-2 text-sm ${
-                  picked[index] === choice
-                    ? 'border-slate-900 bg-slate-50'
-                    : 'border-slate-200 hover:border-slate-400'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name={`question-${index}`}
-                  checked={picked[index] === choice}
-                  disabled={!isStudent}
-                  onChange={() => setPicked((prev) => ({ ...prev, [index]: choice }))}
-                  className="accent-slate-900"
-                />
+          <div className="space-y-2.5 pt-1">
+            {question.options.map((option, choice) => {
+              const isSelected = picked[index] === choice;
+              return (
+                <label
+                  key={choice}
+                  className={`flex cursor-pointer items-center gap-3.5 rounded-xl border p-3.5 text-sm font-medium transition-all ${
+                    isSelected
+                      ? 'border-brand-500 bg-brand-50/70 text-brand-900 shadow-xs ring-2 ring-brand-500/20'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50/70'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name={`question-${index}`}
+                    checked={isSelected}
+                    disabled={!isStudent}
+                    onChange={() => setPicked((prev) => ({ ...prev, [index]: choice }))}
+                    className="accent-brand-600 size-4"
+                  />
 
-                <span className="w-4 text-slate-400">{optionLabel[choice]}</span>
-                {option}
-              </label>
-            ))}
+                  <span className={`flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-bold ${
+                    isSelected ? 'bg-brand-200 text-brand-800' : 'bg-slate-100 text-slate-500'
+                  }`}>
+                    {optionLabel[choice]}
+                  </span>
+
+                  <span className="flex-1">{option}</span>
+                </label>
+              );
+            })}
           </div>
         </Card>
       ))}
@@ -144,44 +159,16 @@ const Taking = ({ documentId }: { documentId: string }) => {
       <Alert>{actionError}</Alert>
 
       {isStudent && questions.length > 0 && (
-        <div className="flex items-center gap-4 border-t border-slate-200 pt-5">
-          <Button disabled={busy || answered === 0} onClick={submit}>
-            {busy ? 'Marking' : 'Submit answers'}
-          </Button>
-
-          <p className="text-sm text-slate-500">
+        <div className="flex items-center justify-between border-t border-slate-200 pt-6">
+          <p className="text-xs text-slate-500 font-medium">
             {answered} of {questions.length} answered
           </p>
+
+          <Button disabled={busy || answered === 0} onClick={submit} className="gap-2">
+            <Send className="size-4" />
+            <span>{busy ? 'Evaluating Answers...' : 'Submit Answers'}</span>
+          </Button>
         </div>
-      )}
-
-      {isStudent && attempts.data && attempts.data.data.length > 1 && (
-        <section>
-          <h2 className="mb-3 text-lg font-medium">Earlier attempts</h2>
-
-          <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
-            {attempts.data.data.slice(1).map((attempt) => (
-              <li
-                key={attempt.documentId}
-                className="flex items-center gap-3 px-4 py-3 text-sm text-slate-600"
-              >
-                {attempt.score === attempt.total ? (
-                  <Check className="size-4 shrink-0" />
-                ) : (
-                  <X className="size-4 shrink-0 text-slate-400" />
-                )}
-
-                <span className="flex-1">
-                  {attempt.score} out of {attempt.total}
-                </span>
-
-                <span className="text-xs text-slate-400">
-                  {new Date(attempt.createdAt).toLocaleDateString()}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
       )}
     </div>
   );
