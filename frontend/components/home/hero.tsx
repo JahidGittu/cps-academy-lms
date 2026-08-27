@@ -4,13 +4,13 @@ import { ArrowRight, CheckCircle2, BookOpen } from 'lucide-react';
 import { HeroArt } from '@/components/home/hero-art';
 
 export const Hero = () => (
-  <section className="relative overflow-hidden hero-mesh border-b border-slate-800 text-white">
+  <section className="relative overflow-hidden hero-mesh border-b border-slate-800 text-white -mt-16 pt-28 pb-20 lg:pt-36 lg:pb-28">
     {/* Ambient Glows */}
     <div className="pointer-events-none absolute -left-20 -top-20 size-96 rounded-full bg-brand-500/20 blur-3xl" />
     <div className="pointer-events-none absolute right-0 top-1/4 size-96 rounded-full bg-violet-600/20 blur-3xl" />
     <div className="pointer-events-none absolute bottom-0 left-1/3 size-72 rounded-full bg-sky-500/15 blur-3xl" />
 
-    <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-20 lg:grid-cols-12 lg:py-28">
+    <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-12">
       <div className="lg:col-span-7">
         <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
           Master new skills, and <span className="bg-gradient-to-r from-brand-300 via-indigo-200 to-violet-300 bg-clip-text text-transparent">track real progress</span>
