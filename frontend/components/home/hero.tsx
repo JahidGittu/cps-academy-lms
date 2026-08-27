@@ -1,60 +1,93 @@
 import Link from 'next/link';
-import { ArrowRight, CheckCircle2, BookOpen } from 'lucide-react';
+import { ArrowRight, BookOpen } from 'lucide-react';
 
 import { HeroArt } from '@/components/home/hero-art';
 
 export const Hero = () => (
-  <section className="relative overflow-hidden hero-mesh border-b border-slate-800 text-white -mt-16 pt-28 pb-20 lg:pt-36 lg:pb-28">
-    {/* Ambient Glows */}
-    <div className="pointer-events-none absolute -left-20 -top-20 size-96 rounded-full bg-brand-500/20 blur-3xl" />
-    <div className="pointer-events-none absolute right-0 top-1/4 size-96 rounded-full bg-violet-600/20 blur-3xl" />
-    <div className="pointer-events-none absolute bottom-0 left-1/3 size-72 rounded-full bg-sky-500/15 blur-3xl" />
+  <section className="relative overflow-hidden bg-white border-b border-slate-200/80 py-12 lg:py-16">
+    {/* Soft Ambient Background Glows */}
+    <div className="pointer-events-none absolute -left-20 top-1/4 size-96 rounded-full bg-brand-500/5 blur-3xl" />
+    <div className="pointer-events-none absolute right-1/4 bottom-0 size-96 rounded-full bg-indigo-500/5 blur-3xl" />
 
     <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-12">
-      <div className="lg:col-span-7">
-        <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-          Master new skills, and <span className="bg-gradient-to-r from-brand-300 via-indigo-200 to-violet-300 bg-clip-text text-transparent">track real progress</span>
-        </h1>
+      {/* Left Column: Heading & Social Proof */}
+      <div className="space-y-6 lg:col-span-6">
+        <div>
+          <h1 className="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl lg:text-5xl xl:text-6xl leading-[1.15]">
+            <span>Learn, Master &amp;</span>
+            <br />
+            <span>Become a </span>
+            <span className="relative inline-block whitespace-nowrap text-brand-600">
+              Future Leader
+              {/* Curved Underline SVG Accent like PTTA */}
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 300 14"
+                preserveAspectRatio="none"
+                className="absolute left-0 -bottom-2 h-3 w-full text-amber-400 pointer-events-none"
+              >
+                <path
+                  d="M3 9 Q 80 1, 150 7 T 297 6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </span>{' '}
+            <span className="text-slate-400 font-normal">—</span>
+            <br />
+            <span>Starting Today!</span>
+          </h1>
 
-        <p className="mt-6 max-w-xl text-lg text-slate-300 leading-relaxed">
-          Structured courses with sequential lessons, verified MCQ quizzes, and persistent progress tracking. Built for learners who finish what they start.
-        </p>
+          <p className="mt-5 text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl">
+            Build real-world software engineering and database skills from CPS Academy. Start your career journey today with structured, sequential learning.
+          </p>
+        </div>
 
-        <div className="mt-8 flex flex-wrap items-center gap-4">
+        {/* CTA Buttons */}
+        <div className="flex flex-wrap items-center gap-4 pt-2">
           <Link
             href="/courses"
-            className="brand-gradient group inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-500/25 transition-all duration-200 hover:shadow-brand-500/40 hover:-translate-y-0.5"
+            className="brand-gradient group inline-flex items-center gap-2.5 rounded-xl px-7 py-3.5 text-base font-bold text-white shadow-lg shadow-brand-500/25 transition-all duration-200 hover:shadow-brand-500/40 hover:-translate-y-0.5"
           >
-            <BookOpen className="size-4" />
+            <BookOpen className="size-5" />
             <span>Explore Courses</span>
-            <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-1" />
-          </Link>
-
-          <Link
-            href="/register"
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-6 py-3 text-sm font-medium text-slate-200 backdrop-blur transition-all duration-200 hover:bg-slate-700/80 hover:text-white hover:border-slate-600 hover:-translate-y-0.5"
-          >
-            <span>Get Started</span>
+            <ArrowRight className="size-5 transition-transform duration-200 group-hover:translate-x-1" />
           </Link>
         </div>
 
-        <div className="mt-10 flex flex-wrap items-center gap-6 text-xs text-slate-400">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="size-4 text-emerald-400" />
-            <span>Sequential Lesson Lock</span>
+        {/* Social Proof Stack (Avatars + Text) */}
+        <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
+          <div className="flex -space-x-2.5 overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="inline-block size-9 rounded-full ring-2 ring-white object-cover shadow-xs"
+              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
+              alt="Enrolled Student"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="inline-block size-9 rounded-full ring-2 ring-white object-cover shadow-xs"
+              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80"
+              alt="Enrolled Student"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="inline-block size-9 rounded-full ring-2 ring-white object-cover shadow-xs"
+              src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80"
+              alt="Enrolled Student"
+            />
           </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="size-4 text-emerald-400" />
-            <span>Instant Auto-Grading</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="size-4 text-emerald-400" />
-            <span>Persistent Progress</span>
-          </div>
+
+          <p className="text-xs sm:text-sm font-medium text-slate-600">
+            <strong className="font-bold text-brand-600">10k+</strong> students already enrolled this month.
+          </p>
         </div>
       </div>
 
-      <div className="lg:col-span-5">
+      {/* Right Column: Hero Visual with Floating Metrics */}
+      <div className="lg:col-span-6">
         <HeroArt />
       </div>
     </div>
