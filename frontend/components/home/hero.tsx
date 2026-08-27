@@ -1,12 +1,13 @@
 import Link from 'next/link';
-import { ArrowRight, ClipboardCheck, ListOrdered, ShieldCheck } from 'lucide-react';
+import { ArrowRight, ClipboardCheck, ListOrdered, LineChart } from 'lucide-react';
 
-// Three plain claims under the buttons. No numbers, because there is nothing here worth counting
-// yet and a made up figure on a landing page is worse than no figure.
+// Three plain claims under the buttons. No numbers, because a made up figure on a landing page is
+// worse than no figure, and the real ones live in the courses section further down where they can
+// be fetched.
 const points = [
-  { icon: ListOrdered, label: 'Lessons unlock in order' },
-  { icon: ClipboardCheck, label: 'Quizzes marked on the server' },
-  { icon: ShieldCheck, label: 'Four roles, one permission matrix' },
+  { icon: ListOrdered, label: 'Lessons open one at a time' },
+  { icon: ClipboardCheck, label: 'Quizzes marked the moment you submit' },
+  { icon: LineChart, label: 'Progress saved to your account' },
 ];
 
 export const Hero = () => (
@@ -15,13 +16,17 @@ export const Hero = () => (
     <div className="pointer-events-none absolute -right-32 top-16 size-96 rounded-full bg-violet-100 blur-3xl" />
 
     <div className="relative mx-auto w-full max-w-3xl px-4 py-20 text-center lg:py-28">
-      <h1 className="text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
-        Learn something, <span className="text-brand-600">and prove it</span>
+      <span className="inline-flex items-center rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700">
+        Enrolment is open
+      </span>
+
+      <h1 className="mt-5 text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
+        Start a course, and <span className="text-brand-600">actually finish it</span>
       </h1>
 
       <p className="mx-auto mt-5 max-w-xl text-lg text-slate-600">
-        Enrol in a course, work through the lessons in order, then take the quiz. Your score is
-        marked on the server and kept, so the progress you see is the progress you did.
+        Enrol in minutes, work down the syllabus one lesson at a time, then sit the quiz. Come back a
+        week later and the course is waiting exactly where you left it.
       </p>
 
       <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -49,10 +54,6 @@ export const Hero = () => (
           </li>
         ))}
       </ul>
-
-      <p className="mt-8 text-sm text-slate-500">
-        Signing up makes you a student. Instructor and manager accounts are handed out by an admin.
-      </p>
     </div>
   </section>
 );
