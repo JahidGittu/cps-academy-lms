@@ -10,10 +10,11 @@ import { Card } from '@/components/ui';
 
 const listQuery = '/blog-posts?sort=createdAt:desc&pagination[pageSize]=3';
 
-const postCovers = [
-  'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80',
+// Distinct editorial & software writing cover imagery (different from course infrastructure covers)
+const blogCovers = [
+  'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80',
 ];
 
 export const LatestPosts = () => {
@@ -54,12 +55,12 @@ export const LatestPosts = () => {
               day: 'numeric',
               year: 'numeric',
             });
-            const coverImage = post.coverImageUrl ?? postCovers[idx % postCovers.length];
+            const coverImage = post.coverImageUrl ?? blogCovers[idx % blogCovers.length];
 
             return (
               <Link key={post.documentId} href={`/blog/${post.documentId}`} className="group block">
                 <Card className="h-full flex flex-col justify-between overflow-hidden border-slate-200/90 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-brand-300 group-hover:shadow-sm p-0 rounded-md">
-                  {/* High-res Blog Cover Image */}
+                  {/* High-res Editorial Cover Image */}
                   <div className="relative h-44 w-full overflow-hidden bg-slate-100">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -67,7 +68,7 @@ export const LatestPosts = () => {
                       alt={post.title}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent" />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/30 to-transparent" />
                   </div>
 
                   <div className="p-5 flex-1 flex flex-col justify-between">
