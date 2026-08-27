@@ -1,12 +1,25 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { DashboardShell } from '@/components/dashboard-shell';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const { user } = useAuth();
 
-  if (user) {
+  const isWorkspaceRoute =
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/courses/new') ||
+    pathname.startsWith('/blog/new') ||
+    pathname.includes('/edit') ||
+    pathname.includes('/students') ||
+    pathname.endsWith('/quiz') ||
+    pathname.startsWith('/lessons/') ||
+    pathname.startsWith('/quizzes/');
+
+  if (user && isWorkspaceRoute) {
     return <DashboardShell>{children}</DashboardShell>;
   }
 

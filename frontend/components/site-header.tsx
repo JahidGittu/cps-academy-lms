@@ -41,11 +41,19 @@ export const SiteHeader = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // When logged in and on any internal app workspace route, the 100vh Sidebar takes over
-  if (user && pathname !== '/') return null;
+  // Hide public top navbar on internal dashboard/workspace routes
+  const isWorkspaceRoute =
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/courses/new') ||
+    pathname.startsWith('/blog/new') ||
+    pathname.includes('/edit') ||
+    pathname.includes('/students') ||
+    pathname.endsWith('/quiz') ||
+    pathname.startsWith('/lessons/') ||
+    pathname.startsWith('/quizzes/');
 
-  const isDashboardRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/admin');
-  if (isDashboardRoute) return null;
+  if (isWorkspaceRoute) return null;
 
   const headerStyle = scrolled
     ? 'bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-xs'

@@ -8,13 +8,19 @@ import { useAuth } from '@/lib/auth';
 export const SiteFooter = () => {
   const pathname = usePathname();
 
-  const { user } = useAuth();
+  // Hide footer completely on internal dashboard/workspace routes
+  const isWorkspaceRoute =
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/courses/new') ||
+    pathname.startsWith('/blog/new') ||
+    pathname.includes('/edit') ||
+    pathname.includes('/students') ||
+    pathname.endsWith('/quiz') ||
+    pathname.startsWith('/lessons/') ||
+    pathname.startsWith('/quizzes/');
 
-  // Hide footer completely when logged in on workspace routes or dashboard
-  if (user && pathname !== '/') return null;
-
-  const isDashboardRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/admin');
-  if (isDashboardRoute) return null;
+  if (isWorkspaceRoute) return null;
 
   return (
     <footer className="mt-20 border-t border-slate-800 bg-slate-950 text-slate-400">

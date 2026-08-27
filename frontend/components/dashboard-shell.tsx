@@ -11,13 +11,13 @@ import {
   GraduationCap,
   ChevronRight,
   FileText,
+  ExternalLink,
 } from 'lucide-react';
 
 import { hasRole, useAuth } from '@/lib/auth';
 
 const getRouteMetadata = (pathname: string, roleName: string) => {
   const isStudent = roleName === 'Student';
-  const isManagerOrAdmin = roleName === 'Admin' || roleName === 'Content Manager';
 
   if (pathname === '/admin') {
     return {
@@ -26,12 +26,19 @@ const getRouteMetadata = (pathname: string, roleName: string) => {
       breadcrumb: 'Platform Overview',
     };
   }
+  if (pathname === '/dashboard/blogs') {
+    return {
+      title: 'Blog Management Studio',
+      subtitle: 'Author, edit, publish, and manage drafts and live technical articles across the platform.',
+      breadcrumb: 'Blog Management',
+    };
+  }
   if (pathname === '/dashboard') {
     return {
       title: isStudent ? 'My Learning Dashboard' : 'Course Management Studio',
       subtitle: isStudent
         ? 'Track your course progress, resume sequential lessons, and check graded quizzes.'
-        : 'Create curriculum, manage lessons, and monitor student completion rates.',
+        : 'Author structured syllabus, manage sequential lessons, and monitor student completion rates.',
       breadcrumb: isStudent ? 'My Enrolled Courses' : 'Course Management',
     };
   }
@@ -56,11 +63,11 @@ const getRouteMetadata = (pathname: string, roleName: string) => {
       breadcrumb: 'Student Roster',
     };
   }
-  if (pathname === '/courses') {
+  if (pathname.startsWith('/courses/') && pathname.endsWith('/quiz')) {
     return {
-      title: 'Course Catalogue',
-      subtitle: 'Explore available tracks and master software engineering.',
-      breadcrumb: 'Courses',
+      title: 'Course Quiz Builder',
+      subtitle: 'Author and configure multiple choice questions with correct answer keys.',
+      breadcrumb: 'Quiz Builder',
     };
   }
   if (pathname === '/blog/new') {
@@ -75,15 +82,6 @@ const getRouteMetadata = (pathname: string, roleName: string) => {
       title: 'Edit Article',
       subtitle: 'Update publication state and article content.',
       breadcrumb: 'Edit Article',
-    };
-  }
-  if (pathname === '/blog') {
-    return {
-      title: isManagerOrAdmin ? 'Blog Management' : 'Engineering Blog & Guides',
-      subtitle: isManagerOrAdmin
-        ? 'Author, publish, and manage draft & live engineering articles.'
-        : 'Insights, tutorials, and architectural best practices.',
-      breadcrumb: isManagerOrAdmin ? 'Blog Management' : 'Articles',
     };
   }
   if (pathname.startsWith('/lessons/')) {
@@ -132,7 +130,7 @@ export const DashboardShell = ({
   const title = customTitle || meta.title;
   const subtitle = customSubtitle !== undefined ? customSubtitle : meta.subtitle;
 
-  // Streamlined, role-tailored sidebar navigation without redundant duplicate links
+  // Streamlined role workspace navigation
   const navItems = [
     ...(isAdmin
       ? [
@@ -148,14 +146,9 @@ export const DashboardShell = ({
             icon: LayoutDashboard,
           },
           {
-            href: '/blog',
+            href: '/dashboard/blogs',
             label: 'Blog Management',
             icon: FileText,
-          },
-          {
-            href: '/courses',
-            label: 'Course Catalogue',
-            icon: Compass,
           },
         ]
       : []),
@@ -170,23 +163,12 @@ export const DashboardShell = ({
           ...(isContentManager
             ? [
                 {
-                  href: '/blog',
+                  href: '/dashboard/blogs',
                   label: 'Blog Management',
                   icon: FileText,
                 },
               ]
-            : [
-                {
-                  href: '/blog',
-                  label: 'Engineering Blog',
-                  icon: BookOpen,
-                },
-              ]),
-          {
-            href: '/courses',
-            label: 'Course Catalogue',
-            icon: Compass,
-          },
+            : []),
         ]
       : []),
 
@@ -197,18 +179,21 @@ export const DashboardShell = ({
             label: 'My Enrolled Courses',
             icon: LayoutDashboard,
           },
-          {
-            href: '/courses',
-            label: 'Course Catalogue',
-            icon: Compass,
-          },
-          {
-            href: '/blog',
-            label: 'Engineering Blog',
-            icon: BookOpen,
-          },
         ]
       : []),
+  ];
+
+  const publicLinks = [
+    {
+      href: '/courses',
+      label: 'Course Catalogue',
+      icon: Compass,
+    },
+    {
+      href: '/blog',
+      label: 'Engineering Blog',
+      icon: BookOpen,
+    },
   ];
 
   return (
@@ -262,6 +247,28 @@ export const DashboardShell = ({
                 </Link>
               );
             })}
+
+            <div className="pt-4 mt-4 border-t border-slate-100">
+              <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 px-3 mb-2">
+                Public Exploration
+              </span>
+              {publicLinks.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href + item.label}
+                    href={item.href}
+                    className="flex items-center justify-between gap-2.5 rounded-md px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
+                  >
+                    <span className="flex items-center gap-2.5 min-w-0">
+                      <Icon className="size-4 shrink-0 text-slate-400" />
+                      <span className="truncate">{item.label}</span>
+                    </span>
+                    <ExternalLink className="size-3 text-slate-300" />
+                  </Link>
+                );
+              })}
+            </div>
           </nav>
         </div>
 
