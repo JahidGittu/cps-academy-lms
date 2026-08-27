@@ -70,6 +70,8 @@ Auth
 Courses
 
 - Course list, course detail with the syllabus, enroll and unenroll
+- The catalogue and a course page are readable without an account; the lesson bodies and the quiz
+  are not
 - Create, edit and delete a course, restricted to the account that owns it
 - Lessons managed from the course edit screen, ordered, with delete
 - Sequential viewing: a lesson opens only when the one before it is marked done
@@ -101,6 +103,13 @@ and policies' job:
 **No role selection at signup.** Anyone who registers is a Student. A form that lets a visitor pick
 Admin is not a permission system, and the spec's matrix only means anything if the role is assigned
 rather than claimed.
+
+**The catalogue is public.** A visitor reads the course list, the descriptions and the full
+syllabus, because a learner has to see what is on offer before making an account. What enrolling
+buys is the lesson bodies and the quiz, and both of those are separate routes that check it. Getting
+the syllabus out to a visitor meant answering it in the course controller: Strapi's sanitizer drops
+a populated relation the calling role may not read, and granting the Public role find on lessons and
+quizzes to get around that would have opened two collections nobody browses.
 
 **Data fetching from the browser.** The token is a bearer token in `localStorage`, so the requests
 that carry it are made from the client. Rendering pages on a Next server would mean either putting
