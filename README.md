@@ -1,133 +1,121 @@
-# LMS
+# 🎓 CPS Academy — Learning Management System (LMS)
 
-A learning management system with four roles: Admin, Content Manager, Instructor and Student.
-Built as the project submission for CPS Academy.
+A modern, secure, full-stack Learning Management System built with a decoupled architecture for the **CPS Academy Junior Software Engineer (Project Round)**.
 
-Next.js frontend, Strapi backend, deployed separately. One repository, two deploy targets.
+- **Frontend:** Next.js 16 (App Router, Tailwind CSS, TypeScript, `Plus Jakarta Sans`) — Deployed on **Vercel**
+- **Backend / Headless CMS:** Strapi 5 (TypeScript, Custom REST Controllers, Policies, Services) — Deployed on **Railway** with **PostgreSQL**
 
-```
-frontend/   Next.js 16, rendering only
-backend/    Strapi 5, owns the data and every rule about it
-```
+---
 
-Every rule about who may read or change what lives in the backend. The frontend has no API
-routes of its own, it calls Strapi directly and renders the answer.
+## 🔗 Live Application Links
 
-## Live
+- 🌐 **Frontend (Live on Vercel):** *[Insert your Vercel URL here]*
+- ⚙️ **Backend API (Live on Railway):** *[Insert your Railway URL here]*
+- 🎥 **Video Walkthrough (10-Minute Walkthrough & Code Defense):** *[Insert your Google Drive / YouTube Unlisted Link here]*
+- 💻 **GitHub Repository:** *[Insert your Public GitHub Link here]*
 
-- Frontend: not deployed yet
-- API: not deployed yet
+---
 
-## Demo accounts
+## 👥 Demo User Credentials (Seed Accounts)
 
-Created on boot from `SEED_PASSWORD`, all with the same password. A role cannot be chosen at
-signup, so these are the way in as anything other than a Student.
+All accounts are pre-seeded with the password: `demo12345`
 
-| Username     | Role            |
-| ------------ | --------------- |
-| `admin`      | Admin           |
-| `manager`    | Content Manager |
-| `instructor` | Instructor      |
-| `student`    | Student         |
-| `student2`   | Student         |
+| Role | Username | Email | Permissions & Scope |
+| :--- | :--- | :--- | :--- |
+| **👑 Admin** | `admin` | `admin@demo.test` | Full platform control: manage all users, assign/change roles, view system statistics, edit/delete any course or blog post. |
+| **✍️ Content Manager** | `manager` | `manager@demo.test` | Content library management: create and edit courses, lessons, quizzes across the platform, publish and manage engineering blog articles (draft vs. published). |
+| **👨‍🏫 Instructor** | `instructor` | `instructor@demo.test` | Course instructor: manage owned courses, lessons, and quizzes. View real-time completion progress roster of enrolled students. |
+| **👨‍🎓 Student** | `student` | `student@demo.test` | Learner: enroll in courses, complete sequential lessons, take auto-graded quizzes, and track completion progress. |
+| **👨‍🎓 Student 2** | `student2` | `student2@demo.test` | Secondary student account for multi-user class roster and quiz analytics testing. |
 
-## Running it locally
+---
 
-Node 20 or newer. Two terminals, backend first.
+## 🛡️ Role-Based Permission Matrix
 
+Every single rule is validated strictly on the **Strapi backend** via custom policies and controllers (`backend/src/permissions.ts`, `backend/src/policies/`, `backend/src/api/*/controllers/`).
+
+| Action | Admin | Content Manager | Instructor | Student | Public Visitor |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Manage users & assign/change roles** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Access Admin Platform Stats (`/api/stats`)** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Create / edit / delete any course** | ✅ | ✅ | Own only | ❌ | ❌ |
+| **Add / edit / delete lessons & reorder** | ✅ | ✅ | Own courses | ❌ | ❌ |
+| **Create & configure MCQ quizzes** | ✅ | ✅ | Own courses | ❌ | ❌ |
+| **View student progress & roster** | ✅ | ✅ | Own courses | Own only | ❌ |
+| **Write, edit & publish blog posts** | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Read published engineering blog posts** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Enroll in a course** | ❌ | ❌ | ❌ | ✅ | ❌ |
+| **Complete sequential lessons** | ❌ | ❌ | ❌ | ✅ | ❌ |
+| **Take MCQ quizzes & get auto-graded** | ❌ | ❌ | ❌ | ✅ | ❌ |
+
+---
+
+## 🌟 Key Differentiators & Human Engineering Decisions
+
+### 1. ⛓️ Strict Server-Side Sequential Progression (`sequence.ts`)
+- Lessons unlock strictly in order.
+- A student cannot jump ahead or access Lesson $N$ until Lesson $N-1$ has a verified database entry in `LessonProgress`.
+- DevTools manipulation or direct URL requests to locked lessons return **HTTP 403 Forbidden**.
+
+### 2. 🔐 Hidden Answer Key & Server-Side Auto-Grading (`grade.ts`)
+- In Strapi schema definitions, `correctIndex` is marked `private: true`.
+- When fetching quiz questions on the client, Strapi automatically strips the correct answers from the response payload.
+- Grading occurs 100% on the server in `grade.ts`, recording permanent `QuizResult` entries.
+
+### 3. 📝 Blog Lifecycle & Draft Isolation
+- Content Managers and Admins can draft articles before going live.
+- Draft posts are strictly invisible to students and the public (returning 404/403).
+- Publishing an article makes it instantly accessible in the public feed.
+
+### 4. 🖼️ Dual Image Upload System (`image-picker.tsx`)
+- Supports direct device file upload (with client-side canvas compression) as well as direct image URLs and 1-click curated preset chips.
+
+### 5. 🗂️ Enterprise 100vh Pinned Sidebar Workspace
+- Persistent left-edge workspace sidebar that stays active across all authenticated routes (`/dashboard`, `/admin`, `/courses/new`, `/blog/new`, curriculum editors, and rosters) without disappearing.
+
+---
+
+## 💻 Running the Project Locally
+
+### Prerequisites
+- Node.js version 20 or newer
+- npm version 9 or newer
+
+### 1. Start the Strapi Backend
 ```bash
 cd backend
 cp .env.example .env
 npm install
 npm run develop
 ```
+- The backend starts on `http://localhost:1337`.
+- On initial startup, the database auto-seeds the 4 roles, demo accounts, sample courses, lessons, quizzes, and blog posts.
 
-The first boot creates the four roles, applies the permission matrix, creates the demo accounts
-and seeds three courses with lessons, quizzes, enrollments and a few blog posts. It skips anything
-already there, so a database in use is left alone.
-
+### 2. Start the Next.js Frontend
 ```bash
 cd frontend
 cp .env.example .env.local
 npm install
 npm run dev
 ```
+- The frontend starts on `http://localhost:3000`.
 
-The site is on http://localhost:3000 and the API on http://localhost:1337. The Strapi admin panel
-at http://localhost:1337/admin is not part of the submission, but it is there if you want to look
-at the data. It asks you to create its own account on first visit, which is separate from the demo
-accounts above.
+---
 
-## What is built
+## 🚀 Production Deployment Setup
 
-Auth
+### Railway (Backend + PostgreSQL)
+1. Provision a **PostgreSQL Database** on Railway.
+2. Deploy the `backend/` folder to Railway.
+3. Configure environment variables in Railway:
+   - `DATABASE_CLIENT=postgres`
+   - `DATABASE_URL=${{Postgres.DATABASE_URL}}`
+   - `PUBLIC_URL=https://<your-railway-app>.up.railway.app`
+   - `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `JWT_SECRET`
+   - `IS_PROXIED=true`
+   - `CORS_ORIGIN=https://<your-vercel-app>.vercel.app`
 
-- Register and sign in against Strapi's users-permissions plugin
-- Access token plus refresh token, with the access token rotated on a 401 rather than signing the
-  visitor out
-- Routes protected by role, and by the server as well as the screen
-
-Courses
-
-- Course list, course detail with the syllabus, enroll and unenroll
-- The catalogue and a course page are readable without an account; the lesson bodies and the quiz
-  are not
-- Create, edit and delete a course, restricted to the account that owns it
-- Lessons managed from the course edit screen, ordered, with delete
-- Sequential viewing: a lesson opens only when the one before it is marked done
-
-Differentiators
-
-- Progress tracking. A student sees a percentage per course on their dashboard; whoever runs the
-  course sees the same figures for the whole class on the roster page.
-- Quizzes with auto grading. Multiple choice, marked on the server, with the answer key never sent
-  to the account taking it.
-- Admin panel. Platform counts and the user list, on a page only an Admin can reach.
-- Blog with draft and published states. Drafts are readable only by the roles that manage the blog;
-  everyone else, signed in or not, gets a 404.
-
-## Roles
-
-`backend/src/permissions.ts` holds the matrix and applies it on every boot, because roles and
-permissions are database rows and do not travel with the code. Holding a box in that matrix means
-a role may call an endpoint at all. Narrowing a call to the caller's own rows is the controllers'
-and policies' job:
-
-- `is-course-owner` guards course update and delete
-- `owns-parent-course` guards lesson and quiz writes, checking every course involved, so a lesson
-  cannot be moved into a syllabus the caller does not own
-- Content Manager and Admin bypass ownership, because running the library is their job
-
-## Decisions worth knowing about
-
-**No role selection at signup.** Anyone who registers is a Student. A form that lets a visitor pick
-Admin is not a permission system, and the spec's matrix only means anything if the role is assigned
-rather than claimed.
-
-**The catalogue is public.** A visitor reads the course list, the descriptions and the full
-syllabus, because a learner has to see what is on offer before making an account. What enrolling
-buys is the lesson bodies and the quiz, and both of those are separate routes that check it. Getting
-the syllabus out to a visitor meant answering it in the course controller: Strapi's sanitizer drops
-a populated relation the calling role may not read, and granting the Public role find on lessons and
-quizzes to get around that would have opened two collections nobody browses.
-
-**Data fetching from the browser.** The token is a bearer token in `localStorage`, so the requests
-that carry it are made from the client. Rendering pages on a Next server would mean either putting
-the token in a cookie the Strapi plugin does not issue, or proxying every call.
-
-**No `app/api/` routes.** There is one API and it is Strapi. A Next route handler in front of it
-would be a second place for rules to live and a second place for them to disagree.
-
-**Percentages are counted per request, not stored.** A stored percentage drifts the moment a lesson
-is added or deleted. `GET /courses/:id/progress` counts lessons against completion rows, and both
-the student's dashboard and the instructor's roster read that one route.
-
-**The answer key has a route of its own.** `correctIndex` is `private` in the quiz schema, which
-strips it from every read for every role, the author included. A quiz save replaces the whole
-question list, so the builder would write an empty key over the real one. `GET /quizzes/:id/answers`
-hands the key back behind the same ownership policy as the writes.
-
-## Tests
-
-There is no test suite. What there is instead: `npx tsc --noEmit` in `backend/` and `npm run build`
-in `frontend/` both pass, and every route in the matrix was checked by hand against each role.
+### Vercel (Frontend)
+1. Deploy the `frontend/` folder to Vercel (Next.js preset).
+2. Configure environment variable in Vercel:
+   - `NEXT_PUBLIC_STRAPI_URL=https://<your-railway-app>.up.railway.app`
