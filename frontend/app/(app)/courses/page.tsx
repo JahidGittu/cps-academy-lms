@@ -112,6 +112,18 @@ export default function CoursesPage() {
         <Empty>
           <p className="font-semibold text-slate-700">No courses match your search</p>
           <p className="text-xs text-slate-500 mt-1">Try clearing your filters or search query.</p>
+          {(query || filter !== 'All Tracks') && (
+            <button
+              type="button"
+              onClick={() => {
+                setQuery('');
+                setFilter('All Tracks');
+              }}
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:underline cursor-pointer"
+            >
+              Clear All Filters ✕
+            </button>
+          )}
         </Empty>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

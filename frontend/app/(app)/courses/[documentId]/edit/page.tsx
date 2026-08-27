@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import { useApi } from '@/lib/use-api';
 import type { Course, Single } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
-import { Alert, Empty } from '@/components/ui';
+import { Alert, Empty, LoadingState } from '@/components/ui';
 import { BuilderHeader } from './builder-header';
 import { BuilderNav, type Section } from './builder-nav';
 import { CourseDetails } from './course-details';
@@ -19,7 +19,14 @@ const Builder = ({ documentId }: { documentId: string }) => {
   // Lessons rather than details: the title is typed once and the syllabus is what you come back for.
   const [section, setSection] = useState<Section>('lessons');
 
-  if (course.loading) return <p className="text-sm text-slate-500">Loading course</p>;
+  if (course.loading) {
+    return (
+      <LoadingState
+        message="Loading course editor..."
+        subtext="Retrieving syllabus outline, lesson sequence, and quiz builder."
+      />
+    );
+  }
 
   if (course.error) return <Alert>{course.error}</Alert>;
 

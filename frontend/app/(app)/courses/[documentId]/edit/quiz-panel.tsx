@@ -5,14 +5,21 @@ import { ClipboardList, Plus, SquarePen } from 'lucide-react';
 
 import { useApi } from '@/lib/use-api';
 import type { Course, Quiz, Single } from '@/lib/types';
-import { Alert, Card, buttonStyle } from '@/components/ui';
+import { Alert, Card, LoadingState, buttonStyle } from '@/components/ui';
 
 // Read-only on purpose. Writing a quiz is its own screen because the options and the answer key need
 // the room, and the key comes from a route of its own that this summary has no business calling.
 const Preview = ({ documentId }: { documentId: string }) => {
   const quiz = useApi<Single<Quiz>>(`/quizzes/${documentId}?populate=questions`);
 
-  if (quiz.loading) return <p className="text-sm text-slate-500">Loading quiz</p>;
+  if (quiz.loading) {
+    return (
+      <LoadingState
+        message="Loading quiz preview..."
+        subtext="Retrieving assessment questions."
+      />
+    );
+  }
 
   if (quiz.error) return <Alert>{quiz.error}</Alert>;
 

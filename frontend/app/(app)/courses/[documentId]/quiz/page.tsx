@@ -9,7 +9,7 @@ import { api, errorMessage } from '@/lib/api';
 import { useApi } from '@/lib/use-api';
 import type { Course, QuizKey, Single } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
-import { Alert, Button, Empty } from '@/components/ui';
+import { Alert, Button, Empty, LoadingState } from '@/components/ui';
 import { QuizBuilder } from './builder';
 import { blankQuestion } from './question-fields';
 
@@ -53,7 +53,14 @@ const Screen = ({ documentId }: { documentId: string }) => {
 
   const key = useApi<Single<QuizKey>>(quiz ? `/quizzes/${quiz}/answers` : null);
 
-  if (course.loading || key.loading) return <p className="text-sm text-slate-500">Loading quiz</p>;
+  if (course.loading || key.loading) {
+    return (
+      <LoadingState
+        message="Loading quiz editor..."
+        subtext="Retrieving questions and answer keys."
+      />
+    );
+  }
 
   if (course.error) return <Alert>{course.error}</Alert>;
 
