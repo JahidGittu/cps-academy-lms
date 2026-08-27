@@ -78,7 +78,7 @@ export const SiteHeader = () => {
     <header className={`sticky top-0 z-40 transition-all duration-300 ${headerStyle}`}>
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-1.5 px-4 sm:px-6">
         <Link href="/" className="mr-auto flex items-center gap-2.5 group">
-          <span className="brand-gradient flex size-9 items-center justify-center rounded-xl text-white shadow-sm shadow-brand-500/30 transition-transform group-hover:scale-105">
+          <span className="brand-gradient flex size-9 items-center justify-center rounded-lg text-white shadow-sm shadow-brand-500/30 transition-transform group-hover:scale-105">
             <GraduationCap className="size-5" />
           </span>
 
@@ -121,6 +121,7 @@ export const SiteHeader = () => {
                 </Link>
               )}
 
+              {/* Logged-in User Profile Display */}
               <div
                 className={`ml-3 hidden items-center gap-2.5 border-l pl-3.5 sm:flex ${
                   isHeroMode ? 'border-white/20' : 'border-slate-200'
@@ -162,14 +163,16 @@ export const SiteHeader = () => {
               </button>
             </>
           ) : (
-            <div className="flex items-center gap-2 ml-2">
-              <NavLink href="/login" label="Sign in" isHeroMode={isHeroMode} />
-
+            <div className="flex items-center ml-2">
               <Link
-                href="/register"
-                className="brand-gradient rounded-lg px-4 py-1.5 text-sm font-medium text-white shadow-xs transition hover:opacity-90 hover:shadow-sm"
+                href="/login"
+                className={
+                  isHeroMode
+                    ? 'rounded-lg border border-white/30 bg-white/10 px-4 py-1.5 text-sm font-semibold text-white shadow-xs backdrop-blur transition hover:bg-white/20'
+                    : 'brand-gradient rounded-lg px-4 py-1.5 text-sm font-semibold text-white shadow-xs transition hover:opacity-90 hover:shadow-sm'
+                }
               >
-                Sign up
+                Sign in
               </Link>
             </div>
           )}
