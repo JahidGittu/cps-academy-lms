@@ -57,7 +57,7 @@ export const SiteHeader = () => {
 
   useEffect(() => {
     const onScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 15);
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -67,11 +67,11 @@ export const SiteHeader = () => {
   }, []);
 
   // When not scrolled on homepage: text is white over dark hero mesh
-  // When scrolled or on other pages: frosted glass with dark slate text
+  // When scrolled or on other pages: soft light background with dark slate text
   const isHeroMode = isHomePage && !scrolled;
 
   const headerStyle = scrolled
-    ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-xs'
+    ? 'bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-xs'
     : 'bg-transparent border-b-0 border-transparent shadow-none';
 
   return (
