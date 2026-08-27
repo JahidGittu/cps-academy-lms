@@ -1,35 +1,12 @@
 import { BookOpen } from 'lucide-react';
 
-// A cover is a URL somebody types into the course form, so most courses will not have one until
-// somebody bothers. An empty grey box reads as a broken image, so the fallback draws itself: a
-// gradient picked off the title, which means the same course keeps the same colour everywhere and a
-// card stays recognisable in a list.
-const palettes = [
-  'from-brand-600 to-violet-600',
-  'from-sky-500 to-brand-600',
-  'from-emerald-500 to-teal-600',
-  'from-amber-500 to-orange-600',
-  'from-rose-500 to-fuchsia-600',
-];
-
-const palette = (title: string) => {
-  // A plain sum of the letters gave two of the three seeded courses the same colour, since it does
-  // not care what order they came in. Multiplying as it goes does.
-  let hash = 0;
-
-  for (const character of title) hash = (hash * 31 + (character.codePointAt(0) ?? 0)) % 9973;
-
-  return palettes[hash % palettes.length];
+const DEFAULT_COVERS: Record<string, string> = {
+  'SQL Foundations': 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&auto=format&fit=crop&q=80',
+  'Postgres in Production': 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80',
+  'Designing a Schema': 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80',
 };
 
-const initials = (title: string) =>
-  title
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join('')
-    .toUpperCase();
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop&q=80';
 
 export const CourseCover = ({
   title,
@@ -39,20 +16,21 @@ export const CourseCover = ({
   title: string;
   url?: string | null;
   className?: string;
-}) =>
-  url ? (
-    // A plain img, not next/image. The host is whatever the author pasted in, and next/image wants
-    // every host it will ever see listed in next.config, which is a list nobody can keep up to date.
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={url} alt="" className={`w-full object-cover ${className}`} />
-  ) : (
-    <div
-      className={`relative flex items-center justify-center overflow-hidden bg-gradient-to-br ${palette(title)} ${className}`}
-    >
-      <BookOpen className="absolute -bottom-5 -right-4 size-24 text-white/15" />
+}) => {
+  const imageUrl = url || DEFAULT_COVERS[title] || FALLBACK_IMAGE;
 
-      <span className="text-2xl font-semibold tracking-widest text-white/90">
-        {initials(title)}
-      </span>
+  return (
+    <div className={`relative w-full overflow-hidden bg-slate-900 ${className}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={imageUrl}
+        alt={title}
+        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+        }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
     </div>
   );
+};

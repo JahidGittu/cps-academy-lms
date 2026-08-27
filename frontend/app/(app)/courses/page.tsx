@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, Sparkles, Filter } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 
 import { hasRole, useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
@@ -51,12 +51,8 @@ export default function CoursesPage() {
       {/* Header & Search Bar */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-200">
         <div>
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 border border-brand-200 px-3 py-1 text-xs font-semibold text-brand-700 mb-2">
-            <Sparkles className="size-3.5 text-brand-600" />
-            <span>Open Syllabus Curriculum</span>
-          </div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Course Catalogue</h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight sm:text-4xl">Course Catalogue</h1>
+          <p className="mt-2 text-base text-slate-600">
             Browse available courses. Inspect syllabi, lessons, and quizzes before enrolling.
           </p>
         </div>

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { BookOpen, Calendar, Plus, Search, Sparkles, Tag } from 'lucide-react';
+import { BookOpen, Calendar, Plus, Search, Sparkles, Tag, ArrowRight } from 'lucide-react';
 
 import { hasRole, useAuth } from '@/lib/auth';
 import { excerpt } from '@/lib/excerpt';
@@ -13,6 +13,12 @@ import { Alert, Card, Empty } from '@/components/ui';
 const listQuery = '/blog-posts?sort=createdAt:desc';
 
 const TOPICS = ['All', 'Architecture', 'Security', 'Tutorial', 'Database'];
+
+const DEFAULT_POST_COVERS = [
+  'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80',
+];
 
 export default function BlogPage() {
   const { user } = useAuth();
@@ -122,52 +128,55 @@ export default function BlogPage() {
                 <p className="text-xs text-slate-500 mt-1">Try searching for a different keyword or topic.</p>
               </Empty>
             ) : (
-              filtered.map((post) => (
-                <Link key={post.documentId} href={`/blog/${post.documentId}`} className="block group">
-                  <Card hover className="flex flex-col sm:flex-row gap-5 p-5">
-                    {post.coverImageUrl ? (
-                      <div className="sm:w-48 h-36 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+              filtered.map((post, idx) => {
+                const cover = post.coverImageUrl || DEFAULT_POST_COVERS[idx % DEFAULT_POST_COVERS.length];
+                return (
+                  <Link key={post.documentId} href={`/blog/${post.documentId}`} className="block group">
+                    <Card hover className="flex flex-col sm:flex-row gap-5 p-5">
+                      <div className="sm:w-52 h-40 shrink-0 overflow-hidden rounded-xl bg-slate-900 relative">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={post.coverImageUrl}
+                          src={cover}
                           alt={post.title}
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent" />
                       </div>
-                    ) : null}
 
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-start justify-between gap-3">
-                          <h2 className="text-lg font-bold text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-2">
-                            {post.title}
-                          </h2>
+                      <div className="flex-1 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-start justify-between gap-3">
+                            <h2 className="text-lg font-bold text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-2">
+                              {post.title}
+                            </h2>
 
-                          {post.publishState === 'draft' && (
-                            <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 border border-amber-200">
-                              Draft
-                            </span>
-                          )}
+                            {post.publishState === 'draft' && (
+                              <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 border border-amber-200">
+                                Draft
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="mt-2.5 line-clamp-2 text-sm text-slate-600 leading-relaxed">
+                            {excerpt(post.body)}
+                          </p>
                         </div>
 
-                        <p className="mt-2 line-clamp-2 text-sm text-slate-600 leading-relaxed">
-                          {excerpt(post.body)}
-                        </p>
+                        <div className="mt-4 flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
+                          <span className="flex items-center gap-1.5 font-medium">
+                            <Calendar className="size-3.5 text-slate-400" />
+                            <span>{new Date(post.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                          </span>
+                          <span className="font-semibold text-brand-600 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                            <span>Read article</span>
+                            <ArrowRight className="size-3.5" />
+                          </span>
+                        </div>
                       </div>
-
-                      <div className="mt-4 flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-                        <span className="flex items-center gap-1.5">
-                          <Calendar className="size-3.5 text-slate-400" />
-                          <span>{new Date(post.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                        </span>
-                        <span className="font-semibold text-brand-600 group-hover:translate-x-0.5 transition-transform">
-                          Read article →
-                        </span>
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              ))
+                    </Card>
+                  </Link>
+                );
+              })
             )}
           </div>
 
@@ -197,7 +206,7 @@ export default function BlogPage() {
                     {excerpt(featured.body)}
                   </p>
                   <span className="mt-3 inline-block text-xs font-semibold text-brand-600">
-                    Check it out →
+                    Read article →
                   </span>
                 </Link>
               </div>
