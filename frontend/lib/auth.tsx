@@ -9,8 +9,10 @@ import type { RoleName, User } from './types';
 type AuthValue = {
   user: User | null;
   loading: boolean;
-  login: (identifier: string, password: string) => Promise<void>;
-  register: (username: string, email: string, password: string) => Promise<void>;
+  // Both hand the account back as well as putting it in the context. The course page needs to know
+  // which role just signed in before its own render has caught up, so it can enrol a new student.
+  login: (identifier: string, password: string) => Promise<User | null>;
+  register: (username: string, email: string, password: string) => Promise<User | null>;
   logout: () => Promise<void>;
 };
 
@@ -28,16 +30,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setLoading(false);
 
-      return;
+      return null;
     }
 
     try {
       const { data } = await api.get<User>('/users/me?populate=role');
 
       setUser(data);
+
+      return data;
     } catch {
       clearTokens();
       setUser(null);
+
+      return null;
     } finally {
       setLoading(false);
     }
@@ -61,7 +67,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     storeTokens(data.jwt, data.refreshToken);
 
-    await loadUser();
+    return loadUser();
   };
 
   // No role is chosen here. Everyone who signs up is a Student, because letting a visitor pick
@@ -71,7 +77,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     storeTokens(data.jwt, data.refreshToken);
 
-    await loadUser();
+    return loadUser();
   };
 
   const logout = async () => {
