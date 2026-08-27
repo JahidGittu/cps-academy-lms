@@ -1,51 +1,63 @@
-import { Check } from 'lucide-react';
+import { CheckCircle, ShieldCheck, Sparkles, Zap } from 'lucide-react';
 
-// Written from the learner's side of the screen. Each one is a thing the platform does for you, not
-// a thing the code does; where that happens is the README's business and the video's.
 const reasons = [
   {
-    title: 'You always know what is next',
-    body: 'The syllabus stops at the lesson you are on, so a week away does not turn into an evening of working out where you were.',
+    icon: Zap,
+    title: 'Never lose your place',
+    body: 'Your progress is tracked dynamically at lesson level. Pick up right where you left off at any time.',
   },
   {
-    title: 'Nothing to keep track of yourself',
-    body: 'Your percentage is counted from the lessons you finished, so it is right every time you open the page.',
+    icon: ShieldCheck,
+    title: 'Verified mastery',
+    body: 'Lessons must be completed in order, ensuring you build foundational skills before advancing.',
   },
   {
-    title: 'A mark you can go back to',
-    body: 'A quiz is graded the moment you hand it in, and the score is kept with the answers you gave.',
+    icon: Sparkles,
+    title: 'Instant auto-grading',
+    body: 'Test your understanding immediately with immediate server-evaluated scores and results stored permanently.',
   },
 ];
 
 export const WhyFinish = () => (
-  <section className="border-y border-slate-200 bg-slate-900">
-    <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-16 lg:grid-cols-2 lg:items-center">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight text-white">
-          Built around finishing, not signing up
+  <section className="relative overflow-hidden bg-slate-950 text-white py-20 border-y border-slate-800">
+    {/* Ambient blur accents */}
+    <div className="pointer-events-none absolute -right-20 top-0 size-80 rounded-full bg-brand-600/15 blur-3xl" />
+    <div className="pointer-events-none absolute left-0 bottom-0 size-80 rounded-full bg-violet-600/15 blur-3xl" />
+
+    <div className="relative mx-auto grid w-full max-w-6xl gap-12 px-4 lg:grid-cols-12 lg:items-center">
+      <div className="lg:col-span-5">
+        <span className="inline-block rounded-full bg-brand-500/10 border border-brand-500/20 px-3.5 py-1 text-xs font-semibold text-brand-300">
+          Built for Completion
+        </span>
+        <h2 className="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          Designed to help you <span className="bg-gradient-to-r from-brand-300 to-violet-300 bg-clip-text text-transparent">reach 100%</span>
         </h2>
 
-        <p className="mt-3 text-slate-300">
-          Most courses get abandoned somewhere in the middle. The way this one is put together is
-          meant to make the middle easier: one lesson open at a time, and a record of everything you
-          have already done.
+        <p className="mt-4 text-slate-300 text-base leading-relaxed">
+          Most online courses are left halfway through. Our platform removes friction with sequential pacing, verified progress, and instant feedback.
         </p>
       </div>
 
-      <ul className="space-y-5">
-        {reasons.map((reason) => (
-          <li key={reason.title} className="flex gap-3">
-            <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white">
-              <Check className="size-3.5" />
-            </span>
+      <div className="lg:col-span-7 space-y-4">
+        {reasons.map((reason) => {
+          const Icon = reason.icon;
+          return (
+            <div 
+              key={reason.title} 
+              className="flex items-start gap-4 rounded-2xl border border-slate-800/80 bg-slate-900/60 p-5 backdrop-blur transition-all duration-200 hover:border-slate-700 hover:bg-slate-900/90"
+            >
+              <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-400">
+                <Icon className="size-5" />
+              </span>
 
-            <div>
-              <h3 className="font-medium text-white">{reason.title}</h3>
-              <p className="mt-1 text-sm text-slate-400">{reason.body}</p>
+              <div>
+                <h3 className="font-semibold text-white text-base">{reason.title}</h3>
+                <p className="mt-1 text-sm text-slate-400 leading-relaxed">{reason.body}</p>
+              </div>
             </div>
-          </li>
-        ))}
-      </ul>
+          );
+        })}
+      </div>
     </div>
   </section>
 );

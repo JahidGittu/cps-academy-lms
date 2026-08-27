@@ -1,43 +1,72 @@
+import { UserPlus, BookOpen, Layers, Award } from 'lucide-react';
+
 const steps = [
   {
-    title: 'Make an account',
-    body: 'It takes a moment and puts you in as a student. Nothing to pay and no card to hand over.',
+    icon: UserPlus,
+    title: 'Create Account',
+    body: 'Quick sign up to start learning. No credit card required.',
+    color: 'text-indigo-600 bg-indigo-50 border-indigo-100',
   },
   {
-    title: 'Enrol in a course',
-    body: 'Browsing is open to everyone. Enrolling is what opens the lesson bodies and the quiz.',
+    icon: BookOpen,
+    title: 'Enroll in Courses',
+    body: 'Browse all available tracks and enroll to unlock lesson content.',
+    color: 'text-violet-600 bg-violet-50 border-violet-100',
   },
   {
-    title: 'Work down the syllabus',
-    body: 'One lesson at a time, video or written. Mark it done and the next one opens.',
+    icon: Layers,
+    title: 'Sequential Lessons',
+    body: 'Learn step-by-step. Completing each lesson unlocks the next.',
+    color: 'text-sky-600 bg-sky-50 border-sky-100',
   },
   {
-    title: 'Sit the quiz',
-    body: 'Answer the questions and get your score back straight away. It is kept, so you can look it up again.',
+    icon: Award,
+    title: 'Take the Quiz',
+    body: 'Validate your knowledge with an auto-graded MCQ assessment.',
+    color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
   },
 ];
 
 export const HowItWorks = () => (
-  <section className="mx-auto w-full max-w-6xl px-4 py-16">
-    <h2 className="text-2xl font-semibold tracking-tight">How it works</h2>
-    <p className="mt-2 max-w-xl text-slate-600">
-      Four steps from a visitor to a finished course, and none of them take longer than an evening.
-    </p>
+  <section className="mx-auto w-full max-w-6xl px-4 py-20">
+    <div className="text-center max-w-2xl mx-auto">
+      <span className="inline-block rounded-full bg-brand-50 border border-brand-200 px-3.5 py-1 text-xs font-semibold text-brand-700">
+        Simple 4-Step Process
+      </span>
+      <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+        How Learning Works
+      </h2>
+      <p className="mt-3 text-slate-600 text-base">
+        A structured learning path designed for maximum retention and steady progress.
+      </p>
+    </div>
 
-    <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {steps.map((step, index) => (
-        <li
-          key={step.title}
-          className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md"
-        >
-          <span className="flex size-8 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
-            {index + 1}
-          </span>
+    <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {steps.map((step, index) => {
+        const Icon = step.icon;
+        return (
+          <div
+            key={step.title}
+            className="group relative rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs transition-all duration-200 hover:-translate-y-1 hover:border-brand-300 hover:shadow-lg"
+          >
+            <div className="flex items-center justify-between">
+              <span className={`flex size-11 items-center justify-center rounded-xl border ${step.color} shadow-xs`}>
+                <Icon className="size-5" />
+              </span>
+              <span className="text-2xl font-black text-slate-200 group-hover:text-brand-300 transition-colors">
+                0{index + 1}
+              </span>
+            </div>
 
-          <h3 className="mt-4 font-medium">{step.title}</h3>
-          <p className="mt-1.5 text-sm text-slate-600">{step.body}</p>
-        </li>
-      ))}
-    </ol>
+            <h3 className="mt-5 font-semibold text-slate-900 text-lg group-hover:text-brand-600 transition-colors">
+              {step.title}
+            </h3>
+            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+              {step.body}
+            </p>
+          </div>
+        );
+      })}
+    </div>
   </section>
 );
