@@ -17,6 +17,9 @@ export type Course = {
   description?: string | null;
   coverImageUrl?: string | null;
   owner?: User | null;
+  // Who wrote it. A plain username rather than the owner relation, which is stripped from the
+  // response for every role below Admin.
+  instructor?: string | null;
   // A course read only carries the syllabus, so these lessons have a title and an order and no
   // body. The body comes from GET /api/lessons/:id, which is where the enrollment check lives.
   lessons?: Lesson[];

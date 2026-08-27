@@ -9,11 +9,10 @@ import { api, errorMessage } from '@/lib/api';
 import { hasRole, useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { Collection, Course, Enrollment, LessonProgress, Single } from '@/lib/types';
-import { RequireAuth } from '@/components/require-auth';
-import { Alert, Button, Card, Empty, ProgressBar } from '@/components/ui';
+import { Alert, Button, buttonStyle, Card, Empty, ProgressBar } from '@/components/ui';
 
 const Detail = ({ documentId }: { documentId: string }) => {
-  const { user } = useAuth();
+  const { user, loading: knowingUser } = useAuth();
   const isStudent = hasRole(user, 'Student');
 
   const [busy, setBusy] = useState(false);
@@ -95,6 +94,28 @@ const Detail = ({ documentId }: { documentId: string }) => {
       </div>
 
       <Alert>{actionError}</Alert>
+
+      {/* Nothing until the user is known, or a student who is already enrolled sees a sign up card
+          flash past on the first paint. */}
+      {!knowingUser && !user && (
+        <Card>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-slate-600">
+              The syllabus is open to read. Enrolling is what opens the lessons and the quiz.
+            </p>
+
+            <span className="flex gap-2">
+              <Link href="/register" className={buttonStyle()}>
+                Create an account
+              </Link>
+
+              <Link href="/login" className={buttonStyle('plain')}>
+                Sign in
+              </Link>
+            </span>
+          </div>
+        </Card>
+      )}
 
       {isStudent && (
         <Card>
@@ -199,9 +220,8 @@ const Detail = ({ documentId }: { documentId: string }) => {
 export default function CoursePage() {
   const params = useParams<{ documentId: string }>();
 
-  return (
-    <RequireAuth>
-      <Detail documentId={params.documentId} />
-    </RequireAuth>
-  );
+  // Open to a visitor, because a course page is what a search result or a shared link lands on. The
+  // titles are all it gives away; the lesson bodies are behind their own route and the enrollment
+  // check that comes with it.
+  return <Detail documentId={params.documentId} />;
 }

@@ -6,7 +6,6 @@ import { BookOpen } from 'lucide-react';
 import { hasRole, useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { Collection, Course, Enrollment } from '@/lib/types';
-import { RequireAuth } from '@/components/require-auth';
 import { Alert, Card, Empty } from '@/components/ui';
 
 const lessonCount = (course: Course) => {
@@ -75,9 +74,9 @@ export default function CoursesPage() {
     <div>
       <h1 className="mb-6 text-2xl font-semibold">Courses</h1>
 
-      <RequireAuth>
-        <Catalogue />
-      </RequireAuth>
+      {/* No sign in wrapper. The catalogue is the one screen a visitor is sent to from the front
+          page, and course reads are granted to the Public role for exactly that. */}
+      <Catalogue />
     </div>
   );
 }
