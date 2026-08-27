@@ -6,18 +6,18 @@ import {
   LayoutDashboard,
   Shield,
   BookOpen,
-  PlusCircle,
-  FileText,
   Compass,
   LogOut,
   GraduationCap,
   ChevronRight,
+  FileText,
 } from 'lucide-react';
 
 import { hasRole, useAuth } from '@/lib/auth';
 
 const getRouteMetadata = (pathname: string, roleName: string) => {
   const isStudent = roleName === 'Student';
+  const isManagerOrAdmin = roleName === 'Admin' || roleName === 'Content Manager';
 
   if (pathname === '/admin') {
     return {
@@ -32,7 +32,7 @@ const getRouteMetadata = (pathname: string, roleName: string) => {
       subtitle: isStudent
         ? 'Track your course progress, resume sequential lessons, and check graded quizzes.'
         : 'Create curriculum, manage lessons, and monitor student completion rates.',
-      breadcrumb: 'Dashboard',
+      breadcrumb: isStudent ? 'My Enrolled Courses' : 'Course Management',
     };
   }
   if (pathname === '/courses/new') {
@@ -79,9 +79,11 @@ const getRouteMetadata = (pathname: string, roleName: string) => {
   }
   if (pathname === '/blog') {
     return {
-      title: 'Engineering Blog',
-      subtitle: 'Insights, tutorials, and architectural best practices.',
-      breadcrumb: 'Articles',
+      title: isManagerOrAdmin ? 'Blog Management' : 'Engineering Blog & Guides',
+      subtitle: isManagerOrAdmin
+        ? 'Author, publish, and manage draft & live engineering articles.'
+        : 'Insights, tutorials, and architectural best practices.',
+      breadcrumb: isManagerOrAdmin ? 'Blog Management' : 'Articles',
     };
   }
   if (pathname.startsWith('/lessons/')) {
@@ -130,7 +132,7 @@ export const DashboardShell = ({
   const title = customTitle || meta.title;
   const subtitle = customSubtitle !== undefined ? customSubtitle : meta.subtitle;
 
-  // Role-specific sidebar navigation items
+  // Streamlined, role-tailored sidebar navigation without redundant duplicate links
   const navItems = [
     ...(isAdmin
       ? [
@@ -146,14 +148,14 @@ export const DashboardShell = ({
             icon: LayoutDashboard,
           },
           {
-            href: '/courses/new',
-            label: 'Create Course',
-            icon: PlusCircle,
+            href: '/blog',
+            label: 'Blog Management',
+            icon: FileText,
           },
           {
-            href: '/blog/new',
-            label: 'Publish Blog Post',
-            icon: FileText,
+            href: '/courses',
+            label: 'Course Catalogue',
+            icon: Compass,
           },
         ]
       : []),
@@ -162,23 +164,29 @@ export const DashboardShell = ({
       ? [
           {
             href: '/dashboard',
-            label: 'My Curriculum',
+            label: 'Course Management',
             icon: LayoutDashboard,
-          },
-          {
-            href: '/courses/new',
-            label: 'Create Course',
-            icon: PlusCircle,
           },
           ...(isContentManager
             ? [
                 {
-                  href: '/blog/new',
-                  label: 'Publish Blog Post',
+                  href: '/blog',
+                  label: 'Blog Management',
                   icon: FileText,
                 },
               ]
-            : []),
+            : [
+                {
+                  href: '/blog',
+                  label: 'Engineering Blog',
+                  icon: BookOpen,
+                },
+              ]),
+          {
+            href: '/courses',
+            label: 'Course Catalogue',
+            icon: Compass,
+          },
         ]
       : []),
 
@@ -189,19 +197,18 @@ export const DashboardShell = ({
             label: 'My Enrolled Courses',
             icon: LayoutDashboard,
           },
+          {
+            href: '/courses',
+            label: 'Course Catalogue',
+            icon: Compass,
+          },
+          {
+            href: '/blog',
+            label: 'Engineering Blog',
+            icon: BookOpen,
+          },
         ]
       : []),
-
-    {
-      href: '/courses',
-      label: 'Course Catalogue',
-      icon: Compass,
-    },
-    {
-      href: '/blog',
-      label: 'Engineering Blog',
-      icon: BookOpen,
-    },
   ];
 
   return (
