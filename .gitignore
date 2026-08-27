@@ -8,10 +8,12 @@ node_modules/
 # next.js
 .next/
 out/
+build/
+AGENTS.md
+CLAUDE.md
 
 # strapi
 .strapi/
-build/
 dist/
 .tmp/
 *.db
