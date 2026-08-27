@@ -1,15 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { ArrowRight, BookOpen, CheckCircle2 } from 'lucide-react';
 
 import { useApi } from '@/lib/use-api';
 import type { Collection, CourseProgress, Enrollment, Single } from '@/lib/types';
 import { Alert, Card, Empty, ProgressBar } from '@/components/ui';
 
-// Each card asks the server for its own numbers rather than one request bringing back every lesson
-// and every completion for this page to count up. It is a request per course, but the percentage a
-// student reads here is then the same figure their instructor reads on the roster, out of the same
-// code, instead of a second count that can disagree with it.
 const Row = ({ enrollment }: { enrollment: Enrollment }) => {
   const course = enrollment.course;
 
@@ -21,27 +18,56 @@ const Row = ({ enrollment }: { enrollment: Enrollment }) => {
 
   const summary = progress.data?.data;
   const mine = summary?.students[0];
+  const isDone = (mine?.percentComplete ?? 0) === 100;
 
   return (
-    <Card>
-      <div className="flex items-start justify-between gap-4">
-        <Link href={`/courses/${course.documentId}`} className="font-medium hover:underline">
-          {course.title}
-        </Link>
+    <Card hover className="flex flex-col justify-between">
+      <div>
+        <div className="flex items-start justify-between gap-3">
+          <Link 
+            href={`/courses/${course.documentId}`} 
+            className="font-semibold text-slate-900 hover:text-brand-600 transition-colors text-base"
+          >
+            {course.title}
+          </Link>
 
-        {mine?.quizTotal ? (
-          <span className="shrink-0 text-sm text-slate-500">
-            Quiz {mine.quizScore} / {mine.quizTotal}
+          {mine?.quizTotal ? (
+            <span className="shrink-0 rounded-md bg-purple-50 px-2 py-0.5 text-xs font-semibold text-purple-700 border border-purple-200">
+              Quiz: {mine.quizScore}/{mine.quizTotal}
+            </span>
+          ) : null}
+        </div>
+
+        <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
+          <span className="flex items-center gap-1.5 font-medium text-slate-700">
+            <BookOpen className="size-3.5 text-brand-600" />
+            <span>{mine?.completedLessons ?? 0} of {summary?.totalLessons ?? 0} lessons completed</span>
           </span>
-        ) : null}
+          <span className="font-bold text-slate-800">{mine?.percentComplete ?? 0}%</span>
+        </div>
+
+        <div className="mt-2">
+          <ProgressBar percent={mine?.percentComplete ?? 0} />
+        </div>
       </div>
 
-      <p className="mt-3 text-sm text-slate-600">
-        {mine?.completedLessons ?? 0} of {summary?.totalLessons ?? 0} lessons done
-      </p>
+      <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
+        {isDone ? (
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
+            <CheckCircle2 className="size-3.5" />
+            <span>All Lessons Completed</span>
+          </span>
+        ) : (
+          <span className="text-xs text-slate-500 font-medium">In Progress</span>
+        )}
 
-      <div className="mt-2">
-        <ProgressBar percent={mine?.percentComplete ?? 0} />
+        <Link
+          href={`/courses/${course.documentId}`}
+          className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700"
+        >
+          <span>Continue</span>
+          <ArrowRight className="size-3" />
+        </Link>
       </div>
     </Card>
   );
@@ -50,7 +76,7 @@ const Row = ({ enrollment }: { enrollment: Enrollment }) => {
 export const EnrolledCourses = () => {
   const enrollments = useApi<Collection<Enrollment>>('/enrollments?populate=course');
 
-  if (enrollments.loading) return <p className="text-sm text-slate-500">Loading your courses</p>;
+  if (enrollments.loading) return <p className="text-sm text-slate-500">Loading your courses...</p>;
 
   if (enrollments.error) return <Alert>{enrollments.error}</Alert>;
 
@@ -58,21 +84,29 @@ export const EnrolledCourses = () => {
 
   return (
     <section>
-      <h2 className="mb-3 text-lg font-medium">My courses</h2>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900">My Enrolled Courses</h2>
+          <p className="text-sm text-slate-500">Resume your lessons and track overall course completion.</p>
+        </div>
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+          {rows.length} {rows.length === 1 ? 'course' : 'courses'}
+        </span>
+      </div>
 
       {rows.length ? (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2">
           {rows.map((enrollment) => (
             <Row key={enrollment.documentId} enrollment={enrollment} />
           ))}
         </div>
       ) : (
         <Empty>
-          Nothing enrolled yet.{' '}
-          <Link href="/courses" className="underline">
-            Browse the courses
+          <p className="text-base font-medium text-slate-700">No active enrollments</p>
+          <p className="mt-1 text-sm text-slate-500">Browse the course catalogue to start learning.</p>
+          <Link href="/courses" className="mt-4 inline-block font-semibold text-brand-600 hover:underline">
+            Explore Courses →
           </Link>
-          .
         </Empty>
       )}
     </section>
