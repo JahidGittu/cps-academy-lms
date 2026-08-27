@@ -3,6 +3,7 @@
 import Link from 'next/link';
 
 import { hasRole, useAuth } from '@/lib/auth';
+import { excerpt } from '@/lib/excerpt';
 import { useApi } from '@/lib/use-api';
 import type { BlogPost, Collection } from '@/lib/types';
 import { Alert, buttonStyle, Card, Empty } from '@/components/ui';
@@ -11,14 +12,6 @@ import { Alert, buttonStyle, Card, Empty } from '@/components/ui';
 // a filter sent from here: the blog-post controller pins anyone outside the two managing roles to
 // published, including a visitor with no account at all.
 const listQuery = '/blog-posts?sort=createdAt:desc';
-
-// The body is Markdown, so the first ordinary line of prose stands in for a summary. Headings are
-// skipped because "## Introduction" tells a reader nothing about the post.
-const excerpt = (body: string) =>
-  body
-    .split('\n')
-    .map((line) => line.trim())
-    .find((line) => line && !line.startsWith('#')) ?? '';
 
 const Posts = () => {
   const posts = useApi<Collection<BlogPost>>(listQuery);
