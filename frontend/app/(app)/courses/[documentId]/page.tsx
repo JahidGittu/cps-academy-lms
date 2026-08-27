@@ -188,10 +188,10 @@ const Detail = ({ documentId }: { documentId: string }) => {
 
       <Alert>{actionError}</Alert>
 
-      <div className="grid gap-8 lg:grid-cols-3">
+      <div className="grid gap-8 lg:grid-cols-3 items-start">
         <div className="space-y-8 lg:col-span-2">
           <section>
-            <h2 className="mb-3 text-lg font-medium">What you will work through</h2>
+            <h2 className="mb-3 text-lg font-bold text-slate-900">What you will work through</h2>
 
             <Syllabus
               lessons={lessons}
@@ -200,13 +200,13 @@ const Detail = ({ documentId }: { documentId: string }) => {
             />
 
             {isStudent && readable && nextUp !== -1 && (
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-slate-500 font-medium">
                 Lessons open one at a time. Mark the open one as complete to unlock the next.
               </p>
             )}
 
             {!readable && lessons.length > 0 && (
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-slate-500 font-medium">
                 Titles are open to read. Enrolling is what opens the lessons themselves.
               </p>
             )}
@@ -214,21 +214,24 @@ const Detail = ({ documentId }: { documentId: string }) => {
 
           {detail.quiz && (
             <section>
-              <h2 className="mb-3 text-lg font-medium">Quiz</h2>
+              <h2 className="mb-3 text-lg font-bold text-slate-900">Quiz Assessment</h2>
 
               <Card>
                 <div className="flex items-center justify-between gap-4">
-                  <p className="flex items-center gap-2 text-sm">
-                    <ClipboardList className="size-4 text-slate-400" />
+                  <p className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                    <ClipboardList className="size-4 text-violet-600" />
                     {detail.quiz.title}
                   </p>
 
                   {readable ? (
-                    <Link href={quizLink} className="text-sm text-slate-900 underline">
-                      Open
+                    <Link
+                      href={quizLink}
+                      className="rounded-md bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100 transition shadow-2xs"
+                    >
+                      Start Quiz →
                     </Link>
                   ) : (
-                    <span className="text-xs text-slate-500">Opens once you enrol</span>
+                    <span className="text-xs text-slate-500 font-medium">Opens once you enrol</span>
                   )}
                 </div>
               </Card>
@@ -236,11 +239,14 @@ const Detail = ({ documentId }: { documentId: string }) => {
           )}
         </div>
 
-        <div className="lg:sticky lg:top-24 lg:self-start">
-          <EnrolPanel course={detail} lessons={lessons.length}>
-            {action()}
-          </EnrolPanel>
-        </div>
+        {/* Sticky Enrol Panel Column */}
+        <aside className="lg:col-span-1">
+          <div className="sticky top-20 z-20 space-y-4">
+            <EnrolPanel course={detail} lessons={lessons.length}>
+              {action()}
+            </EnrolPanel>
+          </div>
+        </aside>
       </div>
     </div>
   );
