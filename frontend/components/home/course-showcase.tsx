@@ -1,44 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, BookOpen } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 import { useApi } from '@/lib/use-api';
 import type { Collection, Course } from '@/lib/types';
-import { Badge, Card, Empty } from '@/components/ui';
+import { Empty } from '@/components/ui';
+import { CourseTile } from '@/components/course-tile';
 
 // Six fills two rows on a wide screen. Asked for as a page size rather than trimmed in the browser,
 // so the front page does not get slower every time somebody adds a course.
 const listQuery = '/courses?sort=createdAt:desc&pagination[pageSize]=6';
-
-const CourseTile = ({ course }: { course: Course }) => {
-  const lessons = course.lessons?.length ?? 0;
-
-  return (
-    <Link href={`/courses/${course.documentId}`} className="block">
-      <Card hover className="flex h-full flex-col">
-        <h3 className="font-medium">{course.title}</h3>
-
-        {course.description && (
-          <p className="mt-2 line-clamp-3 text-sm text-slate-600">{course.description}</p>
-        )}
-
-        <div className="mt-4 flex flex-wrap items-center gap-2 pt-1 text-xs text-slate-500">
-          <span className="flex items-center gap-1.5">
-            <BookOpen className="size-3.5" />
-            {lessons} {lessons === 1 ? 'lesson' : 'lessons'}
-          </span>
-
-          {course.quiz && <Badge tone="brand">Ends with a quiz</Badge>}
-        </div>
-
-        {course.instructor && (
-          <p className="mt-3 text-xs text-slate-400">Taught by {course.instructor}</p>
-        )}
-      </Card>
-    </Link>
-  );
-};
 
 export const CourseShowcase = () => {
   const courses = useApi<Collection<Course>>(listQuery);
@@ -61,7 +33,7 @@ export const CourseShowcase = () => {
     if (!rows.length) return <Empty>No courses on the platform yet.</Empty>;
 
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map((course) => (
           <CourseTile key={course.documentId} course={course} />
         ))}
