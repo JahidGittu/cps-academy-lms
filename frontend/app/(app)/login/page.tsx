@@ -6,7 +6,14 @@ import { useRouter } from 'next/navigation';
 
 import { errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { Alert, Button, Card, Field } from '@/components/ui';
+import { Alert, Button, Field } from '@/components/ui';
+import { AuthFrame } from '@/components/auth-frame';
+
+const points = [
+  'Your courses are where you left them',
+  'The next lesson is the one that opens',
+  'Old quiz results are still readable',
+];
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -31,42 +38,44 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="mx-auto max-w-sm">
-      <h1 className="mb-6 text-2xl font-semibold">Sign in</h1>
+    <AuthFrame
+      title="Sign in"
+      lead="Pick up wherever you stopped last time."
+      aside="Nothing to work out again. The course remembers where you got to."
+      points={points}
+      footer={
+        <>
+          No account yet?{' '}
+          <Link href="/register" className="font-medium text-brand-700 underline">
+            Create one
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={submit} className="space-y-4">
+        <Field
+          label="Username or email"
+          value={identifier}
+          onChange={(event) => setIdentifier(event.target.value)}
+          autoComplete="username"
+          required
+        />
 
-      <Card>
-        <form onSubmit={submit} className="space-y-4">
-          <Field
-            label="Username or email"
-            value={identifier}
-            onChange={(event) => setIdentifier(event.target.value)}
-            autoComplete="username"
-            required
-          />
+        <Field
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="current-password"
+          required
+        />
 
-          <Field
-            label="Password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            autoComplete="current-password"
-            required
-          />
+        <Alert>{error}</Alert>
 
-          <Alert>{error}</Alert>
-
-          <Button type="submit" disabled={busy} className="w-full">
-            {busy ? 'Signing in' : 'Sign in'}
-          </Button>
-        </form>
-      </Card>
-
-      <p className="mt-4 text-center text-sm text-slate-500">
-        No account yet?{' '}
-        <Link href="/register" className="text-slate-900 underline">
-          Sign up
-        </Link>
-      </p>
-    </div>
+        <Button type="submit" disabled={busy} className="w-full">
+          {busy ? 'Signing in' : 'Sign in'}
+        </Button>
+      </form>
+    </AuthFrame>
   );
 }
