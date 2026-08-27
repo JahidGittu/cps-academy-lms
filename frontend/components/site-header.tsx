@@ -26,6 +26,7 @@ const NavLink = ({ href, label }: { href: string; label: string }) => {
 };
 
 export const SiteHeader = () => {
+  const pathname = usePathname();
   const { user, loading, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 
@@ -39,6 +40,10 @@ export const SiteHeader = () => {
 
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // When on dashboard or admin workspace, hide public top navbar completely
+  const isDashboardRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/admin');
+  if (isDashboardRoute) return null;
 
   const headerStyle = scrolled
     ? 'bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-xs'
