@@ -26,7 +26,14 @@ const getRouteMetadata = (pathname: string, roleName: string) => {
       breadcrumb: 'Platform Overview',
     };
   }
-  if (pathname === '/dashboard/blogs') {
+  if (pathname === '/admin/course-management') {
+    return {
+      title: 'Course Management Studio',
+      subtitle: 'Author structured syllabus, manage sequential lessons, and monitor student completion rates.',
+      breadcrumb: 'Course Management',
+    };
+  }
+  if (pathname === '/admin/blog-management') {
     return {
       title: 'Blog Management Studio',
       subtitle: 'Author, edit, publish, and manage drafts and live technical articles across the platform.',
@@ -141,12 +148,12 @@ export const DashboardShell = ({
             badge: 'Admin',
           },
           {
-            href: '/dashboard',
+            href: '/admin/course-management',
             label: 'Course Management',
             icon: LayoutDashboard,
           },
           {
-            href: '/dashboard/blogs',
+            href: '/admin/blog-management',
             label: 'Blog Management',
             icon: FileText,
           },
@@ -156,14 +163,14 @@ export const DashboardShell = ({
     ...((isInstructor || isContentManager) && !isAdmin
       ? [
           {
-            href: '/dashboard',
+            href: '/admin/course-management',
             label: 'Course Management',
             icon: LayoutDashboard,
           },
           ...(isContentManager
             ? [
                 {
-                  href: '/dashboard/blogs',
+                  href: '/admin/blog-management',
                   label: 'Blog Management',
                   icon: FileText,
                 },
