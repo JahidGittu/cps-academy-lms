@@ -1,61 +1,57 @@
-@import "tailwindcss";
-@plugin "@tailwindcss/typography";
-
-@theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@import 'tailwindcss';
 
 @theme {
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-200: #c7d2fe;
-  --color-brand-500: #6366f1;
-  --color-brand-600: #4f46e5;
-  --color-brand-700: #4338ca;
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+  --color-brand-900: #1e3a8a;
+  --color-brand-950: #172554;
 }
 
 body {
-  font-family: var(--font-sans), system-ui, sans-serif;
-  color: #0f172a;
   background-color: #f8fafc;
+  background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
-/* Reusable brand gradients and effects */
 .brand-gradient {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #4338ca 50%, #6d28d9 100%);
 }
 
 .brand-gradient-subtle {
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(124, 58, 237, 0.08) 100%);
+  background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 50%, #f5f3ff 100%);
 }
 
 .hero-mesh {
-  background-color: #0f172a;
+  background-color: #030712;
   background-image: 
-    radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.35) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(124, 58, 237, 0.3) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(14, 165, 233, 0.2) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, hsla(222, 95%, 15%, 1) 0, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(250, 95%, 18%, 1) 0, transparent 50%),
+    radial-gradient(at 50% 100%, hsla(217, 95%, 12%, 1) 0, transparent 60%);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.glass-card-dark {
   background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-@keyframes float-slow {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 .animate-float {
-  animation: float-slow 4s ease-in-out infinite;
+  animation: floatSlow 6s ease-in-out infinite;
 }
-
