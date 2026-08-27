@@ -1,4 +1,4 @@
-import { CheckCircle, ShieldCheck, Sparkles, Zap } from 'lucide-react';
+import { ShieldCheck, Sparkles, Zap } from 'lucide-react';
 
 const reasons = [
   {
@@ -24,9 +24,9 @@ export const WhyFinish = () => (
     <div className="pointer-events-none absolute -right-20 top-0 size-80 rounded-full bg-brand-600/15 blur-3xl" />
     <div className="pointer-events-none absolute left-0 bottom-0 size-80 rounded-full bg-violet-600/15 blur-3xl" />
 
-    <div className="relative mx-auto grid w-full max-w-6xl gap-12 px-4 lg:grid-cols-12 lg:items-center">
+    <div className="relative mx-auto grid w-full max-w-6xl gap-12 px-4 sm:px-6 lg:grid-cols-12 lg:items-center">
       <div className="lg:col-span-5">
-        <span className="inline-block rounded-full bg-brand-500/10 border border-brand-500/20 px-3.5 py-1 text-xs font-semibold text-brand-300">
+        <span className="inline-block rounded-md bg-brand-500/10 border border-brand-500/20 px-3 py-1 text-xs font-semibold text-brand-300">
           Built for Completion
         </span>
         <h2 className="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
@@ -38,16 +38,16 @@ export const WhyFinish = () => (
         </p>
       </div>
 
-      <div className="lg:col-span-7 space-y-4">
+      <div className="lg:col-span-7 space-y-3.5">
         {reasons.map((reason) => {
           const Icon = reason.icon;
           return (
             <div 
               key={reason.title} 
-              className="flex items-start gap-4 rounded-2xl border border-slate-800/80 bg-slate-900/60 p-5 backdrop-blur transition-all duration-200 hover:border-slate-700 hover:bg-slate-900/90"
+              className="flex items-start gap-4 rounded-xl border border-slate-800/80 bg-slate-900/60 p-5 backdrop-blur transition-all duration-200 hover:border-slate-700 hover:bg-slate-900/90"
             >
-              <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-400">
-                <Icon className="size-5" />
+              <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-500/10 border border-brand-500/20 text-brand-400">
+                <Icon className="size-4" />
               </span>
 
               <div>

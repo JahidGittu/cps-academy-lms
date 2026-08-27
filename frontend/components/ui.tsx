@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
 
 export const inputStyle =
-  'w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10';
+  'w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10';
 
 export const Field = ({
   label,
@@ -30,7 +30,7 @@ const variants = {
 };
 
 export const buttonStyle = (variant: keyof typeof variants = 'primary') =>
-  `inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]}`;
+  `inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]}`;
 
 export const Button = ({
   variant = 'primary',
@@ -50,8 +50,8 @@ export const Card = ({
   className?: string;
 }) => (
   <div
-    className={`rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs ${
-      hover ? 'transition-all duration-200 hover:-translate-y-1 hover:border-brand-300 hover:shadow-lg hover:shadow-brand-500/5' : ''
+    className={`rounded-xl border border-slate-200/90 bg-white p-6 shadow-xs ${
+      hover ? 'transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md' : ''
     } ${className}`}
   >
     {children}
@@ -60,13 +60,13 @@ export const Card = ({
 
 export const Alert = ({ children }: { children: React.ReactNode }) =>
   children ? (
-    <div className="rounded-xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700 flex items-start gap-2.5">
+    <div className="rounded-lg border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700 flex items-start gap-2.5">
       <span className="font-medium">{children}</span>
     </div>
   ) : null;
 
 export const Empty = ({ children }: { children: React.ReactNode }) => (
-  <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center text-sm text-slate-500">
+  <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center text-sm text-slate-500">
     {children}
   </div>
 );
@@ -87,14 +87,14 @@ export const Badge = ({
   tone?: keyof typeof tones;
 }) => (
   <span
-    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${tones[tone]}`}
+    className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-xs font-semibold ${tones[tone]}`}
   >
     {children}
   </span>
 );
 
 export const ProgressBar = ({ percent }: { percent: number }) => (
-  <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 p-0.5 ring-1 ring-slate-200/60">
+  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 p-0.5 ring-1 ring-slate-200/60">
     <div
       className="brand-gradient h-full rounded-full transition-all duration-500 shadow-xs"
       style={{ width: `${percent}%` }}

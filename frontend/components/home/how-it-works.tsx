@@ -28,9 +28,9 @@ const steps = [
 ];
 
 export const HowItWorks = () => (
-  <section className="mx-auto w-full max-w-6xl px-4 py-20">
+  <section className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6">
     <div className="text-center max-w-2xl mx-auto">
-      <span className="inline-block rounded-full bg-brand-50 border border-brand-200 px-3.5 py-1 text-xs font-semibold text-brand-700">
+      <span className="inline-block rounded-md bg-brand-50 border border-brand-200 px-3 py-1 text-xs font-semibold text-brand-700">
         Simple 4-Step Process
       </span>
       <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
@@ -47,18 +47,18 @@ export const HowItWorks = () => (
         return (
           <div
             key={step.title}
-            className="group relative rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs transition-all duration-200 hover:-translate-y-1 hover:border-brand-300 hover:shadow-lg"
+            className="group relative rounded-xl border border-slate-200/90 bg-white p-6 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md"
           >
             <div className="flex items-center justify-between">
-              <span className={`flex size-11 items-center justify-center rounded-xl border ${step.color} shadow-xs`}>
+              <span className={`flex size-10 items-center justify-center rounded-lg border ${step.color} shadow-2xs`}>
                 <Icon className="size-5" />
               </span>
-              <span className="text-2xl font-black text-slate-200 group-hover:text-brand-300 transition-colors">
+              <span className="text-xl font-black text-slate-200 group-hover:text-brand-300 transition-colors">
                 0{index + 1}
               </span>
             </div>
 
-            <h3 className="mt-5 font-semibold text-slate-900 text-lg group-hover:text-brand-600 transition-colors">
+            <h3 className="mt-5 font-semibold text-slate-900 text-base group-hover:text-brand-600 transition-colors">
               {step.title}
             </h3>
             <p className="mt-2 text-sm text-slate-600 leading-relaxed">

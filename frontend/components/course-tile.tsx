@@ -11,13 +11,13 @@ export const CourseTile = ({ course, enrolled = false }: { course: Course; enrol
   return (
     <Link
       href={`/courses/${course.documentId}`}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs transition-all duration-200 hover:-translate-y-1 hover:border-brand-300 hover:shadow-lg hover:shadow-brand-500/5"
+      className="group flex h-full flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md"
     >
       <div className="relative overflow-hidden">
-        <CourseCover title={course.title} url={course.coverImageUrl} className="h-40 transition-transform duration-300 group-hover:scale-105" />
+        <CourseCover title={course.title} url={course.coverImageUrl} className="h-44 transition-transform duration-300 group-hover:scale-105" />
         {enrolled && (
           <div className="absolute top-3 right-3">
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600/95 px-2.5 py-1 text-xs font-semibold text-white shadow-md backdrop-blur">
+            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-600/95 px-2.5 py-1 text-xs font-semibold text-white shadow-md backdrop-blur">
               <CheckCircle className="size-3" />
               <span>Enrolled</span>
             </span>
@@ -26,7 +26,7 @@ export const CourseTile = ({ course, enrolled = false }: { course: Course; enrol
       </div>
 
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="font-semibold text-slate-900 text-lg group-hover:text-brand-600 transition-colors line-clamp-1">
+        <h3 className="font-semibold text-slate-900 text-base group-hover:text-brand-600 transition-colors line-clamp-1">
           {course.title}
         </h3>
 

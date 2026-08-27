@@ -71,7 +71,7 @@ const Taking = ({ documentId }: { documentId: string }) => {
       {course && (
         <Link
           href={`/courses/${course.documentId}`}
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-brand-600 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-brand-600 transition-colors"
         >
           <ArrowLeft className="size-4" />
           <span>Back to {course.title}</span>
@@ -79,16 +79,16 @@ const Taking = ({ documentId }: { documentId: string }) => {
       )}
 
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{detail.title}</h1>
-        <p className="mt-1 text-sm text-slate-500">{questions.length} MCQ {questions.length === 1 ? 'Question' : 'Questions'} · Instant Auto-Grading</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{detail.title}</h1>
+        <p className="mt-1 text-xs text-slate-500">{questions.length} MCQ {questions.length === 1 ? 'Question' : 'Questions'} · Instant Auto-Grading</p>
       </div>
 
       {lastAttempt && (
         <Card className="brand-gradient-subtle border-brand-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="flex size-10 items-center justify-center rounded-xl bg-brand-600 text-white shadow-xs">
-                <Award className="size-5" />
+              <span className="flex size-9 items-center justify-center rounded-lg bg-brand-600 text-white shadow-xs">
+                <Award className="size-4" />
               </span>
               <div>
                 <p className="text-sm font-semibold text-slate-900">
@@ -100,7 +100,7 @@ const Taking = ({ documentId }: { documentId: string }) => {
               </div>
             </div>
 
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 border border-emerald-200">
+            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800 border border-emerald-200">
               <CheckCircle2 className="size-3.5" />
               <span>Graded</span>
             </span>
@@ -113,21 +113,21 @@ const Taking = ({ documentId }: { documentId: string }) => {
       {questions.map((question, index) => (
         <Card key={question.id} className="space-y-4">
           <div className="flex items-start gap-3">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-700">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-slate-100 text-xs font-bold text-slate-700">
               {index + 1}
             </span>
-            <p className="font-semibold text-slate-900 text-base leading-snug pt-0.5">
+            <p className="font-semibold text-slate-900 text-sm leading-snug pt-0.5">
               {question.text}
             </p>
           </div>
 
-          <div className="space-y-2.5 pt-1">
+          <div className="space-y-2 pt-1">
             {question.options.map((option, choice) => {
               const isSelected = picked[index] === choice;
               return (
                 <label
                   key={choice}
-                  className={`flex cursor-pointer items-center gap-3.5 rounded-xl border p-3.5 text-sm font-medium transition-all ${
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm font-medium transition-all ${
                     isSelected
                       ? 'border-brand-500 bg-brand-50/70 text-brand-900 shadow-xs ring-2 ring-brand-500/20'
                       : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50/70'
@@ -142,13 +142,13 @@ const Taking = ({ documentId }: { documentId: string }) => {
                     className="accent-brand-600 size-4"
                   />
 
-                  <span className={`flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-bold ${
+                  <span className={`flex size-5 shrink-0 items-center justify-center rounded-md text-[11px] font-bold ${
                     isSelected ? 'bg-brand-200 text-brand-800' : 'bg-slate-100 text-slate-500'
                   }`}>
                     {optionLabel[choice]}
                   </span>
 
-                  <span className="flex-1">{option}</span>
+                  <span className="flex-1 text-xs sm:text-sm">{option}</span>
                 </label>
               );
             })}

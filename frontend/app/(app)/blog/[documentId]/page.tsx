@@ -19,8 +19,10 @@ const Post = ({ documentId }: { documentId: string }) => {
   if (post.status === 404) {
     return (
       <Empty>
-        <p className="font-semibold text-slate-800">Article not published</p>
-        <p className="mt-1 text-xs text-slate-500">This post is either in draft state or does not exist.</p>
+        <p className="font-semibold text-slate-800">Post not found</p>
+        <p className="mt-1 text-sm text-slate-500">
+          This post either does not exist or has not been published yet.
+        </p>
       </Empty>
     );
   }
@@ -29,16 +31,16 @@ const Post = ({ documentId }: { documentId: string }) => {
 
   const detail = post.data?.data;
 
-  if (!detail) return <Empty>This article is not available.</Empty>;
+  if (!detail) return <Empty>No content available.</Empty>;
 
   const canEdit = hasRole(user, 'Content Manager', 'Admin');
 
   return (
-    <article className="max-w-3xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
+    <article className="space-y-6 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <Link
           href="/blog"
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-brand-600 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-brand-600 transition"
         >
           <ArrowLeft className="size-4" />
           <span>Back to Articles</span>
@@ -56,7 +58,7 @@ const Post = ({ documentId }: { documentId: string }) => {
       </div>
 
       {detail.coverImageUrl && (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-md">
+        <div className="overflow-hidden rounded-xl border border-slate-200 shadow-md">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={detail.coverImageUrl}
@@ -74,18 +76,18 @@ const Post = ({ documentId }: { documentId: string }) => {
           </span>
 
           {detail.publishState === 'draft' && (
-            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800 border border-amber-200">
+            <span className="rounded-md bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800 border border-amber-200">
               Draft Mode
             </span>
           )}
         </div>
 
-        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-tight">
           {detail.title}
         </h1>
       </div>
 
-      <div className="prose prose-slate max-w-none rounded-2xl bg-white p-6 sm:p-8 border border-slate-200/90 shadow-xs leading-relaxed text-slate-700">
+      <div className="prose prose-slate max-w-none rounded-xl bg-white p-6 sm:p-8 border border-slate-200/90 shadow-xs leading-relaxed text-slate-700">
         <Markdown>{detail.body}</Markdown>
       </div>
     </article>

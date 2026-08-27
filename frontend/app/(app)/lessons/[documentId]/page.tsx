@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import Markdown from 'react-markdown';
-import { ArrowLeft, ArrowRight, CheckCircle2, Play, Lock, BookOpen, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Play, Lock, BookOpen } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
 import { hasRole, useAuth } from '@/lib/auth';
@@ -67,11 +67,11 @@ const Viewer = ({ documentId }: { documentId: string }) => {
 
   if (lesson.status === 403) {
     return (
-      <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-8 text-center max-w-lg mx-auto">
-        <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 mb-3">
-          <Lock className="size-6" />
+      <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-8 text-center max-w-lg mx-auto">
+        <span className="inline-flex size-11 items-center justify-center rounded-lg bg-amber-100 text-amber-700 mb-3">
+          <Lock className="size-5" />
         </span>
-        <h2 className="text-lg font-bold text-amber-900">Sequential Lesson Locked</h2>
+        <h2 className="text-base font-bold text-amber-900">Sequential Lesson Locked</h2>
         <p className="mt-2 text-sm text-amber-800">
           You must complete earlier lessons before accessing this one.
         </p>
@@ -109,7 +109,7 @@ const Viewer = ({ documentId }: { documentId: string }) => {
           <span className="font-semibold text-slate-900 truncate max-w-md">{detail.title}</span>
         </div>
 
-        <span className="rounded-full bg-brand-50 border border-brand-200 px-3 py-1 text-xs font-bold text-brand-700">
+        <span className="rounded-md bg-brand-50 border border-brand-200 px-2.5 py-0.5 text-xs font-bold text-brand-700">
           Lesson {at + 1} of {siblings.length}
         </span>
       </div>
@@ -123,7 +123,7 @@ const Viewer = ({ documentId }: { documentId: string }) => {
           </div>
 
           {embed ? (
-            <div className="overflow-hidden rounded-2xl border border-slate-800 bg-black shadow-lg">
+            <div className="overflow-hidden rounded-xl border border-slate-800 bg-black shadow-md">
               <iframe
                 src={embed}
                 title={detail.title}
@@ -133,9 +133,9 @@ const Viewer = ({ documentId }: { documentId: string }) => {
             </div>
           ) : (
             detail.videoUrl && (
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 flex items-center gap-3">
-                <Play className="size-5 text-brand-600" />
-                <a href={detail.videoUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-brand-600 hover:underline">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 flex items-center gap-3">
+                <Play className="size-4 text-brand-600" />
+                <a href={detail.videoUrl} target="_blank" rel="noopener noreferrer" className="text-xs sm:text-sm font-semibold text-brand-600 hover:underline">
                   Watch External Video Lesson ↗
                 </a>
               </div>
@@ -143,7 +143,7 @@ const Viewer = ({ documentId }: { documentId: string }) => {
           )}
 
           {detail.content && (
-            <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed rounded-2xl bg-white p-6 sm:p-8 border border-slate-200/90 shadow-xs">
+            <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed rounded-xl bg-white p-6 sm:p-8 border border-slate-200/90 shadow-xs">
               <Markdown>{detail.content}</Markdown>
             </div>
           )}
@@ -151,14 +151,14 @@ const Viewer = ({ documentId }: { documentId: string }) => {
           <Alert>{actionError}</Alert>
 
           {isStudent && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 flex flex-wrap items-center justify-between gap-4 shadow-xs">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 flex flex-wrap items-center justify-between gap-4 shadow-xs">
               <div>
                 <p className="text-sm font-semibold text-slate-900">Completion Status</p>
                 <p className="text-xs text-slate-500">Mark complete to update your progress and unlock subsequent lessons.</p>
               </div>
 
               {completed ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700 border border-emerald-200">
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 border border-emerald-200">
                   <CheckCircle2 className="size-4 text-emerald-600" />
                   <span>Lesson Completed</span>
                 </span>
@@ -175,7 +175,7 @@ const Viewer = ({ documentId }: { documentId: string }) => {
             {previous ? (
               <Link
                 href={`/lessons/${previous.documentId}`}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+                className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors"
               >
                 <ArrowLeft className="size-4" />
                 <span>Previous: {previous.title}</span>
@@ -193,7 +193,7 @@ const Viewer = ({ documentId }: { documentId: string }) => {
               ) : (
                 <Link
                   href={`/lessons/${next.documentId}`}
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+                  className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
                 >
                   <span>Next: {next.title}</span>
                   <ArrowRight className="size-4" />
@@ -204,7 +204,7 @@ const Viewer = ({ documentId }: { documentId: string }) => {
 
         {/* Course Syllabus Playlist Sidebar (4 cols) */}
         <aside className="lg:col-span-4 space-y-4">
-          <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
+          <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs">
             <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2 mb-3 pb-3 border-b border-slate-100">
               <BookOpen className="size-4 text-brand-600" />
               <span>Course Syllabus</span>
@@ -217,13 +217,13 @@ const Viewer = ({ documentId }: { documentId: string }) => {
                   <Link
                     key={item.documentId}
                     href={`/lessons/${item.documentId}`}
-                    className={`flex items-center gap-2.5 rounded-xl p-2.5 text-xs transition-all ${
+                    className={`flex items-center gap-2.5 rounded-lg p-2.5 text-xs transition-all ${
                       isCurrent
                         ? 'bg-brand-50 text-brand-900 font-bold border border-brand-200'
                         : 'text-slate-700 hover:bg-slate-50'
                     }`}
                   >
-                    <span className={`flex size-6 shrink-0 items-center justify-center rounded-md font-bold text-[11px] ${
+                    <span className={`flex size-5 shrink-0 items-center justify-center rounded font-bold text-[10px] ${
                       isCurrent ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-500'
                     }`}>
                       {index + 1}

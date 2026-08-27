@@ -3,11 +3,17 @@
 
 export type RoleName = 'Admin' | 'Content Manager' | 'Instructor' | 'Student';
 
+export type Role = {
+  id: number;
+  name: RoleName;
+  type: string;
+};
+
 export type User = {
   id: number;
   username: string;
   email: string;
-  role?: { id: number; name: RoleName; type: string };
+  role?: Role;
 };
 
 export type Course = {
@@ -99,22 +105,19 @@ export type BlogPost = {
   author?: User | null;
 };
 
-// GET /api/courses/:id/progress. A student gets a roster of one, themselves.
-export type StudentProgress = {
-  id: number;
-  username: string | null;
-  completedLessons: number;
-  percentComplete: number;
-  quizScore: number | null;
-  quizTotal: number | null;
-};
-
 export type CourseProgress = {
   totalLessons: number;
-  students: StudentProgress[];
+  students: {
+    id: number;
+    studentId: number;
+    username: string;
+    completedLessons: number;
+    percentComplete: number;
+    quizScore: number | null;
+    quizTotal: number | null;
+  }[];
 };
 
-// GET /api/stats, Admin only.
 export type Stats = {
   users: { role: string; count: number }[];
   courses: number;
@@ -124,9 +127,6 @@ export type Stats = {
   blogPosts: { published: number; drafts: number };
 };
 
-export type Collection<T> = {
-  data: T[];
-  meta: { pagination: { page: number; pageSize: number; pageCount: number; total: number } };
-};
+export type Collection<T> = { data: T[]; meta: { pagination: { total: number } } };
 
 export type Single<T> = { data: T };

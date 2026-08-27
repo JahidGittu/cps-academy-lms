@@ -18,9 +18,9 @@ const Tile = ({
   value: number;
   color: string;
 }) => (
-  <Card hover className="flex items-center gap-4">
-    <span className={`flex size-12 items-center justify-center rounded-xl ${color} shadow-xs`}>
-      <Icon className="size-6" />
+  <Card hover className="flex items-center gap-4 p-5">
+    <span className={`flex size-11 items-center justify-center rounded-lg ${color} shadow-xs`}>
+      <Icon className="size-5" />
     </span>
 
     <div>
@@ -48,7 +48,7 @@ export const PlatformStats = () => {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900">Platform Overview</h2>
-          <p className="text-sm text-slate-500">Real-time counts across users, curriculum, enrollments, and content.</p>
+          <p className="text-xs sm:text-sm text-slate-500">Real-time counts across users, curriculum, enrollments, and content.</p>
         </div>
       </div>
 
@@ -61,7 +61,7 @@ export const PlatformStats = () => {
         <Tile icon={Newspaper} label="Published Articles" value={data.blogPosts.published} color="bg-rose-50 text-rose-600 border border-rose-100" />
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 px-4 py-3 border border-slate-200 text-xs text-slate-600">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-50 px-4 py-3 border border-slate-200 text-xs text-slate-600">
         <div className="flex flex-wrap items-center gap-3 font-medium">
           <span className="font-semibold text-slate-800">User breakdown:</span>
           {data.users.map((row) => (

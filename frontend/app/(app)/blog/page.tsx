@@ -50,17 +50,17 @@ export default function BlogPage() {
   return (
     <div className="space-y-10">
       {/* Blog Header & Search Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-slate-900 px-6 py-10 sm:px-10 sm:py-12 text-white border border-slate-800 shadow-xl">
+      <div className="relative overflow-hidden rounded-xl bg-slate-900 px-6 py-8 sm:px-10 sm:py-10 text-white border border-slate-800 shadow-md">
         <div className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full bg-brand-500/20 blur-3xl" />
         <div className="pointer-events-none absolute left-1/3 -bottom-16 size-64 rounded-full bg-violet-600/20 blur-3xl" />
 
         <div className="relative max-w-2xl">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 px-3 py-1 text-xs font-semibold text-brand-300 backdrop-blur mb-3">
+          <div className="inline-flex items-center gap-1.5 rounded-md bg-brand-500/10 border border-brand-500/20 px-3 py-1 text-xs font-semibold text-brand-300 backdrop-blur mb-3">
             <Sparkles className="size-3.5" />
             <span>Articles & Insights</span>
           </div>
 
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
             Engineering Blog & Guides
           </h1>
           <p className="mt-2 text-sm text-slate-300 leading-relaxed">
@@ -75,14 +75,14 @@ export default function BlogPage() {
                 placeholder="Search articles by title or keyword..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-800/90 pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-slate-400 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800/90 pl-10 pr-4 py-2 text-sm text-white placeholder:text-slate-400 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20"
               />
             </div>
 
             {canManage && (
               <Link
                 href="/blog/new"
-                className="brand-gradient inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 shrink-0"
+                className="brand-gradient inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 shrink-0"
               >
                 <Plus className="size-4" />
                 <span>Write Post</span>
@@ -102,7 +102,7 @@ export default function BlogPage() {
             key={topic}
             type="button"
             onClick={() => setActiveTopic(topic)}
-            className={`rounded-full px-3.5 py-1 text-xs font-semibold transition-all ${
+            className={`rounded-md px-3.5 py-1 text-xs font-semibold transition-all ${
               activeTopic === topic
                 ? 'bg-brand-600 text-white shadow-xs'
                 : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
@@ -121,7 +121,7 @@ export default function BlogPage() {
       ) : (
         <div className="grid gap-8 lg:grid-cols-12">
           {/* Main Feed (8 cols) */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className="lg:col-span-8 space-y-5">
             {filtered.length === 0 ? (
               <Empty>
                 <p className="font-semibold text-slate-700">No matching articles found</p>
@@ -133,7 +133,7 @@ export default function BlogPage() {
                 return (
                   <Link key={post.documentId} href={`/blog/${post.documentId}`} className="block group">
                     <Card hover className="flex flex-col sm:flex-row gap-5 p-5">
-                      <div className="sm:w-52 h-40 shrink-0 overflow-hidden rounded-xl bg-slate-900 relative">
+                      <div className="sm:w-48 h-36 shrink-0 overflow-hidden rounded-lg bg-slate-900 relative">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={cover}
@@ -146,23 +146,23 @@ export default function BlogPage() {
                       <div className="flex-1 flex flex-col justify-between">
                         <div>
                           <div className="flex items-start justify-between gap-3">
-                            <h2 className="text-lg font-bold text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-2">
+                            <h2 className="text-base font-bold text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-2">
                               {post.title}
                             </h2>
 
                             {post.publishState === 'draft' && (
-                              <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 border border-amber-200">
+                              <span className="shrink-0 rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 border border-amber-200">
                                 Draft
                               </span>
                             )}
                           </div>
 
-                          <p className="mt-2.5 line-clamp-2 text-sm text-slate-600 leading-relaxed">
+                          <p className="mt-2 line-clamp-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
                             {excerpt(post.body)}
                           </p>
                         </div>
 
-                        <div className="mt-4 flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
+                        <div className="mt-3 flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
                           <span className="flex items-center gap-1.5 font-medium">
                             <Calendar className="size-3.5 text-slate-400" />
                             <span>{new Date(post.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
@@ -181,8 +181,8 @@ export default function BlogPage() {
           </div>
 
           {/* Sidebar (4 cols) */}
-          <aside className="lg:col-span-4 space-y-6">
-            <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs">
+          <aside className="lg:col-span-4 space-y-5">
+            <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs">
               <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                 <BookOpen className="size-4 text-brand-600" />
                 <span>About This Blog</span>
@@ -194,7 +194,7 @@ export default function BlogPage() {
             </div>
 
             {featured && (
-              <div className="rounded-2xl border border-brand-200 brand-gradient-subtle p-5 shadow-xs">
+              <div className="rounded-xl border border-brand-200 brand-gradient-subtle p-5 shadow-xs">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-brand-700 block mb-1">
                   Featured Post
                 </span>

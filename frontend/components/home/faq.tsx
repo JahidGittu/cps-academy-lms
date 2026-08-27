@@ -23,24 +23,27 @@ const questions = [
   },
 ];
 
-// Plain details and summary elements. An accordion is one of the few things a browser already does,
-// and doing it here instead would mean a client component holding an index in state.
 export const Faq = () => (
-  <section className="mx-auto w-full max-w-3xl px-4 py-16">
-    <h2 className="text-center text-2xl font-semibold tracking-tight">Questions people ask</h2>
+  <section className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6">
+    <div className="text-center mb-8">
+      <span className="inline-block rounded-md bg-brand-50 border border-brand-200 px-3 py-1 text-xs font-semibold text-brand-700 mb-3">
+        FAQ
+      </span>
+      <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Frequently Asked Questions</h2>
+    </div>
 
-    <div className="mt-8 space-y-3">
+    <div className="space-y-3">
       {questions.map(({ q, a }) => (
         <details
           key={q}
-          className="group rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm open:border-brand-200"
+          className="group rounded-lg border border-slate-200 bg-white px-5 py-4 shadow-2xs open:border-brand-300 transition-colors"
         >
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-slate-800 text-sm">
             {q}
             <ChevronDown className="size-4 shrink-0 text-slate-400 transition group-open:rotate-180" />
           </summary>
 
-          <p className="mt-3 text-sm text-slate-600">{a}</p>
+          <p className="mt-3 text-sm text-slate-600 leading-relaxed">{a}</p>
         </details>
       ))}
     </div>

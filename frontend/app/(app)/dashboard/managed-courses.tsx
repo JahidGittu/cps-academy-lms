@@ -21,12 +21,12 @@ export const ManagedCourses = () => {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900">Manage Courses</h2>
-          <p className="text-sm text-slate-500">Create, edit, and monitor student progress across your curriculum.</p>
+          <p className="text-xs sm:text-sm text-slate-500">Create, edit, and monitor student progress across your curriculum.</p>
         </div>
 
         <Link 
           href="/courses/new" 
-          className="brand-gradient inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:opacity-95 hover:shadow-md"
+          className="brand-gradient inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-xs transition hover:opacity-95 hover:shadow-md"
         >
           <Plus className="size-4" />
           <span>New Course</span>
