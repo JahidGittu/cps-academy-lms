@@ -91,13 +91,13 @@ const Viewer = ({ documentId }: { documentId: string }) => {
   // Sequential 403 Forbidden Screen with helpful user guidance
   if (lesson.status === 403) {
     return (
-      <div className="mx-auto max-w-lg rounded-md border border-amber-200 bg-amber-50/80 p-8 text-center shadow-xs">
-        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+      <div className="mx-auto max-w-lg rounded-md border border-slate-200 bg-white p-8 text-center shadow-xs">
+        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-slate-100 text-slate-600 border border-slate-200">
           <Lock className="size-6" />
         </div>
-        <h2 className="text-lg font-bold text-amber-950">Sequential Progression Locked</h2>
-        <p className="mt-2 text-xs sm:text-sm text-amber-900 leading-relaxed">
-          Lessons in this track must be completed in order. You cannot skip ahead until earlier lessons are marked as complete.
+        <h2 className="text-lg font-bold text-slate-900">Lesson Locked</h2>
+        <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
+          Please complete the earlier lessons in this course first to unlock this lesson.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Link
@@ -240,12 +240,12 @@ const Viewer = ({ documentId }: { documentId: string }) => {
               isStudent && !completed ? (
                 /* Disabled Next Button with Tooltip when current lesson is not completed */
                 <div
-                  title="Sequential Lock: Complete this lesson first to unlock the next lesson."
+                  title="Complete this lesson first to unlock the next lesson"
                   className="group relative inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-400 cursor-not-allowed shadow-2xs"
                 >
                   <Lock className="size-3.5 text-slate-400" />
                   <span>Next: {next.title}</span>
-                  <span className="hidden sm:inline text-[11px] text-amber-700 font-bold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded ml-1">
+                  <span className="hidden sm:inline text-[11px] text-slate-500 font-semibold bg-slate-200/90 px-1.5 py-0.5 rounded ml-1">
                     Complete current first
                   </span>
                 </div>

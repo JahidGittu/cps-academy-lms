@@ -58,7 +58,7 @@ export const Syllabus = ({
 
                 {/* Locked Tooltip Badge */}
                 <span
-                  title="Sequential lock: Complete previous lessons to unlock this lesson."
+                  title="Complete previous lessons to unlock"
                   className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500 border border-slate-200 cursor-help"
                 >
                   <Lock className="size-3 text-slate-400" />

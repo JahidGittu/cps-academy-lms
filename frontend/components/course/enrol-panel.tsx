@@ -19,7 +19,7 @@ export const EnrolPanel = ({
       <ul className="space-y-2.5 text-xs sm:text-sm text-slate-600 font-medium">
         <li className="flex items-center gap-2.5">
           <ListOrdered className="size-4 shrink-0 text-brand-600" />
-          <span>{lessons} {lessons === 1 ? 'lesson' : 'lessons'}, sequential unlock</span>
+          <span>{lessons} Structured {lessons === 1 ? 'Lesson' : 'Lessons'}</span>
         </li>
 
         {course.quiz && (
