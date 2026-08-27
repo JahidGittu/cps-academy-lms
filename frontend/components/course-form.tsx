@@ -11,9 +11,10 @@ import { Alert, Button, Field, TextField } from '@/components/ui';
 export type CourseValues = { title: string; description: string; coverImageUrl: string };
 
 const SAMPLES = [
-  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop&q=80',
+  { label: 'Database / SQL', url: 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&auto=format&fit=crop&q=80' },
+  { label: 'Backend Servers', url: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80' },
+  { label: 'Software Code', url: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80' },
+  { label: 'System Architecture', url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80' },
 ];
 
 export const CourseForm = ({
@@ -24,7 +25,7 @@ export const CourseForm = ({
   course?: Course;
   save: (values: CourseValues) => Promise<void>;
   label: string;
-}) => {
+  }) => {
   const [values, setValues] = useState<CourseValues>({
     title: course?.title ?? '',
     description: course?.description ?? '',
@@ -77,33 +78,35 @@ export const CourseForm = ({
           placeholder="https://images.unsplash.com/..."
         />
 
-        <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-          <Sparkles className="size-3 text-brand-600" />
-          <span>Quick sample covers:</span>
-          {SAMPLES.map((url, i) => (
+        <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <span className="flex items-center gap-1 font-semibold text-slate-700">
+            <Sparkles className="size-3 text-brand-600" />
+            <span>Preset covers:</span>
+          </span>
+          {SAMPLES.map((sample) => (
             <button
-              key={i}
+              key={sample.label}
               type="button"
-              onClick={() => setValues((prev) => ({ ...prev, coverImageUrl: url }))}
-              className="text-brand-600 underline hover:text-brand-800"
+              onClick={() => setValues((prev) => ({ ...prev, coverImageUrl: sample.url }))}
+              className="rounded bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-brand-50 hover:text-brand-700 transition border border-slate-200"
             >
-              Cover {i + 1}
+              {sample.label}
             </button>
           ))}
         </div>
       </div>
 
       {values.coverImageUrl && (
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2">
-          <p className="mb-1.5 flex items-center gap-1 text-xs font-semibold text-slate-600">
-            <ImageIcon className="size-3.5" />
-            <span>Thumbnail Preview</span>
+        <div className="overflow-hidden rounded-md border border-slate-200 bg-slate-50 p-2.5">
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+            <ImageIcon className="size-3.5 text-brand-600" />
+            <span>Thumbnail Live Preview</span>
           </p>
-          <div className="relative h-36 w-full overflow-hidden rounded-lg">
+          <div className="relative h-44 w-full overflow-hidden rounded bg-slate-900 shadow-xs">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={values.coverImageUrl}
-              alt="Preview"
+              alt="Course Cover Preview"
               className="h-full w-full object-cover"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';

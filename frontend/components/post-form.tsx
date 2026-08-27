@@ -16,9 +16,10 @@ export type PostValues = {
 };
 
 const SAMPLES = [
-  'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80',
+  { label: 'Engineering Workspace', url: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&auto=format&fit=crop&q=80' },
+  { label: 'Coding Setup', url: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&auto=format&fit=crop&q=80' },
+  { label: 'Software Review', url: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80' },
+  { label: 'System Architecture', url: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80' },
 ];
 
 export const PostForm = ({
@@ -60,7 +61,13 @@ export const PostForm = ({
 
   return (
     <form onSubmit={submit} className="space-y-5">
-      <Field label="Article Title" value={values.title} onChange={set('title')} required placeholder="e.g. Architecting Scalable Web Applications" />
+      <Field
+        label="Article Title"
+        value={values.title}
+        onChange={set('title')}
+        required
+        placeholder="e.g. Architecting Scalable Web Applications"
+      />
 
       <TextField
         label="Article Body (Markdown supported)"
@@ -73,39 +80,41 @@ export const PostForm = ({
 
       <div>
         <Field
-          label="Cover Image URL"
+          label="Cover Image / Thumbnail URL"
           value={values.coverImageUrl}
           onChange={set('coverImageUrl')}
           placeholder="https://images.unsplash.com/..."
         />
 
-        <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-          <Sparkles className="size-3 text-brand-600" />
-          <span>Quick sample images:</span>
-          {SAMPLES.map((url, i) => (
+        <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <span className="flex items-center gap-1 font-semibold text-slate-700">
+            <Sparkles className="size-3 text-brand-600" />
+            <span>Preset article covers:</span>
+          </span>
+          {SAMPLES.map((sample) => (
             <button
-              key={i}
+              key={sample.label}
               type="button"
-              onClick={() => setValues((prev) => ({ ...prev, coverImageUrl: url }))}
-              className="text-brand-600 underline hover:text-brand-800"
+              onClick={() => setValues((prev) => ({ ...prev, coverImageUrl: sample.url }))}
+              className="rounded bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-brand-50 hover:text-brand-700 transition border border-slate-200"
             >
-              Image {i + 1}
+              {sample.label}
             </button>
           ))}
         </div>
       </div>
 
       {values.coverImageUrl && (
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2">
-          <p className="mb-1.5 flex items-center gap-1 text-xs font-semibold text-slate-600">
-            <ImageIcon className="size-3.5" />
-            <span>Cover Preview</span>
+        <div className="overflow-hidden rounded-md border border-slate-200 bg-slate-50 p-2.5">
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+            <ImageIcon className="size-3.5 text-brand-600" />
+            <span>Cover Live Preview</span>
           </p>
-          <div className="relative h-36 w-full overflow-hidden rounded-lg">
+          <div className="relative h-44 w-full overflow-hidden rounded bg-slate-900 shadow-xs">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={values.coverImageUrl}
-              alt="Preview"
+              alt="Article Cover Preview"
               className="h-full w-full object-cover"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';
@@ -115,13 +124,19 @@ export const PostForm = ({
         </div>
       )}
 
-      <label className="block">
-        <span className="mb-1.5 block text-sm font-medium text-slate-700">Publishing State</span>
-        <select value={values.publishState} onChange={set('publishState')} className={inputStyle}>
-          <option value="draft">Draft (Restricted to Content Managers & Admins)</option>
-          <option value="published">Published (Visible to all students and public)</option>
-        </select>
-      </label>
+      <div>
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-medium text-slate-700">Publication State</span>
+          <select
+            value={values.publishState}
+            onChange={set('publishState')}
+            className={inputStyle}
+          >
+            <option value="draft">Draft (Visible to managers and admin only)</option>
+            <option value="published">Published (Visible on public engineering blog)</option>
+          </select>
+        </label>
+      </div>
 
       <Alert>{error}</Alert>
 
