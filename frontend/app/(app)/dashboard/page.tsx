@@ -2,26 +2,32 @@
 
 import { hasRole, useAuth } from '@/lib/auth';
 import { RequireAuth } from '@/components/require-auth';
+import { DashboardShell } from '@/components/dashboard-shell';
 import { EnrolledCourses } from './enrolled-courses';
 import { ManagedCourses } from './managed-courses';
 
-// The two halves of the site meet here. A student is asking how far through their courses they are;
-// everyone else is asking what they are responsible for, so the panel is picked by role rather than
-// showing both with one of them empty.
 const Panel = () => {
   const { user } = useAuth();
+  const isStudent = hasRole(user, 'Student');
 
-  return hasRole(user, 'Student') ? <EnrolledCourses /> : <ManagedCourses />;
+  return (
+    <DashboardShell
+      title={isStudent ? 'My Learning Dashboard' : 'Course Management Studio'}
+      subtitle={
+        isStudent
+          ? 'Track your course progress, resume sequential lessons, and check graded quizzes.'
+          : 'Create curriculum, manage lessons, and monitor student completion rates.'
+      }
+    >
+      {isStudent ? <EnrolledCourses /> : <ManagedCourses />}
+    </DashboardShell>
+  );
 };
 
 export default function DashboardPage() {
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-semibold">Dashboard</h1>
-
-      <RequireAuth>
-        <Panel />
-      </RequireAuth>
-    </div>
+    <RequireAuth>
+      <Panel />
+    </RequireAuth>
   );
 }
