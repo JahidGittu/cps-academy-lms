@@ -11,7 +11,7 @@ import { hasRole, useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { Collection, Lesson, LessonProgress, Single } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
-import { Alert, Button, Empty } from '@/components/ui';
+import { Alert, Button, Empty, LoadingState } from '@/components/ui';
 
 const lessonQuery = (documentId: string) =>
   `/lessons/${documentId}?populate[course][fields]=title,documentId` +
@@ -52,7 +52,14 @@ const Viewer = ({ documentId }: { documentId: string }) => {
     }
   };
 
-  if (lesson.loading) return <p className="text-sm text-slate-500">Loading lesson content...</p>;
+  if (lesson.loading) {
+    return (
+      <LoadingState
+        message="Loading lesson content..."
+        subtext="Fetching video lectures and interactive code notes."
+      />
+    );
+  }
 
   if (lesson.status === 404) {
     return (

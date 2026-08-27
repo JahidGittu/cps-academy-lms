@@ -5,13 +5,20 @@ import { BookOpen, Edit, Plus, Users } from 'lucide-react';
 
 import { useApi } from '@/lib/use-api';
 import type { Collection, Course } from '@/lib/types';
-import { Alert, Card, Empty } from '@/components/ui';
+import { Alert, Card, Empty, LoadingState } from '@/components/ui';
 import { CourseCover } from '@/components/course-cover';
 
 export const ManagedCourses = () => {
   const courses = useApi<Collection<Course>>('/courses?mine=true');
 
-  if (courses.loading) return <p className="text-sm text-slate-500">Loading managed courses...</p>;
+  if (courses.loading) {
+    return (
+      <LoadingState
+        message="Loading course studio..."
+        subtext="Fetching your authored curriculum, lessons, and student rosters."
+      />
+    );
+  }
 
   if (courses.error) return <Alert>{courses.error}</Alert>;
 

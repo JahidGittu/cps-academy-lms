@@ -8,7 +8,7 @@ import { ArrowLeft, Calendar, Edit3, User, Clock } from 'lucide-react';
 import { hasRole, useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { BlogPost, Single } from '@/lib/types';
-import { Alert, Empty } from '@/components/ui';
+import { Alert, Empty, LoadingState } from '@/components/ui';
 
 const DEFAULT_POST_COVERS = [
   'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1200&auto=format&fit=crop&q=80',
@@ -29,7 +29,14 @@ const Post = ({ documentId }: { documentId: string }) => {
   const { user } = useAuth();
   const post = useApi<Single<BlogPost>>(`/blog-posts/${documentId}`);
 
-  if (post.loading) return <p className="text-sm text-slate-500">Loading article...</p>;
+  if (post.loading) {
+    return (
+      <LoadingState
+        message="Loading article..."
+        subtext="Fetching Markdown content and author metadata."
+      />
+    );
+  }
 
   if (post.status === 404) {
     return (

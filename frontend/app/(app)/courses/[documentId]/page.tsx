@@ -9,7 +9,7 @@ import { api, errorMessage } from '@/lib/api';
 import { hasRole, useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { Collection, Course, Enrollment, LessonProgress, Single, User } from '@/lib/types';
-import { Alert, Button, buttonStyle, Card, Empty, ProgressBar } from '@/components/ui';
+import { Alert, Button, buttonStyle, Card, Empty, LoadingState, ProgressBar } from '@/components/ui';
 import { DetailHeader } from '@/components/course/detail-header';
 import { EnrolPanel } from '@/components/course/enrol-panel';
 import { JoinForm } from '@/components/course/join-form';
@@ -70,7 +70,14 @@ const Detail = ({ documentId }: { documentId: string }) => {
     else await enrol();
   };
 
-  if (course.loading) return <p className="text-sm text-slate-500">Loading course</p>;
+  if (course.loading) {
+    return (
+      <LoadingState
+        message="Loading course curriculum..."
+        subtext="Retrieving syllabus outline, lessons, and assessment status."
+      />
+    );
+  }
 
   if (course.error) return <Alert>{course.error}</Alert>;
 

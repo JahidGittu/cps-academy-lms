@@ -101,3 +101,60 @@ export const ProgressBar = ({ percent }: { percent: number }) => (
     />
   </div>
 );
+
+export const Spinner = ({
+  className = 'size-5',
+  tone = 'brand',
+}: {
+  className?: string;
+  tone?: 'brand' | 'white' | 'slate';
+}) => {
+  const color =
+    tone === 'brand'
+      ? 'text-brand-600'
+      : tone === 'white'
+      ? 'text-white'
+      : 'text-slate-400';
+
+  return (
+    <svg
+      className={`animate-spin ${className} ${color}`}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
+  );
+};
+
+export const LoadingState = ({
+  message = 'Loading workspace...',
+  subtext = 'Please wait a moment while we fetch your data.',
+  minHeight = 'min-h-[360px]',
+}: {
+  message?: string;
+  subtext?: string;
+  minHeight?: string;
+}) => (
+  <div
+    className={`flex w-full flex-col items-center justify-center rounded-md border border-slate-200/80 bg-white/70 p-12 text-center shadow-xs backdrop-blur-xs ${minHeight}`}
+  >
+    <div className="relative mb-4 flex size-14 items-center justify-center">
+      {/* Outer gentle pulsing ring */}
+      <div className="absolute inset-0 size-14 animate-ping rounded-full bg-brand-500/15" />
+      {/* Center crisp icon container */}
+      <div className="relative flex size-12 items-center justify-center rounded-full bg-brand-50 border border-brand-200 shadow-xs">
+        <Spinner className="size-6" tone="brand" />
+      </div>
+    </div>
+
+    <h3 className="text-base font-bold text-slate-900 tracking-tight">{message}</h3>
+    {subtext && <p className="mt-1 text-xs text-slate-500 max-w-xs font-medium">{subtext}</p>}
+  </div>
+);

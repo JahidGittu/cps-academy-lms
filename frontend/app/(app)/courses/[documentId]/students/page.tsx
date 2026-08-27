@@ -7,7 +7,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useApi } from '@/lib/use-api';
 import type { Course, CourseProgress, Single } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
-import { Alert, Empty, ProgressBar } from '@/components/ui';
+import { Alert, Empty, LoadingState, ProgressBar } from '@/components/ui';
 
 const Roster = ({ documentId }: { documentId: string }) => {
   const course = useApi<Single<Course>>(`/courses/${documentId}`);
@@ -18,7 +18,12 @@ const Roster = ({ documentId }: { documentId: string }) => {
   const progress = useApi<Single<CourseProgress>>(`/courses/${documentId}/progress`);
 
   if (course.loading || progress.loading) {
-    return <p className="text-sm text-slate-500">Loading students</p>;
+    return (
+      <LoadingState
+        message="Loading student roster..."
+        subtext="Fetching enrolled student completion rates and quiz assessment scores."
+      />
+    );
   }
 
   const detail = course.data?.data;

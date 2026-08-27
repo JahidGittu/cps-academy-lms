@@ -7,7 +7,7 @@ import { api, errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { Role, User } from '@/lib/types';
-import { Alert } from '@/components/ui';
+import { Alert, LoadingState } from '@/components/ui';
 
 const roleBadgeColor: Record<string, string> = {
   Admin: 'bg-purple-50 text-purple-700 border-purple-200',
@@ -46,7 +46,14 @@ export const UserList = ({ onChanged }: { onChanged?: () => void }) => {
     }
   };
 
-  if (users.loading) return <p className="text-sm text-slate-500">Loading user directory...</p>;
+  if (users.loading) {
+    return (
+      <LoadingState
+        message="Loading user directory..."
+        subtext="Fetching all registered user accounts and assigned roles."
+      />
+    );
+  }
 
   if (users.error) return <Alert>{users.error}</Alert>;
 

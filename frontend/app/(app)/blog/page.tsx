@@ -8,7 +8,7 @@ import { hasRole, useAuth } from '@/lib/auth';
 import { excerpt } from '@/lib/excerpt';
 import { useApi } from '@/lib/use-api';
 import type { BlogPost, Collection } from '@/lib/types';
-import { Alert, Card, Empty } from '@/components/ui';
+import { Alert, Card, Empty, LoadingState } from '@/components/ui';
 
 const listQuery = '/blog-posts?sort=createdAt:desc';
 
@@ -115,7 +115,10 @@ export default function BlogPage() {
 
       {/* Main Content & Sidebar Layout */}
       {posts.loading ? (
-        <p className="text-sm text-slate-500">Loading articles...</p>
+        <LoadingState
+          message="Loading engineering articles..."
+          subtext="Fetching technical write-ups, architecture breakdowns, and guides."
+        />
       ) : posts.error ? (
         <Alert>{posts.error}</Alert>
       ) : (

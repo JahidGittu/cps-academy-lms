@@ -6,7 +6,7 @@ import { Search, Filter } from 'lucide-react';
 import { hasRole, useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { Collection, Course, Enrollment } from '@/lib/types';
-import { Alert, Empty } from '@/components/ui';
+import { Alert, Empty, LoadingState } from '@/components/ui';
 import { CourseTile } from '@/components/course-tile';
 
 const FILTERS = ['All', 'With Quizzes', 'Enrolled Only'];
@@ -102,7 +102,10 @@ export default function CoursesPage() {
 
       {/* Course Grid */}
       {courses.loading ? (
-        <p className="text-sm text-slate-500">Loading courses...</p>
+        <LoadingState
+          message="Loading course catalogue..."
+          subtext="Fetching available tracks, syllabi, and interactive quizzes."
+        />
       ) : courses.error ? (
         <Alert>{courses.error}</Alert>
       ) : filtered.length === 0 ? (

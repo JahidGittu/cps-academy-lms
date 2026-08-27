@@ -10,7 +10,7 @@ import { hasRole, useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { Collection, Quiz, QuizResult, Single } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
-import { Alert, Button, Card, Empty } from '@/components/ui';
+import { Alert, Button, Card, Empty, LoadingState } from '@/components/ui';
 
 const optionLabel = 'ABCDEFGH';
 
@@ -51,7 +51,14 @@ const Taking = ({ documentId }: { documentId: string }) => {
     }
   };
 
-  if (quiz.loading) return <p className="text-sm text-slate-500">Loading quiz...</p>;
+  if (quiz.loading) {
+    return (
+      <LoadingState
+        message="Loading quiz assessment..."
+        subtext="Fetching assessment questions and your previous attempt scores."
+      />
+    );
+  }
 
   if (quiz.status === 404) {
     return <Empty>This quiz belongs to a course you have not enrolled in.</Empty>;

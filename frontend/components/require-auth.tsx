@@ -4,11 +4,8 @@ import Link from 'next/link';
 
 import { hasRole, useAuth } from '@/lib/auth';
 import type { RoleName } from '@/lib/types';
-import { Empty } from './ui';
+import { Empty, LoadingState } from './ui';
 
-// The server decides what a role may read; this only decides what to put on the screen while it
-// does. Children are not rendered until there is a user, which also keeps a page from firing a
-// request that would come back 401 and bounce a visitor to the login screen.
 export const RequireAuth = ({
   roles,
   children,
@@ -18,21 +15,33 @@ export const RequireAuth = ({
 }) => {
   const { user, loading } = useAuth();
 
-  if (loading) return <p className="text-sm text-slate-500">Loading</p>;
+  if (loading) {
+    return (
+      <LoadingState
+        message="Authenticating session..."
+        subtext="Verifying account security and permission level."
+      />
+    );
+  }
 
   if (!user) {
     return (
       <Empty>
-        <Link href="/login" className="text-slate-900 underline">
+        <Link href="/login" className="text-brand-600 font-bold underline hover:text-brand-800">
           Sign in
         </Link>{' '}
-        to see this page.
+        to access this page.
       </Empty>
     );
   }
 
   if (roles && !hasRole(user, ...roles)) {
-    return <Empty>This page is not for {user.role?.name} accounts.</Empty>;
+    return (
+      <Empty>
+        <p className="font-bold text-slate-800">Access Restricted</p>
+        <p className="mt-1 text-xs text-slate-500">This workspace is not accessible to {user.role?.name ?? 'your'} accounts.</p>
+      </Empty>
+    );
   }
 
   return <>{children}</>;

@@ -5,7 +5,7 @@ import { ArrowRight, BookOpen, CheckCircle2 } from 'lucide-react';
 
 import { useApi } from '@/lib/use-api';
 import type { Collection, CourseProgress, Enrollment, Single } from '@/lib/types';
-import { Alert, Card, Empty, ProgressBar } from '@/components/ui';
+import { Alert, Card, Empty, LoadingState, ProgressBar } from '@/components/ui';
 
 const Row = ({ enrollment }: { enrollment: Enrollment }) => {
   const course = enrollment.course;
@@ -76,7 +76,14 @@ const Row = ({ enrollment }: { enrollment: Enrollment }) => {
 export const EnrolledCourses = () => {
   const enrollments = useApi<Collection<Enrollment>>('/enrollments?populate=course');
 
-  if (enrollments.loading) return <p className="text-sm text-slate-500">Loading your courses...</p>;
+  if (enrollments.loading) {
+    return (
+      <LoadingState
+        message="Loading your enrolled courses..."
+        subtext="Syncing your sequential lesson progression and quiz scores."
+      />
+    );
+  }
 
   if (enrollments.error) return <Alert>{enrollments.error}</Alert>;
 
@@ -89,7 +96,7 @@ export const EnrolledCourses = () => {
           <h2 className="text-xl font-bold text-slate-900">My Enrolled Courses</h2>
           <p className="text-sm text-slate-500">Resume your lessons and track overall course completion.</p>
         </div>
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+        <span className="rounded bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 border border-slate-200">
           {rows.length} {rows.length === 1 ? 'course' : 'courses'}
         </span>
       </div>
