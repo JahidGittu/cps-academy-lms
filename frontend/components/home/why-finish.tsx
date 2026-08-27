@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { Check } from 'lucide-react';
 
 // Written from the learner's side of the screen. Each one is a thing the platform does for you, not
@@ -31,13 +30,6 @@ export const WhyFinish = () => (
           meant to make the middle easier: one lesson open at a time, and a record of everything you
           have already done.
         </p>
-
-        <Link
-          href="/register"
-          className="mt-6 inline-flex items-center rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-slate-900 transition hover:bg-slate-100"
-        >
-          Create an account
-        </Link>
       </div>
 
       <ul className="space-y-5">

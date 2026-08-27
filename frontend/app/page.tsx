@@ -4,7 +4,6 @@ import { Faq } from '@/components/home/faq';
 import { Hero } from '@/components/home/hero';
 import { HowItWorks } from '@/components/home/how-it-works';
 import { LatestPosts } from '@/components/home/latest-posts';
-import { Teaching } from '@/components/home/teaching';
 import { WhyFinish } from '@/components/home/why-finish';
 
 // One file per section. The page is the running order, which is the only thing that changes when
@@ -18,7 +17,6 @@ export default function HomePage() {
       <WhyFinish />
       <LatestPosts />
       <Faq />
-      <Teaching />
       <CallToAction />
     </>
   );
