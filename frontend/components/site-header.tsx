@@ -41,7 +41,9 @@ export const SiteHeader = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // When on dashboard or admin workspace, hide public top navbar completely
+  // When logged in and on any internal app workspace route, the 100vh Sidebar takes over
+  if (user && pathname !== '/') return null;
+
   const isDashboardRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/admin');
   if (isDashboardRoute) return null;
 

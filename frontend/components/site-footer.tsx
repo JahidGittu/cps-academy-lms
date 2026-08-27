@@ -3,11 +3,16 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { GraduationCap } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
 
 export const SiteFooter = () => {
   const pathname = usePathname();
 
-  // Hide footer completely on dashboard and admin workspace
+  const { user } = useAuth();
+
+  // Hide footer completely when logged in on workspace routes or dashboard
+  if (user && pathname !== '/') return null;
+
   const isDashboardRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/admin');
   if (isDashboardRoute) return null;
 
