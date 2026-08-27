@@ -18,11 +18,12 @@ dist/
 *.sqlite
 *.sqlite3
 
-# local tooling and editor config
-.claude/
+# IDEs and editors
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# os
+# OS files
 .DS_Store
 Thumbs.db
