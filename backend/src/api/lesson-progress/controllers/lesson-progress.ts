@@ -1,7 +1,3 @@
-/**
- * lesson-progress controller
- */
-
 import { factories } from '@strapi/strapi';
 import type { Context } from 'koa';
 
@@ -12,7 +8,6 @@ const UID = 'api::lesson-progress.lesson-progress';
 
 const visibleTo = (ctx: Context) => {
   const me = caller(ctx).id;
-
   return roleName(ctx) === 'Student'
     ? { student: { id: me } }
     : { lesson: { course: { owner: { id: me } } } };
@@ -34,6 +29,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     if (!lesson?.course) return ctx.notFound();
 
+    // Verify enrollment
     const [enrolled] = await strapi.documents('api::enrollment.enrollment').findMany({
       filters: { student: { id: me }, course: { documentId: lesson.course.documentId } },
       limit: 1,
@@ -41,9 +37,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     if (!enrolled) return ctx.forbidden('enroll in the course before completing its lessons');
 
-    // The order is enforced on the way in as well as on the read. Without this a student could post
-    // a completion for the last lesson and walk back through the course with everything unlocked,
-    // since unlocking only ever looks at what has been marked done.
+    // Enforce sequential unlock order
     const blocking = await unfinishedLessonBefore(
       strapi,
       me,
@@ -53,10 +47,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     if (blocking) return ctx.forbidden(`finish "${blocking.title}" first`);
 
-    // No pair of fields can be made unique in the schema, so the second row has to be stopped
-    // here. Marking a lesson done twice is a double click rather than an error, so the row that
-    // already exists is returned instead of a 400, and the completed count cannot pass the
-    // lesson count and push progress over 100 percent.
+    // Prevent duplicate completion records
     const [already] = await strapi.documents(UID).findMany({
       filters: { student: { id: me }, lesson: { documentId: lessonId } },
       limit: 1,
@@ -69,7 +60,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     });
 
     ctx.status = 201;
-
     return super.transformResponse(await super.sanitizeOutput(progress, ctx));
   },
 
@@ -80,7 +70,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     if (!seesEveryRow(ctx)) narrow(query, visibleTo(ctx));
 
     const { results, pagination } = await strapi.service(UID).find(query);
-
     return super.transformResponse(await super.sanitizeOutput(results, ctx), { pagination });
   },
 

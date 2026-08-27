@@ -3,10 +3,6 @@ import type { Core } from '@strapi/strapi';
 const READ = ['find', 'findOne'];
 const MANAGE = ['find', 'findOne', 'create', 'update', 'delete'];
 
-// The type is what Advanced Settings stores as the role for new signups, so it is
-// written out here instead of letting Strapi derive it from the name. Exported because the
-// stats endpoint counts accounts per role and should ask one place which roles exist, rather
-// than reading them back out of the database and finding Strapi's own unused ones in there.
 export const roles = [
   { name: 'Admin', type: 'admin', description: 'Full control of the platform.' },
   { name: 'Content Manager', type: 'content_manager', description: 'Builds the course library and writes the blog.' },
@@ -14,20 +10,14 @@ export const roles = [
   { name: 'Student', type: 'student', description: 'Enrolls in courses, reads lessons and takes quizzes.' },
 ];
 
-// The permission matrix from the project spec. A role holding a box here may call that
-// endpoint at all; narrowing a call to the caller's own rows is the controllers' job.
+// RBAC Permission matrix mapping
 const matrix: Record<string, Record<string, string[]>> = {
-  // The catalogue is the shop window. A learner has to see what is on offer before deciding to make
-  // an account, so course reads are open, and a course read carries titles only. The lesson bodies
-  // and the quiz questions come from their own routes, which stay behind the enrollment gate.
   Public: {
     'api::course.course': READ,
     'api::blog-post.blog-post': READ,
   },
 
   Student: {
-    // progress is the custom route in api/course/routes/progress.ts. Anyone who can see a course
-    // can ask how far through it people are; which people is decided in the controller.
     'api::course.course': [...READ, 'progress'],
     'api::lesson.lesson': READ,
     'api::quiz.quiz': READ,
@@ -42,8 +32,6 @@ const matrix: Record<string, Record<string, string[]>> = {
   Instructor: {
     'api::course.course': [...MANAGE, 'progress'],
     'api::lesson.lesson': MANAGE,
-    // answers is the route in api/quiz/routes/answers.ts, which hands back the key a quiz is
-    // authored against. Students hold quiz read and not this, so taking a quiz never sees it.
     'api::quiz.quiz': [...MANAGE, 'answers'],
     'api::blog-post.blog-post': READ,
     'api::enrollment.enrollment': READ,
@@ -65,8 +53,6 @@ const matrix: Record<string, Record<string, string[]>> = {
     'plugin::users-permissions.auth': ['logout'],
   },
 
-  // No create on enrollment or quiz-result: the matrix marks "enroll in a course" and
-  // "take quizzes" as things an Admin does not do. The deletes are platform management.
   Admin: {
     'api::course.course': [...MANAGE, 'progress'],
     'api::lesson.lesson': MANAGE,
@@ -78,15 +64,10 @@ const matrix: Record<string, Record<string, string[]>> = {
     'plugin::users-permissions.user': ['me', 'find', 'findOne', 'count', 'create', 'update', 'destroy'],
     'plugin::users-permissions.role': READ,
     'plugin::users-permissions.auth': ['logout'],
-    // Nobody else gets this box, so the stats controller has no role check of its own.
     'api::stats.stats': ['find'],
   },
 };
 
-// Which permissions this file may remove. Nothing under plugin::users-permissions.auth is ever
-// removed: those are the boxes that let anyone register and log in, and rewriting them from here
-// could lock the platform shut. Granting auth.logout above still works, because the plugin hands
-// it out by role type and none of these four roles is of type authenticated.
 const isMine = (action: string) =>
   action.startsWith('api::') ||
   action.startsWith('plugin::users-permissions.user.') ||
@@ -148,16 +129,26 @@ type AdvancedSettings = { default_role: string };
 
 const setSignupRole = async (strapi: Core.Strapi, type: string) => {
   const store = strapi.store({ type: 'plugin', name: 'users-permissions' });
-  const advanced = (await store.get({ key: 'advanced' })) as AdvancedSettings | null;
+  const role = await strapi.db
+    .query('plugin::users-permissions.role')
+    .findOne({ where: { type } });
 
-  if (!advanced || advanced.default_role === type) return;
+  if (!role) return;
 
-  await store.set({ key: 'advanced', value: { ...advanced, default_role: type } });
-  strapi.log.info(`default signup role set to ${type}`);
+  const current = (await store.get({ key: 'advanced' })) as AdvancedSettings | null;
+
+  if (current && String(current.default_role) !== String(role.id)) {
+    await store.set({ key: 'advanced', value: { ...current, default_role: role.id } });
+  }
 };
 
-export default async ({ strapi }: { strapi: Core.Strapi }) => {
+export const applyPermissions = async (strapi: Core.Strapi) => {
   await ensureRoles(strapi);
   await applyMatrix(strapi);
   await setSignupRole(strapi, 'student');
 };
+
+export default async ({ strapi }: { strapi: Core.Strapi }) => {
+  await applyPermissions(strapi);
+};
+

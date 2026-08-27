@@ -1,7 +1,3 @@
-/**
- * enrollment controller
- */
-
 import { factories } from '@strapi/strapi';
 import type { Context } from 'koa';
 
@@ -10,9 +6,7 @@ import { caller, narrow, roleName, seesEveryRow } from '../../../utils/caller';
 const UID = 'api::enrollment.enrollment';
 
 export default factories.createCoreController(UID, ({ strapi }) => ({
-  // The student comes from the session, never from the body, or one signed in user could enroll
-  // another. That rules out super.create: it validates the body against what the caller's role may
-  // write, and a Student may not write a relation to the user collection even to point at itself.
+  // Attach student from auth session, ignore client-provided user id
   async create(ctx: Context) {
     const me = caller(ctx).id;
     const body = ctx.request.body as { data?: { course?: unknown } };
@@ -31,7 +25,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
       limit: 1,
     });
 
-    // No pair of fields can be made unique in the schema, so the second enrollment is caught here.
     if (duplicate) return ctx.badRequest('already enrolled in this course');
 
     const enrollment = await strapi.documents(UID).create({
@@ -40,7 +33,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     });
 
     ctx.status = 201;
-
     return super.transformResponse(await super.sanitizeOutput(enrollment, ctx));
   },
 
@@ -51,8 +43,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     if (!seesEveryRow(ctx)) {
       const me = caller(ctx).id;
 
-      // Students see their own enrollments, instructors the enrollments on courses they own. An
-      // unexpected role lands in the second branch and sees nothing, which is the safe way round.
       narrow(
         query,
         roleName(ctx) === 'Student' ? { student: { id: me } } : { course: { owner: { id: me } } }
@@ -60,7 +50,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     }
 
     const { results, pagination } = await strapi.service(UID).find(query);
-
     return super.transformResponse(await super.sanitizeOutput(results, ctx), { pagination });
   },
 
@@ -74,15 +63,12 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
       });
 
       const mine = enrollment?.student?.id === me || enrollment?.course?.owner?.id === me;
-
-      // 404 rather than 403: a 403 would confirm the row exists to someone allowed nowhere near it.
       if (!mine) return ctx.notFound();
     }
 
     return super.findOne(ctx);
   },
 
-  // Unenrolling is the student's own decision. Admin can also remove one as platform cleanup.
   async delete(ctx: Context) {
     if (roleName(ctx) !== 'Admin') {
       const me = caller(ctx).id;
