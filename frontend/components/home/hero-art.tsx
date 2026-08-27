@@ -2,18 +2,17 @@ export const HeroArt = () => {
   return (
     <div className="relative mx-auto w-full flex items-center justify-center">
       {/* Background Subtle Soft Glow */}
-      <div className="brand-gradient absolute -inset-3 rotate-1 rounded-2xl opacity-15 blur-2xl" />
+      <div className="brand-gradient absolute -inset-2 rotate-1 rounded-lg opacity-15 blur-xl" />
 
-      {/* Main Clean Showcase Frame */}
-      <div className="relative w-full overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-3 sm:p-4 shadow-xl">
-        <div className="relative overflow-hidden rounded-xl bg-slate-900 shadow-xs">
+      {/* Main Clean Showcase Frame with User Uploaded Illustration */}
+      <div className="relative w-full overflow-hidden rounded-lg border border-slate-200/90 bg-white p-2 sm:p-3 shadow-lg">
+        <div className="relative overflow-hidden rounded-md bg-slate-100">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1000&auto=format&fit=crop&q=80"
-            alt="Interactive Online Learning Workspace"
-            className="w-full h-72 sm:h-96 object-cover transition-transform duration-500 hover:scale-105"
+            src="/hero-illustration.png"
+            alt="Online Learning Illustration"
+            className="w-full h-auto max-h-[420px] object-cover transition-transform duration-500 hover:scale-[1.02]"
           />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent" />
         </div>
       </div>
     </div>

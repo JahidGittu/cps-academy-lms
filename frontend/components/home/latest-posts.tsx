@@ -27,7 +27,7 @@ export const LatestPosts = () => {
       <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-8">
         <div className="flex flex-wrap items-end justify-between gap-4 mb-10">
           <div>
-            <span className="inline-block rounded-md bg-brand-50 border border-brand-200 px-3 py-1 text-xs font-semibold text-brand-700 mb-2">
+            <span className="inline-block rounded bg-brand-50 border border-brand-200 px-2.5 py-0.5 text-xs font-semibold text-brand-700 mb-2">
               Engineering Insights
             </span>
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
@@ -40,7 +40,7 @@ export const LatestPosts = () => {
 
           <Link
             href="/blog"
-            className="group inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-brand-600 transition"
+            className="group inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-brand-600 transition"
           >
             <span>All Articles</span>
             <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
@@ -58,7 +58,7 @@ export const LatestPosts = () => {
 
             return (
               <Link key={post.documentId} href={`/blog/${post.documentId}`} className="group block">
-                <Card className="h-full flex flex-col justify-between overflow-hidden border-slate-200/90 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-brand-300 group-hover:shadow-md p-0">
+                <Card className="h-full flex flex-col justify-between overflow-hidden border-slate-200/90 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-brand-300 group-hover:shadow-sm p-0 rounded-md">
                   {/* High-res Blog Cover Image */}
                   <div className="relative h-44 w-full overflow-hidden bg-slate-100">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -70,9 +70,9 @@ export const LatestPosts = () => {
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent" />
                   </div>
 
-                  <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div className="p-5 flex-1 flex flex-col justify-between">
                     <div>
-                      <div className="flex items-center gap-3 text-xs text-slate-500 mb-3">
+                      <div className="flex items-center gap-3 text-xs text-slate-500 mb-2.5">
                         <span className="flex items-center gap-1">
                           <Calendar className="size-3.5" />
                           {date}
@@ -94,7 +94,7 @@ export const LatestPosts = () => {
                       </p>
                     </div>
 
-                    <span className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 group-hover:text-brand-700">
+                    <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 group-hover:text-brand-700">
                       Read article <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
                     </span>
                   </div>

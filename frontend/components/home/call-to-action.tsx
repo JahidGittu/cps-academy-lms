@@ -3,7 +3,7 @@ import { ArrowRight, Compass } from 'lucide-react';
 
 export const CallToAction = () => (
   <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-8">
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-violet-700 p-8 sm:p-14 text-white shadow-xl shadow-brand-500/10">
+    <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-brand-600 via-indigo-600 to-violet-700 p-8 sm:p-12 text-white shadow-lg shadow-brand-500/10">
       {/* Decorative background shapes */}
       <div className="pointer-events-none absolute -right-12 -top-12 size-64 rounded-full bg-white/10 blur-2xl" />
       <div className="pointer-events-none absolute -left-12 -bottom-12 size-64 rounded-full bg-white/10 blur-2xl" />
@@ -19,7 +19,7 @@ export const CallToAction = () => (
         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
           <Link
             href="/register"
-            className="group inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3 text-base font-bold text-brand-700 shadow-lg transition-all hover:bg-brand-50 hover:shadow-xl"
+            className="group inline-flex items-center gap-2 rounded-md bg-white px-6 py-2.5 text-base font-bold text-brand-700 shadow-md transition-all hover:bg-brand-50 hover:shadow-lg"
           >
             <span>Create Free Account</span>
             <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
@@ -27,7 +27,7 @@ export const CallToAction = () => (
 
           <Link
             href="/courses"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3 text-base font-semibold text-white backdrop-blur transition hover:bg-white/20"
+            className="inline-flex items-center gap-2 rounded-md border border-white/30 bg-white/10 px-5 py-2.5 text-base font-semibold text-white backdrop-blur transition hover:bg-white/20"
           >
             <Compass className="size-4" />
             <span>Browse Catalogue</span>

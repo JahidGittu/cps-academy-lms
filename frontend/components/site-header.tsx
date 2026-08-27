@@ -14,7 +14,7 @@ const NavLink = ({ href, label }: { href: string; label: string }) => {
   return (
     <Link
       href={href}
-      className={`rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-all duration-150 ${
+      className={`rounded-md px-3.5 py-1.5 text-sm font-semibold transition-all duration-150 ${
         active
           ? 'bg-brand-50 text-brand-700 shadow-2xs font-bold'
           : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
@@ -53,7 +53,7 @@ export const SiteHeader = () => {
     <header className={`sticky top-0 z-40 transition-all duration-200 ${headerStyle}`}>
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-1.5 px-4 sm:px-8">
         <Link href="/" className="mr-auto flex items-center gap-2.5 group">
-          <span className="brand-gradient flex size-9 items-center justify-center rounded-lg text-white shadow-sm shadow-brand-500/30 transition-transform group-hover:scale-105">
+          <span className="brand-gradient flex size-9 items-center justify-center rounded-md text-white shadow-sm shadow-brand-500/30 transition-transform group-hover:scale-105">
             <GraduationCap className="size-5" />
           </span>
 
@@ -77,7 +77,7 @@ export const SiteHeader = () => {
               {hasRole(user, 'Admin') && (
                 <Link
                   href="/admin"
-                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors"
                 >
                   <Shield className="size-3.5" />
                   <span>Admin</span>
@@ -86,7 +86,7 @@ export const SiteHeader = () => {
 
               {/* Logged-in User Profile Display */}
               <div className="ml-3 hidden items-center gap-2.5 border-l border-slate-200 pl-3.5 sm:flex">
-                <span className="flex size-8 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700 uppercase shadow-xs">
+                <span className="flex size-7 items-center justify-center rounded-md bg-brand-100 text-xs font-bold text-brand-700 uppercase shadow-xs">
                   {user.username.slice(0, 2)}
                 </span>
 
@@ -100,7 +100,7 @@ export const SiteHeader = () => {
                 type="button"
                 onClick={() => void logout()}
                 title="Sign out"
-                className="ml-1.5 rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                className="ml-1.5 rounded-md p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
               >
                 <LogOut className="size-4" />
               </button>
@@ -109,7 +109,7 @@ export const SiteHeader = () => {
             <div className="flex items-center ml-2">
               <Link
                 href="/login"
-                className="brand-gradient rounded-lg px-4 py-1.5 text-sm font-semibold text-white shadow-xs transition hover:opacity-90 hover:shadow-sm"
+                className="brand-gradient rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-xs transition hover:opacity-90 hover:shadow-sm"
               >
                 Sign in
               </Link>

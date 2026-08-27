@@ -11,13 +11,13 @@ export const CourseTile = ({ course, enrolled = false }: { course: Course; enrol
   return (
     <Link
       href={`/courses/${course.documentId}`}
-      className="group flex h-full flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md"
+      className="group flex h-full flex-col overflow-hidden rounded-md border border-slate-200/90 bg-white shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-sm"
     >
       <div className="relative overflow-hidden">
         <CourseCover title={course.title} url={course.coverImageUrl} className="h-44 transition-transform duration-300 group-hover:scale-105" />
         {enrolled && (
           <div className="absolute top-3 right-3">
-            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-600/95 px-2.5 py-1 text-xs font-semibold text-white shadow-md backdrop-blur">
+            <span className="inline-flex items-center gap-1 rounded bg-emerald-600/95 px-2 py-0.5 text-xs font-semibold text-white shadow-sm backdrop-blur">
               <CheckCircle className="size-3" />
               <span>Enrolled</span>
             </span>

@@ -19,7 +19,7 @@ export const Hero = () => (
             <span>Become a </span>
             <span className="relative inline-block whitespace-nowrap text-brand-600">
               Future Leader
-              {/* Curved Underline SVG Accent like PTTA */}
+              {/* Curved Underline SVG Accent */}
               <svg
                 aria-hidden="true"
                 viewBox="0 0 300 14"
@@ -49,7 +49,7 @@ export const Hero = () => (
         <div className="flex flex-wrap items-center gap-4 pt-2">
           <Link
             href="/courses"
-            className="brand-gradient group inline-flex items-center gap-2.5 rounded-xl px-7 py-3.5 text-base font-bold text-white shadow-lg shadow-brand-500/25 transition-all duration-200 hover:shadow-brand-500/40 hover:-translate-y-0.5"
+            className="brand-gradient group inline-flex items-center gap-2.5 rounded-md px-6 py-3 text-base font-bold text-white shadow-md shadow-brand-500/20 transition-all duration-200 hover:shadow-brand-500/30 hover:-translate-y-0.5"
           >
             <BookOpen className="size-5" />
             <span>Explore Courses</span>
@@ -59,22 +59,22 @@ export const Hero = () => (
 
         {/* Social Proof Stack (Avatars + Text) */}
         <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
-          <div className="flex -space-x-2.5 overflow-hidden">
+          <div className="flex -space-x-2 overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              className="inline-block size-9 rounded-full ring-2 ring-white object-cover shadow-xs"
+              className="inline-block size-8 rounded-full ring-2 ring-white object-cover shadow-xs"
               src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
               alt="Enrolled Student"
             />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              className="inline-block size-9 rounded-full ring-2 ring-white object-cover shadow-xs"
+              className="inline-block size-8 rounded-full ring-2 ring-white object-cover shadow-xs"
               src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80"
               alt="Enrolled Student"
             />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              className="inline-block size-9 rounded-full ring-2 ring-white object-cover shadow-xs"
+              className="inline-block size-8 rounded-full ring-2 ring-white object-cover shadow-xs"
               src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80"
               alt="Enrolled Student"
             />
