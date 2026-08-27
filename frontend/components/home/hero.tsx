@@ -4,7 +4,7 @@ import { ArrowRight, BookOpen } from 'lucide-react';
 import { HeroArt } from '@/components/home/hero-art';
 
 export const Hero = () => (
-  <section className="relative overflow-hidden bg-white border-b border-slate-200/80 py-12 lg:py-20">
+  <section className="relative overflow-hidden bg-white border-b border-slate-200/80 py-14 lg:py-24">
     {/* Soft Ambient Background Glows */}
     <div className="pointer-events-none absolute -left-20 top-1/4 size-96 rounded-full bg-brand-500/5 blur-3xl" />
     <div className="pointer-events-none absolute right-1/4 bottom-0 size-96 rounded-full bg-indigo-500/5 blur-3xl" />
@@ -13,7 +13,7 @@ export const Hero = () => (
       {/* Left Column: Heading & Social Proof */}
       <div className="space-y-6 lg:col-span-6">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl lg:text-5xl xl:text-6xl leading-[1.15]">
+          <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-5xl xl:text-6xl leading-[1.15]">
             <span>Learn, Master &amp;</span>
             <br />
             <span>Become a </span>
@@ -40,7 +40,7 @@ export const Hero = () => (
             <span>Starting Today!</span>
           </h1>
 
-          <p className="mt-5 text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl">
+          <p className="mt-5 text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl font-normal">
             Build real-world software engineering and database skills from CPS Academy. Start your career journey today with structured, sequential learning.
           </p>
         </div>
@@ -49,7 +49,7 @@ export const Hero = () => (
         <div className="flex flex-wrap items-center gap-4 pt-2">
           <Link
             href="/courses"
-            className="brand-gradient group inline-flex items-center gap-2.5 rounded-md px-6 py-3 text-base font-bold text-white shadow-md shadow-brand-500/20 transition-all duration-200 hover:shadow-brand-500/30 hover:-translate-y-0.5"
+            className="brand-gradient group inline-flex items-center gap-2.5 rounded-md px-6 py-3 text-base font-semibold text-white shadow-md shadow-brand-500/20 transition-all duration-200 hover:shadow-brand-500/30 hover:-translate-y-0.5"
           >
             <BookOpen className="size-5" />
             <span>Explore Courses</span>
@@ -81,7 +81,7 @@ export const Hero = () => (
           </div>
 
           <p className="text-xs sm:text-sm font-medium text-slate-600">
-            <strong className="font-bold text-brand-600">10k+</strong> students already enrolled this month.
+            <strong className="font-semibold text-brand-600">10k+</strong> students already enrolled this month.
           </p>
         </div>
       </div>
