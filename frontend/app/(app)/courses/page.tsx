@@ -102,10 +102,7 @@ export default function CoursesPage() {
 
       {/* Course Grid */}
       {courses.loading ? (
-        <LoadingState
-          message="Loading course catalogue..."
-          subtext="Fetching available tracks, syllabi, and interactive quizzes."
-        />
+        <LoadingState />
       ) : courses.error ? (
         <Alert>{courses.error}</Alert>
       ) : filtered.length === 0 ? (

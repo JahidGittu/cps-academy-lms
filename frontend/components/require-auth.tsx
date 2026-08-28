@@ -1,10 +1,13 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { ShieldAlert, ArrowLeft } from 'lucide-react';
 
 import { hasRole, useAuth } from '@/lib/auth';
 import type { RoleName } from '@/lib/types';
-import { Empty, LoadingState } from './ui';
+import { Button, LoadingState } from './ui';
 
 export const RequireAuth = ({
   roles,
@@ -14,33 +17,42 @@ export const RequireAuth = ({
   children: React.ReactNode;
 }) => {
   const { user, loading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
 
-  if (loading) {
-    return (
-      <LoadingState
-        message="Authenticating session..."
-        subtext="Verifying account security and permission level."
-      />
-    );
-  }
+  useEffect(() => {
+    if (!loading && !user) {
+      const redirectTarget = pathname ? `?redirect=${encodeURIComponent(pathname)}` : '';
+      router.replace(`/login${redirectTarget}`);
+    }
+  }, [user, loading, pathname, router]);
 
-  if (!user) {
-    return (
-      <Empty>
-        <Link href="/login" className="text-brand-600 font-bold underline hover:text-brand-800">
-          Sign in
-        </Link>{' '}
-        to access this page.
-      </Empty>
-    );
+  if (loading || !user) {
+    return <LoadingState minHeight="min-h-[50vh]" />;
   }
 
   if (roles && !hasRole(user, ...roles)) {
+    const isStudent = user.role?.name === 'Student';
+    const fallbackPath = isStudent ? '/dashboard' : '/admin';
+
     return (
-      <Empty>
-        <p className="font-bold text-slate-800">Access Restricted</p>
-        <p className="mt-1 text-xs text-slate-500">This workspace is not accessible to {user.role?.name ?? 'your'} accounts.</p>
-      </Empty>
+      <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+        <div className="flex size-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 mb-4 shadow-2xs">
+          <ShieldAlert className="size-7" />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900">Access Restricted</h2>
+        <p className="mt-1.5 max-w-md text-xs sm:text-sm text-slate-500 leading-relaxed">
+          Your account role (<strong className="text-slate-800">{user.role?.name ?? 'Authenticated'}</strong>) does not have sufficient administrative privileges to access this area.
+        </p>
+        <div className="mt-6">
+          <Link href={fallbackPath}>
+            <Button variant="primary" className="gap-2">
+              <ArrowLeft className="size-4" />
+              <span>Return to Workspace</span>
+            </Button>
+          </Link>
+        </div>
+      </div>
     );
   }
 

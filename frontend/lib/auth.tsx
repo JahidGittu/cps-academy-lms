@@ -9,8 +9,6 @@ import type { RoleName, User } from './types';
 type AuthValue = {
   user: User | null;
   loading: boolean;
-  // Both hand the account back as well as putting it in the context. The course page needs to know
-  // which role just signed in before its own render has caught up, so it can enrol a new student.
   login: (identifier: string, password: string) => Promise<User | null>;
   register: (username: string, email: string, password: string) => Promise<User | null>;
   logout: () => Promise<void>;
@@ -23,26 +21,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // populate=role is needed because the role is a relation. It only comes back at all thanks to
-  // the server extension that puts it there; sanitizeOutput strips it otherwise.
   const loadUser = useCallback(async () => {
     if (!accessToken()) {
       setUser(null);
       setLoading(false);
-
       return null;
     }
 
     try {
       const { data } = await api.get<User>('/users/me?populate=role');
-
       setUser(data);
-
       return data;
     } catch {
       clearTokens();
       setUser(null);
-
       return null;
     } finally {
       setLoading(false);
@@ -50,8 +42,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    // Called when a refresh fails, which means the session is genuinely over rather than the
-    // access token having merely expired.
     setSignedOutHandler(() => {
       setUser(null);
       router.push('/login');
@@ -64,25 +54,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (identifier: string, password: string) => {
     const { data } = await api.post('/auth/local', { identifier, password });
-
     storeTokens(data.jwt, data.refreshToken);
-
     return loadUser();
   };
 
-  // No role is chosen here. Everyone who signs up is a Student, because letting a visitor pick
-  // Admin would undo the whole permission matrix.
   const register = async (username: string, email: string, password: string) => {
     const { data } = await api.post('/auth/local/register', { username, email, password });
-
     storeTokens(data.jwt, data.refreshToken);
-
     return loadUser();
   };
 
   const logout = async () => {
-    // The server revokes the refresh token, so this is not just a local forget. Failing here
-    // still has to clear the browser, or a signed-out user keeps a working token.
     try {
       await api.post('/auth/logout');
     } finally {

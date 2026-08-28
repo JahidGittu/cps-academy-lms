@@ -51,4 +51,30 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     return super.findOne(ctx);
   },
+
+  async delete(ctx: Context) {
+    const lesson = await strapi.documents(UID).findOne({
+      documentId: ctx.params.id,
+      populate: { course: { populate: ['owner'] } },
+    });
+
+    if (!lesson) return ctx.notFound();
+
+    const me = caller(ctx).id;
+    const isOwner = (lesson.course as { owner?: { id?: number } } | null)?.owner?.id === me;
+    if (!seesEveryRow(ctx) && !isOwner) {
+      return ctx.forbidden();
+    }
+
+    // Cascade delete any student progresses for this lesson
+    const progresses = await strapi.documents('api::lesson-progress.lesson-progress').findMany({
+      filters: { lesson: { documentId: lesson.documentId } },
+    });
+    for (const lp of progresses) {
+      await strapi.documents('api::lesson-progress.lesson-progress').delete({ documentId: lp.documentId });
+    }
+
+    await strapi.documents(UID).delete({ documentId: ctx.params.id });
+    return ctx.send({ data: { documentId: ctx.params.id, deleted: true } });
+  },
 }));

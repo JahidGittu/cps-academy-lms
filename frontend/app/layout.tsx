@@ -27,8 +27,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="en" className={`${sansFont.variable} ${monoFont.variable} font-sans h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-slate-50 text-slate-900 font-sans">
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${sansFont.variable} ${monoFont.variable} font-sans h-full antialiased`}
+    >
+      <body
+        suppressHydrationWarning
+        className="flex min-h-full flex-col bg-slate-50 text-slate-900 font-sans"
+      >
         <AuthProvider>
           <SiteHeader />
           <main className="flex-1">{children}</main>

@@ -44,12 +44,7 @@ export default function PublicBlogPage() {
   const featured = filtered[0];
 
   if (posts.loading) {
-    return (
-      <LoadingState
-        message="Loading engineering articles..."
-        subtext="Fetching technical write-ups, architecture breakdowns, and guides."
-      />
-    );
+    return <LoadingState />;
   }
 
   if (posts.error) return <Alert>{posts.error}</Alert>;

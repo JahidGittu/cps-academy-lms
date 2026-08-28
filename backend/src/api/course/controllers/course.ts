@@ -82,6 +82,57 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     return super.transformResponse(await super.sanitizeOutput(course, ctx));
   },
 
+  async delete(ctx: Context) {
+    const course = await strapi.documents(UID).findOne({
+      documentId: ctx.params.id,
+      populate: ['lessons', 'quiz', 'owner'],
+    });
+
+    if (!course) return ctx.notFound();
+
+    const me = caller(ctx).id;
+    if (!seesEveryRow(ctx) && course.owner?.id !== me) {
+      return ctx.forbidden();
+    }
+
+    // Cascade delete enrollments
+    const enrollments = await strapi.documents('api::enrollment.enrollment').findMany({
+      filters: { course: { documentId: course.documentId } },
+    });
+    for (const e of enrollments) {
+      await strapi.documents('api::enrollment.enrollment').delete({ documentId: e.documentId });
+    }
+
+    // Cascade delete lessons and their progresses
+    if (course.lessons?.length) {
+      for (const lesson of course.lessons) {
+        const progresses = await strapi.documents('api::lesson-progress.lesson-progress').findMany({
+          filters: { lesson: { documentId: lesson.documentId } },
+        });
+        for (const lp of progresses) {
+          await strapi.documents('api::lesson-progress.lesson-progress').delete({ documentId: lp.documentId });
+        }
+        await strapi.documents('api::lesson.lesson').delete({ documentId: lesson.documentId });
+      }
+    }
+
+    // Cascade delete quiz and quiz results
+    if (course.quiz) {
+      const results = await strapi.documents('api::quiz-result.quiz-result').findMany({
+        filters: { quiz: { documentId: course.quiz.documentId } },
+      });
+      for (const qr of results) {
+        await strapi.documents('api::quiz-result.quiz-result').delete({ documentId: qr.documentId });
+      }
+      await strapi.documents('api::quiz.quiz').delete({ documentId: course.quiz.documentId });
+    }
+
+    // Delete course
+    await strapi.documents(UID).delete({ documentId: ctx.params.id });
+
+    return ctx.send({ data: { documentId: ctx.params.id, deleted: true } });
+  },
+
   async find(ctx: Context) {
     const mine = ctx.query.mine === 'true';
     delete ctx.query.mine;

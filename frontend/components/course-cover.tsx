@@ -1,12 +1,13 @@
 import { BookOpen } from 'lucide-react';
 
-const DEFAULT_COVERS: Record<string, string> = {
+export const DEFAULT_COVERS: Record<string, string> = {
+  'Web Development: HTML, CSS & JavaScript Masterclass': 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop&q=80',
   'SQL Foundations': 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&auto=format&fit=crop&q=80',
   'Postgres in Production': 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80',
   'Designing a Schema': 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80',
 };
 
-const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop&q=80';
+export const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop&q=80';
 
 export const CourseCover = ({
   title,

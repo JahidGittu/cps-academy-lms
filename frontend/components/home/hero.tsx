@@ -4,7 +4,7 @@ import { ArrowRight, BookOpen } from 'lucide-react';
 import { HeroArt } from '@/components/home/hero-art';
 
 export const Hero = () => (
-  <section className="relative overflow-hidden bg-white border-b border-slate-200/80 py-14 lg:py-24">
+  <section className="relative overflow-hidden bg-white border-b border-slate-200/80 py-14">
     {/* Soft Ambient Background Glows */}
     <div className="pointer-events-none absolute -left-20 top-1/4 size-96 rounded-full bg-brand-500/5 blur-3xl" />
     <div className="pointer-events-none absolute right-1/4 bottom-0 size-96 rounded-full bg-indigo-500/5 blur-3xl" />
@@ -14,7 +14,7 @@ export const Hero = () => (
       <div className="space-y-6 lg:col-span-6">
         <div>
           <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-5xl xl:text-6xl leading-[1.15]">
-            <span>Learn, Master &amp;</span>
+            <span>Learn, Grow &amp;</span>
             <br />
             <span>Become a </span>
             <span className="relative inline-block whitespace-nowrap text-brand-600">
@@ -37,7 +37,7 @@ export const Hero = () => (
             </span>{' '}
             <span className="text-slate-400 font-normal">—</span>
             <br />
-            <span>Starting Today!</span>
+            {/* <span>Starting Today!</span> */}
           </h1>
 
           <p className="mt-5 text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl font-normal">

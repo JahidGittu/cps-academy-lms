@@ -8,21 +8,28 @@ import { useApi } from '@/lib/use-api';
 import type { Course, CourseProgress, Single } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
 import { Alert, Empty, LoadingState, ProgressBar } from '@/components/ui';
+import { useSetBreadcrumbs } from '@/components/dashboard-shell';
 
 const Roster = ({ documentId }: { documentId: string }) => {
   const course = useApi<Single<Course>>(`/courses/${documentId}`);
   const progress = useApi<Single<CourseProgress>>(`/courses/${documentId}/progress`);
 
-  if (course.loading || progress.loading) {
-    return (
-      <LoadingState
-        message="Loading student roster..."
-        subtext="Fetching enrolled student completion rates and quiz assessment scores."
-      />
-    );
+  const detail = course.data?.data;
+
+  useSetBreadcrumbs(
+    detail
+      ? [
+          { label: 'Courses', href: '/admin/course-management' },
+          { label: detail.title },
+          { label: 'Student Progress' },
+        ]
+      : [{ label: 'Courses', href: '/admin/course-management' }, { label: 'Student Progress' }]
+  );
+
+  if ((course.loading && !course.data) || (progress.loading && !progress.data)) {
+    return <LoadingState />;
   }
 
-  const detail = course.data?.data;
   if (!detail) return <Empty>This course does not exist.</Empty>;
 
   if (!detail.owned) return <Empty>This course belongs to someone else.</Empty>;
@@ -40,15 +47,6 @@ const Roster = ({ documentId }: { documentId: string }) => {
 
   return (
     <div className="space-y-6">
-      {/* Back Link */}
-      <Link
-        href={`/courses/${documentId}`}
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-brand-600 transition-colors"
-      >
-        <ArrowLeft className="size-4" />
-        <span>Back to {detail.title}</span>
-      </Link>
-
       {/* Top Header & Analytics Summary Cards */}
       <div className="space-y-4">
         <div>

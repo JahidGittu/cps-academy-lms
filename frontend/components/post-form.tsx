@@ -5,8 +5,9 @@ import type { ChangeEvent, FormEvent } from 'react';
 
 import { errorMessage } from '@/lib/api';
 import type { BlogPost } from '@/lib/types';
-import { Alert, Button, Field, inputStyle, TextField } from '@/components/ui';
+import { Alert, Button, Field, inputStyle } from '@/components/ui';
 import { ImagePicker } from '@/components/image-picker';
+import { RichTextEditor } from '@/components/rich-text-editor';
 
 export type PostValues = {
   title: string;
@@ -43,7 +44,7 @@ export const PostForm = ({
 
   const set =
     (field: keyof PostValues) =>
-    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | { target: { value: string } }) =>
       setValues((prev) => ({ ...prev, [field]: event.target.value }));
 
   const submit = async (event: FormEvent) => {
@@ -69,13 +70,13 @@ export const PostForm = ({
         placeholder="e.g. Architecting Scalable Web Applications"
       />
 
-      <TextField
-        label="Article Body (Markdown supported)"
+      <RichTextEditor
+        label="Article Body"
         value={values.body}
         onChange={set('body')}
         required
-        rows={14}
-        placeholder="Write content with markdown formatting..."
+        rows={12}
+        placeholder="Write your article content, paragraphs, code snippets, and analysis..."
       />
 
       {/* Dual Upload & URL Image Picker */}

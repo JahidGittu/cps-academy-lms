@@ -30,12 +30,7 @@ const Post = ({ documentId }: { documentId: string }) => {
   const post = useApi<Single<BlogPost>>(`/blog-posts/${documentId}`);
 
   if (post.loading) {
-    return (
-      <LoadingState
-        message="Loading article..."
-        subtext="Fetching Markdown content and author metadata."
-      />
-    );
+    return <LoadingState />;
   }
 
   if (post.status === 404) {

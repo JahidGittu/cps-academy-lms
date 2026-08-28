@@ -7,7 +7,7 @@ import { useApi } from '@/lib/use-api';
 import type { Course, Single } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
 import { Alert, Empty, LoadingState } from '@/components/ui';
-import { BuilderHeader } from './builder-header';
+import { useSetBreadcrumbs } from '@/components/dashboard-shell';
 import { BuilderNav, type Section } from './builder-nav';
 import { CourseDetails } from './course-details';
 import { LessonManager } from './lesson-manager';
@@ -16,21 +16,25 @@ import { QuizPanel } from './quiz-panel';
 const Builder = ({ documentId }: { documentId: string }) => {
   const course = useApi<Single<Course>>(`/courses/${documentId}`);
 
-  // Lessons rather than details: the title is typed once and the syllabus is what you come back for.
-  const [section, setSection] = useState<Section>('lessons');
+  // Default to 1st tab (Details & Overview) when opening course edit
+  const [section, setSection] = useState<Section>('details');
 
-  if (course.loading) {
-    return (
-      <LoadingState
-        message="Loading course editor..."
-        subtext="Retrieving syllabus outline, lesson sequence, and quiz builder."
-      />
-    );
+  const detail = course.data?.data;
+
+  useSetBreadcrumbs(
+    detail
+      ? [
+          { label: 'Courses', href: '/admin/course-management' },
+          { label: detail.title },
+        ]
+      : [{ label: 'Courses', href: '/admin/course-management' }, { label: 'Edit Course' }]
+  );
+
+  if (course.loading && !course.data) {
+    return <LoadingState />;
   }
 
   if (course.error) return <Alert>{course.error}</Alert>;
-
-  const detail = course.data?.data;
 
   if (!detail) return <Empty>This course does not exist.</Empty>;
 
@@ -39,21 +43,18 @@ const Builder = ({ documentId }: { documentId: string }) => {
   if (!detail.owned) return <Empty>This course belongs to someone else.</Empty>;
 
   return (
-    <div className="space-y-6">
-      <BuilderHeader course={detail} />
+    <div className="grid gap-6 lg:grid-cols-[200px_minmax(0,1fr)] lg:items-start">
+      <BuilderNav
+        section={section}
+        lessons={detail.lessons?.length ?? 0}
+        hasQuiz={Boolean(detail.quiz)}
+        courseId={documentId}
+        onSelect={setSection}
+      />
 
-      <div className="grid gap-6 lg:grid-cols-[200px_minmax(0,1fr)] lg:items-start">
-        <BuilderNav
-          section={section}
-          lessons={detail.lessons?.length ?? 0}
-          hasQuiz={Boolean(detail.quiz)}
-          onSelect={setSection}
-        />
-
-        {section === 'details' && <CourseDetails course={detail} onSaved={course.reload} />}
-        {section === 'lessons' && <LessonManager course={documentId} onChanged={course.reload} />}
-        {section === 'quiz' && <QuizPanel course={detail} />}
-      </div>
+      {section === 'details' && <CourseDetails course={detail} onSaved={course.reload} />}
+      {section === 'lessons' && <LessonManager course={documentId} onChanged={course.reload} />}
+      {section === 'quiz' && <QuizPanel course={detail} />}
     </div>
   );
 };

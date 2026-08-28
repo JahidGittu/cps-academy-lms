@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { api, errorMessage } from '@/lib/api';
 import { useApi } from '@/lib/use-api';
 import type { Collection, Lesson, Single } from '@/lib/types';
-import { Alert, Empty } from '@/components/ui';
+import { Alert, Empty, LoadingState } from '@/components/ui';
 import { LessonEditor, type LessonValues } from './lesson-editor';
 import { LessonList } from './lesson-list';
 
@@ -23,12 +23,22 @@ export const LessonManager = ({
     `/lessons?filters[course][documentId][$eq]=${course}&sort=order:asc`
   );
 
-  // What the panel on the right is holding: a documentId, the word new, or nothing at all.
+  // Keep local ordered list for instant optimistic rendering without UI jumping or deselecting
+  const [localLessons, setLocalLessons] = useState<Lesson[]>([]);
+  // What the panel on the right is holding: a documentId, the word 'new', or empty
   const [selected, setSelected] = useState('');
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
 
-  const rows = lessons.data?.data ?? [];
+  // Synchronize server lessons into local state
+  useEffect(() => {
+    if (lessons.data?.data) {
+      const sorted = [...lessons.data.data].sort((a, b) => a.order - b.order);
+      setLocalLessons(sorted);
+    }
+  }, [lessons.data]);
+
+  const rows = localLessons;
   const editing = rows.find((row) => row.documentId === selected) ?? null;
 
   // The header counts lessons off the course read, so a write here has to refresh both.
@@ -50,18 +60,15 @@ export const LessonManager = ({
     }
   };
 
-  // Left to throw on purpose: the editor is showing the form the save came from, so it is the thing
-  // that should be showing the reason it failed.
+  // Save lesson handler
   const save = async (values: LessonValues) => {
     if (editing) {
       await api.put(`/lessons/${editing.documentId}`, { data: values });
       await refresh();
-
       return;
     }
 
-    // Students read the syllabus in this order, so a new lesson goes on the end rather than fighting
-    // for a rung somebody else is already on.
+    // Students read the syllabus in this order, so a new lesson goes on the end
     const order = rows.length ? Math.max(...rows.map((row) => row.order)) + 1 : 1;
     const { data } = await api.post<Single<Lesson>>('/lessons', {
       data: { ...values, order, course },
@@ -71,35 +78,59 @@ export const LessonManager = ({
     setSelected(data.data.documentId);
   };
 
-  // Two puts that trade the pair's order values, rather than one that renumbers the list. Only the
-  // two rows involved change, so nothing else in the syllabus can drift.
+  // Instant optimistic reorder that maintains active lesson state and zero UI flickering
   const move = (index: number, delta: number) =>
     run(async () => {
       const moving = rows[index];
       const other = rows[index + delta];
 
-      if (!other) return;
+      if (!moving || !other) return;
 
-      await api.put(`/lessons/${moving.documentId}`, { data: { order: other.order } });
-      await api.put(`/lessons/${other.documentId}`, { data: { order: moving.order } });
+      const currentSelected = selected;
+
+      // 1. Optimistically swap in local UI state immediately
+      const nextList = [...rows];
+      const movingNewOrder = other.order;
+      const otherNewOrder = moving.order;
+
+      nextList[index] = { ...other, order: otherNewOrder };
+      nextList[index + delta] = { ...moving, order: movingNewOrder };
+      setLocalLessons(nextList);
+
+      // 2. Persist order values to backend in background
+      await api.put(`/lessons/${moving.documentId}`, { data: { order: movingNewOrder } });
+      await api.put(`/lessons/${other.documentId}`, { data: { order: otherNewOrder } });
+
+      // 3. Silently revalidate without unmounting
       await refresh();
+
+      // 4. Ensure active lesson stays selected
+      if (currentSelected) {
+        setSelected(currentSelected);
+      }
     });
 
   const remove = (lesson: Lesson) => {
-    if (!window.confirm(`Delete ${lesson.title}? Any progress recorded against it goes too.`)) {
+    if (!window.confirm(`Delete "${lesson.title}"? Any student progress recorded against it will also be deleted.`)) {
       return;
     }
 
     void run(async () => {
+      // Optimistic removal
+      setLocalLessons((prev) => prev.filter((l) => l.documentId !== lesson.documentId));
+      if (selected === lesson.documentId) {
+        setSelected('');
+      }
+
       await api.delete(`/lessons/${lesson.documentId}`);
-
-      if (selected === lesson.documentId) setSelected('');
-
       await refresh();
     });
   };
 
-  if (lessons.loading) return <p className="text-sm text-slate-500">Loading lessons</p>;
+  // Guard initial loading only (do not unmount on subsequent background reloads)
+  if (lessons.loading && !lessons.data) {
+    return <LoadingState />;
+  }
 
   if (lessons.error) return <Alert>{lessons.error}</Alert>;
 
@@ -118,8 +149,7 @@ export const LessonManager = ({
           onRemove={remove}
         />
 
-        {/* Keyed on the selection so switching lessons builds a fresh form. Without it the boxes
-            would keep the text of whichever lesson was open first. */}
+        {/* Keyed on the selection so switching lessons builds a fresh form */}
         {selected === 'new' || editing ? (
           <LessonEditor
             key={selected}
@@ -128,7 +158,10 @@ export const LessonManager = ({
             onCancel={() => setSelected('')}
           />
         ) : (
-          <Empty>Pick a lesson to edit it, or add one.</Empty>
+          <Empty>
+            <p className="text-base font-bold text-slate-800">No Lesson Selected</p>
+            <p className="text-xs text-slate-500 mt-1">Select a lesson from the syllabus or add a new one.</p>
+          </Empty>
         )}
       </div>
     </div>

@@ -1,16 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
+import { CheckCircle2, RefreshCw } from 'lucide-react';
 
 import { errorMessage } from '@/lib/api';
 import type { Lesson } from '@/lib/types';
-import { Alert, Button, Field, TextField } from '@/components/ui';
+import { Alert, Button, Field } from '@/components/ui';
+import { RichTextEditor } from '@/components/rich-text-editor';
 
 export type LessonValues = { title: string; videoUrl: string; content: string };
 
-// No position field. Where a lesson sits is what the arrows in the syllabus are for, and a number box
-// beside them is a second way to say the same thing that can disagree with the first.
 export const LessonEditor = ({
   lesson,
   onSave,
@@ -28,23 +28,67 @@ export const LessonEditor = ({
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [saved, setSaved] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'unsaved' | 'saving' | 'saved'>('idle');
+
+  const isInitialMount = useRef(true);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const latestValues = useRef(values);
+  latestValues.current = values;
+
+  // Debounced auto-save for existing lessons (1200ms debounce)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    // Only auto-save if editing an existing lesson and title is present
+    if (!lesson || !values.title.trim()) return;
+
+    setSaveStatus('unsaved');
+
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(async () => {
+      setSaveStatus('saving');
+      setError('');
+
+      try {
+        await onSave(latestValues.current);
+        setSaveStatus('saved');
+      } catch (caught) {
+        setError(errorMessage(caught));
+        setSaveStatus('idle');
+      }
+    }, 1200);
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [values.title, values.videoUrl, values.content, lesson]);
 
   const set =
     (field: keyof LessonValues) =>
-    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      setSaved(false);
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | { target: { value: string } }) => {
       setValues((prev) => ({ ...prev, [field]: event.target.value }));
     };
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
     setBusy(true);
     setError('');
 
     try {
       await onSave(values);
-      setSaved(true);
+      setSaveStatus('saved');
     } catch (caught) {
       setError(errorMessage(caught));
     } finally {
@@ -55,30 +99,54 @@ export const LessonEditor = ({
   return (
     <form
       onSubmit={submit}
-      className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="space-y-4 rounded border border-slate-200 bg-white p-5 shadow-2xs"
     >
       <div className="flex items-baseline justify-between gap-3 border-b border-slate-200 pb-3">
-        <h2 className="truncate text-sm font-medium">
-          {lesson ? lesson.title : 'New lesson'}
+        <h2 className="truncate text-sm font-bold text-slate-900">
+          {lesson ? lesson.title : 'New Lesson'}
         </h2>
 
-        {saved && <span className="shrink-0 text-xs text-emerald-600">Saved</span>}
+        {lesson ? (
+          <div className="text-xs">
+            {saveStatus === 'saving' && (
+              <span className="inline-flex items-center gap-1.5 font-semibold text-brand-600 animate-pulse">
+                <RefreshCw className="size-3 animate-spin" />
+                <span>Auto-saving...</span>
+              </span>
+            )}
+            {saveStatus === 'saved' && (
+              <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
+                <CheckCircle2 className="size-3.5 text-emerald-500" />
+                <span>Saved</span>
+              </span>
+            )}
+            {saveStatus === 'unsaved' && (
+              <span className="inline-flex items-center gap-1.5 text-slate-400 font-medium">
+                <span className="size-1.5 rounded-full bg-amber-500" />
+                <span>Unsaved changes</span>
+              </span>
+            )}
+          </div>
+        ) : (
+          saveStatus === 'saved' && <span className="shrink-0 text-xs font-bold text-emerald-600">✓ Created!</span>
+        )}
       </div>
 
-      <Field label="Title" value={values.title} onChange={set('title')} required />
+      <Field label="Lesson Title" value={values.title} onChange={set('title')} placeholder="e.g. Introduction to CSS Flexbox" required />
 
       <Field
-        label="Video URL"
+        label="Video URL (Optional)"
         value={values.videoUrl}
         onChange={set('videoUrl')}
-        placeholder="https://www.youtube.com/watch?v="
+        placeholder="https://www.youtube.com/watch?v=..."
       />
 
-      <TextField
-        label="Content (Markdown)"
+      <RichTextEditor
+        label="Lesson Content"
         value={values.content}
         onChange={set('content')}
-        rows={14}
+        placeholder="Write lesson notes, explanations, code snippets, or instructions..."
+        rows={12}
       />
 
       <p className="text-xs text-slate-500">
@@ -87,14 +155,20 @@ export const LessonEditor = ({
 
       <Alert>{error}</Alert>
 
-      <div className="flex gap-2">
+      <div className="flex items-center gap-3">
         <Button type="submit" disabled={busy}>
-          {busy ? 'Saving' : 'Save lesson'}
+          {busy ? 'Saving...' : lesson ? 'Save lesson' : 'Create lesson'}
         </Button>
 
         <Button type="button" variant="plain" onClick={onCancel}>
           Close
         </Button>
+
+        {lesson && saveStatus === 'saved' && (
+          <span className="text-xs font-medium text-slate-500 hidden sm:inline">
+            ✓ Auto-synced with cloud
+          </span>
+        )}
       </div>
     </form>
   );

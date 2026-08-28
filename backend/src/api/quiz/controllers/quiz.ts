@@ -5,7 +5,7 @@
 import { factories } from '@strapi/strapi';
 import type { Context } from 'koa';
 
-import { courseScope, narrow, seesEveryRow } from '../../../utils/caller';
+import { caller, courseScope, narrow, seesEveryRow } from '../../../utils/caller';
 
 const UID = 'api::quiz.quiz';
 
@@ -61,5 +61,31 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
         })),
       },
     };
+  },
+
+  async delete(ctx: Context) {
+    const quiz = await strapi.documents(UID).findOne({
+      documentId: ctx.params.id,
+      populate: { course: { populate: ['owner'] } },
+    });
+
+    if (!quiz) return ctx.notFound();
+
+    const me = caller(ctx).id;
+    const isOwner = (quiz.course as { owner?: { id?: number } } | null)?.owner?.id === me;
+    if (!seesEveryRow(ctx) && !isOwner) {
+      return ctx.forbidden();
+    }
+
+    // Cascade delete quiz results
+    const results = await strapi.documents('api::quiz-result.quiz-result').findMany({
+      filters: { quiz: { documentId: quiz.documentId } },
+    });
+    for (const qr of results) {
+      await strapi.documents('api::quiz-result.quiz-result').delete({ documentId: qr.documentId });
+    }
+
+    await strapi.documents(UID).delete({ documentId: ctx.params.id });
+    return ctx.send({ data: { documentId: ctx.params.id, deleted: true } });
   },
 }));

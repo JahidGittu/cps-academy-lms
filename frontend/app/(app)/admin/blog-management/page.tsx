@@ -10,6 +10,10 @@ import {
   Eye,
   CheckCircle2,
   FileEdit,
+  RotateCcw,
+  BookOpen,
+  ArrowUpDown,
+  Filter,
 } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
@@ -17,10 +21,10 @@ import { excerpt } from '@/lib/excerpt';
 import { useApi } from '@/lib/use-api';
 import type { BlogPost, Collection } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
-import { Alert, Empty, LoadingState } from '@/components/ui';
+import { Alert, Button, Empty, LoadingState } from '@/components/ui';
+import { ConfirmModal } from '@/components/confirm-modal';
 
-const listQuery = '/blog-posts?sort=createdAt:desc';
-const TOPICS = ['All', 'Architecture', 'Security', 'Tutorial', 'Database'];
+const TOPICS = ['All Topics', 'Architecture', 'Security', 'Tutorial', 'Database'];
 
 const DEFAULT_POST_COVERS = [
   'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&auto=format&fit=crop&q=80',
@@ -28,62 +32,83 @@ const DEFAULT_POST_COVERS = [
   'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80',
 ];
 
+type BlogSortOption = 'newest' | 'oldest' | 'title_asc' | 'title_desc';
+
 const BlogManagementStudio = () => {
   const [query, setQuery] = useState('');
-  const [activeTopic, setActiveTopic] = useState('All');
+  const [activeTopic, setActiveTopic] = useState('All Topics');
   const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<BlogSortOption>('newest');
+
+  const [deletingPost, setDeletingPost] = useState<{ id: string; title: string } | null>(null);
+  const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
 
-  const posts = useApi<Collection<BlogPost>>(listQuery);
+  const posts = useApi<Collection<BlogPost>>('/blog-posts?populate=*&sort=createdAt:desc');
   const rows = posts.data?.data ?? [];
 
+  const publishedCount = useMemo(() => rows.filter((r) => r.publishState === 'published').length, [rows]);
+  const draftCount = useMemo(() => rows.filter((r) => r.publishState === 'draft').length, [rows]);
+
   const filtered = useMemo(() => {
-    return rows.filter((post) => {
-      const matchesSearch =
-        post.title.toLowerCase().includes(query.toLowerCase()) ||
-        post.body.toLowerCase().includes(query.toLowerCase());
+    return rows
+      .filter((post) => {
+        const matchesSearch =
+          query.trim() === '' ||
+          post.title.toLowerCase().includes(query.toLowerCase()) ||
+          post.body.toLowerCase().includes(query.toLowerCase()) ||
+          (post.author?.username ?? '').toLowerCase().includes(query.toLowerCase());
 
-      const matchesTopic =
-        activeTopic === 'All' ||
-        post.title.toLowerCase().includes(activeTopic.toLowerCase()) ||
-        post.body.toLowerCase().includes(activeTopic.toLowerCase());
+        const matchesTopic =
+          activeTopic === 'All Topics' ||
+          post.title.toLowerCase().includes(activeTopic.toLowerCase()) ||
+          post.body.toLowerCase().includes(activeTopic.toLowerCase());
 
-      const matchesStatus =
-        statusFilter === 'all' ||
-        (statusFilter === 'published' && post.publishState === 'published') ||
-        (statusFilter === 'draft' && post.publishState === 'draft');
+        const matchesStatus =
+          statusFilter === 'all' ||
+          (statusFilter === 'published' && post.publishState === 'published') ||
+          (statusFilter === 'draft' && post.publishState === 'draft');
 
-      return matchesSearch && matchesTopic && matchesStatus;
-    });
-  }, [rows, query, activeTopic, statusFilter]);
+        return matchesSearch && matchesTopic && matchesStatus;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'title_asc') return a.title.localeCompare(b.title);
+        if (sortBy === 'title_desc') return b.title.localeCompare(a.title);
+        if (sortBy === 'oldest') {
+          return new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime();
+        }
+        return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
+      });
+  }, [rows, query, activeTopic, statusFilter, sortBy]);
 
-  const publishedCount = rows.filter((r) => r.publishState === 'published').length;
-  const draftCount = rows.filter((r) => r.publishState === 'draft').length;
+  const hasActiveFilters = query !== '' || activeTopic !== 'All Topics' || statusFilter !== 'all';
 
-  const handleDelete = async (documentId: string, title: string) => {
-    if (!window.confirm(`Are you sure you want to permanently delete "${title}"?`)) return;
+  const resetFilters = () => {
+    setQuery('');
+    setActiveTopic('All Topics');
+    setStatusFilter('all');
+    setSortBy('newest');
+  };
 
-    setDeletingId(documentId);
+  const confirmDelete = async () => {
+    if (!deletingPost) return;
+
+    setBusy(true);
     setActionError('');
 
     try {
-      await api.delete(`/blog-posts/${documentId}`);
+      await api.delete(`/blog-posts/${deletingPost.id}`);
+      setDeletingPost(null);
       await posts.reload();
     } catch (err) {
       setActionError(errorMessage(err));
     } finally {
-      setDeletingId(null);
+      setBusy(false);
     }
   };
 
   if (posts.loading) {
-    return (
-      <LoadingState
-        message="Loading blog studio..."
-        subtext="Fetching publication drafts and published engineering articles."
-      />
-    );
+    return <LoadingState />;
   }
 
   if (posts.error) return <Alert>{posts.error}</Alert>;
@@ -94,7 +119,7 @@ const BlogManagementStudio = () => {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-            Blog Management Studio
+            Blogs
           </h2>
           <p className="mt-1 text-xs sm:text-sm text-slate-500">
             Author, edit, publish, and manage drafts and live technical articles across the platform.
@@ -112,90 +137,137 @@ const BlogManagementStudio = () => {
 
       <Alert>{actionError}</Alert>
 
-      {/* Filters & Search */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Status Tabs */}
-          <div className="flex items-center rounded-md border border-slate-200 bg-white p-0.5 shadow-2xs mr-2">
-            <button
-              type="button"
-              onClick={() => setStatusFilter('all')}
-              className={`rounded px-3 py-1 text-xs font-bold transition ${
-                statusFilter === 'all' ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              All ({rows.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter('published')}
-              className={`rounded px-3 py-1 text-xs font-bold transition ${
-                statusFilter === 'published' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              Published ({publishedCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter('draft')}
-              className={`rounded px-3 py-1 text-xs font-bold transition ${
-                statusFilter === 'draft' ? 'bg-amber-50 text-amber-700' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              Drafts ({draftCount})
-            </button>
-          </div>
-
-          {TOPICS.map((topic) => (
-            <button
-              key={topic}
-              type="button"
-              onClick={() => setActiveTopic(topic)}
-              className={`rounded-full px-3.5 py-1 text-xs font-semibold transition-all ${
-                activeTopic === topic
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              {topic}
-            </button>
-          ))}
+      {/* KPI Metric Summary Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+        <div className="rounded border border-slate-200 bg-white p-4 shadow-2xs">
+          <p className="text-xs font-semibold text-slate-500">Total Articles</p>
+          <p className="mt-1 text-2xl font-extrabold text-slate-900">{rows.length}</p>
         </div>
+        <div className="rounded border border-slate-200 bg-white p-4 shadow-2xs">
+          <p className="text-xs font-semibold text-slate-500">Published</p>
+          <p className="mt-1 text-2xl font-extrabold text-emerald-600">{publishedCount}</p>
+        </div>
+        <div className="rounded border border-slate-200 bg-white p-4 shadow-2xs">
+          <p className="text-xs font-semibold text-slate-500">Drafts</p>
+          <p className="mt-1 text-2xl font-extrabold text-amber-600">{draftCount}</p>
+        </div>
+        <div className="rounded border border-slate-200 bg-white p-4 shadow-2xs">
+          <p className="text-xs font-semibold text-slate-500">Topics Covered</p>
+          <p className="mt-1 text-2xl font-extrabold text-brand-600">
+            {TOPICS.length - 1}
+          </p>
+        </div>
+      </div>
 
+      {/* Search, Filter & Sort Controls Bar */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white p-3 rounded border border-slate-200 shadow-2xs">
         {/* Search Input */}
-        <div className="relative min-w-[240px] flex-1 sm:flex-none">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+        <div className="relative flex-1 min-w-[240px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search articles by title..."
+            placeholder="Search articles by title, content, or author..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-2xs"
+            className="w-full pl-9 pr-4 py-1.5 text-xs sm:text-sm rounded border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition"
           />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+            >
+              ✕
+            </button>
+          )}
         </div>
+
+        {/* Filter Controls */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Status Filter */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as 'all' | 'published' | 'draft')}
+            className="rounded border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+          >
+            <option value="all">All Status ({rows.length})</option>
+            <option value="published">Published ({publishedCount})</option>
+            <option value="draft">Drafts ({draftCount})</option>
+          </select>
+
+          {/* Topic Filter */}
+          <select
+            value={activeTopic}
+            onChange={(e) => setActiveTopic(e.target.value)}
+            className="rounded border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+          >
+            {TOPICS.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+
+          {/* Sort By Dropdown */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as BlogSortOption)}
+            className="rounded border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="title_asc">Title (A - Z)</option>
+            <option value="title_desc">Title (Z - A)</option>
+          </select>
+
+          {/* Clear Filters Button */}
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="inline-flex items-center gap-1 rounded border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+              title="Reset all filters"
+            >
+              <RotateCcw className="size-3" />
+              <span>Reset</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Results Header Count */}
+      <div className="flex items-center justify-between text-xs text-slate-500 font-medium px-1">
+        <span>
+          Showing <strong>{filtered.length}</strong> of {rows.length} articles
+        </span>
       </div>
 
       {/* Blog Management Data Table */}
       {filtered.length === 0 ? (
         <Empty>
-          <p className="font-semibold text-slate-700">No articles found matching your criteria</p>
-          <p className="text-xs text-slate-500 mt-1">Try clearing your search query or status filter.</p>
-          {(query || activeTopic !== 'All' || statusFilter !== 'all') && (
-            <button
-              type="button"
-              onClick={() => {
-                setQuery('');
-                setActiveTopic('All');
-                setStatusFilter('all');
-              }}
-              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:underline cursor-pointer"
+          <p className="text-base font-bold text-slate-800">
+            {hasActiveFilters ? 'No articles found matching your criteria' : 'No articles in your studio yet'}
+          </p>
+          <p className="text-xs text-slate-500 mt-1">
+            {hasActiveFilters
+              ? 'Try changing your search keywords or resetting the status and topic filters.'
+              : 'Write your first technical article and publish it to the engineering blog.'}
+          </p>
+          {hasActiveFilters ? (
+            <Button variant="plain" onClick={resetFilters} className="mt-4">
+              Clear All Filters
+            </Button>
+          ) : (
+            <Link
+              href="/blog/new"
+              className="brand-gradient mt-4 inline-flex items-center gap-2 rounded px-4 py-2 text-xs font-bold text-white shadow-xs hover:opacity-95"
             >
-              Clear All Filters ✕
-            </button>
+              <Plus className="size-4" />
+              <span>Write First Article</span>
+            </Link>
           )}
         </Empty>
       ) : (
-        <div className="overflow-hidden rounded-md border border-slate-200/90 bg-white shadow-2xs">
+        <div className="overflow-hidden rounded border border-slate-200/90 bg-white shadow-2xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs sm:text-sm">
               <thead className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
@@ -218,7 +290,7 @@ const BlogManagementStudio = () => {
                       {/* Cover & Title */}
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3.5">
-                          <div className="size-12 rounded overflow-hidden bg-slate-100 shrink-0 border border-slate-200/80">
+                          <div className="size-12 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-200/80 shadow-2xs">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={cover}
@@ -243,7 +315,7 @@ const BlogManagementStudio = () => {
                       {/* Author */}
                       <td className="px-5 py-3.5 font-medium text-slate-600 text-xs">
                         <span className="inline-flex items-center gap-1.5">
-                          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-600 uppercase">
+                          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-600 uppercase border border-slate-200">
                             {(post.author?.username || 'Staff').slice(0, 2)}
                           </span>
                           <span className="truncate">{post.author?.username || 'Staff Editor'}</span>
@@ -253,12 +325,12 @@ const BlogManagementStudio = () => {
                       {/* Status */}
                       <td className="px-5 py-3.5">
                         {isPublished ? (
-                          <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 border border-emerald-200">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
                             <CheckCircle2 className="size-3" />
                             <span>Published</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 border border-amber-200">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 border border-amber-200">
                             <FileEdit className="size-3" />
                             <span>Draft</span>
                           </span>
@@ -266,7 +338,7 @@ const BlogManagementStudio = () => {
                       </td>
 
                       {/* Date */}
-                      <td className="px-5 py-3.5 text-xs text-slate-500">
+                      <td className="px-5 py-3.5 text-xs text-slate-500 font-medium">
                         {new Date(post.createdAt).toLocaleDateString(undefined, {
                           month: 'short',
                           day: 'numeric',
@@ -280,23 +352,23 @@ const BlogManagementStudio = () => {
                           <Link
                             href={`/blog/${post.documentId}`}
                             title="Preview Public Article"
-                            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
                           >
                             <Eye className="size-4" />
                           </Link>
                           <Link
                             href={`/blog/${post.documentId}/edit`}
                             title="Edit Article"
-                            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600 transition"
+                            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600 transition"
                           >
                             <Pencil className="size-4" />
                           </Link>
                           <button
                             type="button"
-                            onClick={() => handleDelete(post.documentId, post.title)}
-                            disabled={deletingId === post.documentId}
+                            onClick={() => setDeletingPost({ id: post.documentId, title: post.title })}
+                            disabled={busy && deletingPost?.id === post.documentId}
                             title="Delete Article"
-                            className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition cursor-pointer"
+                            className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition cursor-pointer"
                           >
                             <Trash2 className="size-4" />
                           </button>
@@ -310,6 +382,18 @@ const BlogManagementStudio = () => {
           </div>
         </div>
       )}
+
+      {/* SweetAlert Article Deletion Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deletingPost)}
+        title="Delete This Article?"
+        message={`Are you sure you want to permanently delete "${deletingPost?.title}"? This post will be completely removed from the engineering blog.`}
+        confirmText="Yes, Delete Article"
+        cancelText="Cancel"
+        loading={busy}
+        onConfirm={confirmDelete}
+        onClose={() => setDeletingPost(null)}
+      />
     </div>
   );
 };

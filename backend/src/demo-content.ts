@@ -5,6 +5,8 @@
 // Courses are attached to an owner by email rather than by id, because ids differ between the
 // local sqlite file and the deployed Postgres.
 
+import { webDevCourse } from './web-dev-course';
+
 type Question = { text: string; options: string[]; correctIndex: number };
 
 type Lesson = { title: string; order: number; content: string; videoUrl?: string };
@@ -18,6 +20,7 @@ export type DemoCourse = {
 };
 
 export const demoCourses: DemoCourse[] = [
+  webDevCourse,
   {
     title: 'SQL Foundations',
     description: 'Reading and writing queries against a relational database, starting from nothing.',

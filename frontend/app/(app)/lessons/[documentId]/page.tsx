@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Markdown from 'react-markdown';
 import {
   ArrowLeft,
@@ -25,7 +25,7 @@ import { RequireAuth } from '@/components/require-auth';
 
 const lessonQuery = (documentId: string) =>
   `/lessons/${documentId}?populate[course][fields]=title,documentId` +
-  `&populate[course][populate][lessons][fields]=title,order,documentId` +
+  `&populate[course][populate][lessons][fields]=title,order,documentId,id` +
   `&populate[course][populate][lessons][sort]=order:asc` +
   `&populate[course][populate][quiz][fields]=title,documentId`;
 
@@ -35,6 +35,7 @@ const embedUrl = (url: string) => {
 };
 
 const Viewer = ({ documentId }: { documentId: string }) => {
+  const router = useRouter();
   const { user } = useAuth();
   const isStudent = hasRole(user, 'Student');
 
@@ -48,6 +49,10 @@ const Viewer = ({ documentId }: { documentId: string }) => {
     isStudent ? `/lesson-progresses?filters[lesson][documentId][$eq]=${documentId}` : null
   );
 
+  const allProgresses = useApi<Collection<LessonProgress>>(
+    isStudent ? '/lesson-progresses?populate=lesson' : null
+  );
+
   const completed = Boolean(progress.data?.data?.length) || justCompleted;
 
   const markDone = async () => {
@@ -58,6 +63,7 @@ const Viewer = ({ documentId }: { documentId: string }) => {
       await api.post('/lesson-progresses', { data: { lesson: documentId } });
       setJustCompleted(true);
       await progress.reload();
+      await allProgresses.reload();
     } catch (caught) {
       setActionError(errorMessage(caught));
     } finally {
@@ -65,13 +71,27 @@ const Viewer = ({ documentId }: { documentId: string }) => {
     }
   };
 
-  if (lesson.loading) {
-    return (
-      <LoadingState
-        message="Loading lesson content..."
-        subtext="Fetching video lectures and interactive code notes."
-      />
-    );
+  const completeAndNext = async (targetUrl: string) => {
+    if (!completed) {
+      setBusy(true);
+      setActionError('');
+      try {
+        await api.post('/lesson-progresses', { data: { lesson: documentId } });
+        setJustCompleted(true);
+        await progress.reload();
+        await allProgresses.reload();
+        router.push(targetUrl);
+      } catch (caught) {
+        setActionError(errorMessage(caught));
+        setBusy(false);
+      }
+    } else {
+      router.push(targetUrl);
+    }
+  };
+
+  if (lesson.loading || (isStudent && allProgresses.loading)) {
+    return <LoadingState />;
   }
 
   if (lesson.status === 404) {
@@ -92,7 +112,7 @@ const Viewer = ({ documentId }: { documentId: string }) => {
   if (lesson.status === 403) {
     return (
       <div className="mx-auto max-w-lg rounded-md border border-slate-200 bg-white p-8 text-center shadow-xs">
-        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-amber-50 text-amber-600 border border-amber-200">
           <Lock className="size-6" />
         </div>
         <h2 className="text-lg font-bold text-slate-900">Lesson Locked</h2>
@@ -109,9 +129,9 @@ const Viewer = ({ documentId }: { documentId: string }) => {
           </Link>
           <Link
             href="/courses"
-            className="inline-flex items-center gap-1.5 rounded-md bg-white border border-amber-300 px-4 py-2 text-xs font-semibold text-amber-900 hover:bg-amber-100/50"
+            className="inline-flex items-center gap-1.5 rounded-md bg-white border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
           >
-            <span>Course Outline</span>
+            <span>Browse Courses</span>
           </Link>
         </div>
       </div>
@@ -130,6 +150,15 @@ const Viewer = ({ documentId }: { documentId: string }) => {
   const next = at >= 0 && at < siblings.length - 1 ? siblings[at + 1] : null;
   const isLastLesson = at === siblings.length - 1;
   const embed = detail.videoUrl ? embedUrl(detail.videoUrl) : null;
+
+  const completedSet = new Set(
+    (allProgresses.data?.data ?? [])
+      .map((row) => row.lesson?.id)
+      .filter((id): id is number => id !== undefined)
+  );
+  if (justCompleted && detail) {
+    completedSet.add(detail.id);
+  }
 
   return (
     <div className="space-y-6">
@@ -195,80 +224,49 @@ const Viewer = ({ documentId }: { documentId: string }) => {
 
           <Alert>{actionError}</Alert>
 
-          {/* Student Completion Action Box */}
-          {isStudent && (
-            <div className="rounded-md border border-slate-200/90 bg-white p-5 flex flex-wrap items-center justify-between gap-4 shadow-2xs">
-              <div>
-                <p className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                  <Sparkles className="size-4 text-brand-600" />
-                  <span>Lesson Progress</span>
-                </p>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Mark this lesson complete to register your progress and unlock the next lesson.
-                </p>
-              </div>
-
-              {completed ? (
-                <div className="inline-flex items-center gap-2 rounded-md bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-700 border border-emerald-200 shadow-2xs">
-                  <CheckCircle2 className="size-4 text-emerald-600" />
-                  <span>Lesson Completed</span>
-                </div>
-              ) : (
-                <Button disabled={busy} onClick={markDone} className="shrink-0 font-bold">
-                  {busy ? 'Saving Progress...' : 'Mark as Complete ✓'}
-                </Button>
-              )}
-            </div>
-          )}
-
-          {/* Sequential Navigation Bar */}
-          <nav className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-6">
+          {/* Sequential Navigation Bar: Only Clean Previous and Next Buttons */}
+          <nav className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-6 mt-8">
             {previous ? (
               <Link
                 href={`/lessons/${previous.documentId}`}
-                className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
+                className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
               >
-                <ArrowLeft className="size-3.5" />
-                <span>Previous: {previous.title}</span>
+                <ArrowLeft className="size-4 text-slate-500" />
+                <span>Previous</span>
               </Link>
             ) : (
               <div />
             )}
 
-            {/* Next Lesson or Quiz Trigger */}
+            {/* Next Button / Action: Automatically Marks Current Complete and Advances */}
             {next ? (
-              isStudent && !completed ? (
-                /* Disabled Next Button with Tooltip when current lesson is not completed */
-                <div
-                  title="Complete this lesson first to unlock the next lesson"
-                  className="group relative inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-400 cursor-not-allowed shadow-2xs"
-                >
-                  <Lock className="size-3.5 text-slate-400" />
-                  <span>Next: {next.title}</span>
-                  <span className="hidden sm:inline text-[11px] text-slate-500 font-semibold bg-slate-200/90 px-1.5 py-0.5 rounded ml-1">
-                    Complete current first
-                  </span>
-                </div>
-              ) : (
-                /* Unlocked Next Button */
-                <Link
-                  href={`/lessons/${next.documentId}`}
-                  className="brand-gradient inline-flex items-center gap-2 rounded-md px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:opacity-95 hover:shadow active:translate-y-0.5"
-                >
-                  <span>Next: {next.title}</span>
-                  <ArrowRight className="size-3.5" />
-                </Link>
-              )
-            ) : isLastLesson && course?.quiz ? (
-              /* If last lesson and course has quiz, trigger assessment */
-              <Link
-                href={`/quizzes/${course.quiz.documentId}`}
-                className="inline-flex items-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-purple-700 transition"
+              <Button
+                disabled={busy}
+                onClick={() => completeAndNext(`/lessons/${next.documentId}`)}
+                className="font-bold flex items-center gap-2 px-5 py-2.5 shadow-xs"
               >
+                <span>{busy ? 'Saving Progress...' : 'Next'}</span>
+                <ArrowRight className="size-4" />
+              </Button>
+            ) : isLastLesson && course?.quiz ? (
+              <Button
+                disabled={busy}
+                onClick={() => course.quiz && completeAndNext(`/quizzes/${course.quiz.documentId}`)}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-bold flex items-center gap-2 px-5 py-2.5 shadow-xs"
+              >
+                <span>{busy ? 'Saving...' : 'Take Quiz Assessment'}</span>
                 <Award className="size-4" />
-                <span>Take Course Quiz Assessment →</span>
-              </Link>
-            ) : null}
+              </Button>
+            ) : (
+              <Button
+                disabled={busy}
+                onClick={() => completeAndNext(course ? `/courses/${course.documentId}` : '/dashboard')}
+                className="font-bold flex items-center gap-2 px-5 py-2.5 shadow-xs"
+              >
+                <span>{busy ? 'Saving...' : 'Finish Course'}</span>
+                <CheckCircle2 className="size-4" />
+              </Button>
+            )}
           </nav>
         </article>
 
@@ -286,6 +284,35 @@ const Viewer = ({ documentId }: { documentId: string }) => {
             <div className="space-y-1.5">
               {siblings.map((item, index) => {
                 const isCurrent = item.documentId === documentId;
+                const isItemDone = completedSet.has(item.id) || (isCurrent && completed);
+
+                // An item is unlocked if not a student, or it's lesson 1, or it's completed,
+                // or previous lesson is done, or it's at/before current index
+                const prevItem = index > 0 ? siblings[index - 1] : null;
+                const isUnlocked =
+                  !isStudent ||
+                  index === 0 ||
+                  isItemDone ||
+                  (prevItem && (completedSet.has(prevItem.id) || (prevItem.documentId === documentId && completed))) ||
+                  index <= at;
+
+                if (!isUnlocked) {
+                  return (
+                    <div
+                      key={item.documentId}
+                      title="Locked: Complete earlier lessons in order to unlock this lesson"
+                      className="flex items-center gap-2.5 rounded-md p-2.5 text-xs bg-slate-50 text-slate-400 border border-slate-200/60 cursor-not-allowed select-none transition-all"
+                    >
+                      <span className="flex size-5 shrink-0 items-center justify-center rounded bg-slate-200/70 text-slate-400 font-bold text-[10px]">
+                        <Lock className="size-3" />
+                      </span>
+                      <span className="truncate flex-1 font-medium">{item.title}</span>
+                      <span className="text-[9px] uppercase tracking-wider font-bold bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded">
+                        Locked
+                      </span>
+                    </div>
+                  );
+                }
 
                 return (
                   <Link
@@ -293,7 +320,9 @@ const Viewer = ({ documentId }: { documentId: string }) => {
                     href={`/lessons/${item.documentId}`}
                     className={`flex items-center gap-2.5 rounded-md p-2.5 text-xs transition-all ${
                       isCurrent
-                        ? 'bg-brand-50 text-brand-900 font-bold border border-brand-200'
+                        ? 'bg-brand-50 text-brand-900 font-bold border border-brand-200 shadow-2xs'
+                        : isItemDone
+                        ? 'text-slate-700 hover:bg-emerald-50/50 hover:text-emerald-900'
                         : 'text-slate-700 hover:bg-slate-50'
                     }`}
                   >
@@ -301,13 +330,19 @@ const Viewer = ({ documentId }: { documentId: string }) => {
                       className={`flex size-5 shrink-0 items-center justify-center rounded font-bold text-[10px] ${
                         isCurrent
                           ? 'bg-brand-600 text-white'
+                          : isItemDone
+                          ? 'bg-emerald-100 text-emerald-700'
                           : 'bg-slate-100 text-slate-500'
                       }`}
                     >
-                      {index + 1}
+                      {isItemDone ? <CheckCircle2 className="size-3 text-emerald-600" /> : index + 1}
                     </span>
 
                     <span className="truncate flex-1">{item.title}</span>
+
+                    {isItemDone && !isCurrent && (
+                      <span className="text-[10px] font-semibold text-emerald-600">Done</span>
+                    )}
                   </Link>
                 );
               })}

@@ -33,6 +33,8 @@ export type Course = {
   // Answered by the server, because the owner relation it would otherwise be compared against is
   // stripped from the response for every role below Admin.
   owned?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type Lesson = {

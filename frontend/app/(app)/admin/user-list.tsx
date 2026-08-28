@@ -47,12 +47,7 @@ export const UserList = ({ onChanged }: { onChanged?: () => void }) => {
   };
 
   if (users.loading) {
-    return (
-      <LoadingState
-        message="Loading user directory..."
-        subtext="Fetching all registered user accounts and assigned roles."
-      />
-    );
+    return <LoadingState />;
   }
 
   if (users.error) return <Alert>{users.error}</Alert>;

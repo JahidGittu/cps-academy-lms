@@ -13,12 +13,7 @@ const Preview = ({ documentId }: { documentId: string }) => {
   const quiz = useApi<Single<Quiz>>(`/quizzes/${documentId}?populate=questions`);
 
   if (quiz.loading) {
-    return (
-      <LoadingState
-        message="Loading quiz preview..."
-        subtext="Retrieving assessment questions."
-      />
-    );
+    return <LoadingState />;
   }
 
   if (quiz.error) return <Alert>{quiz.error}</Alert>;

@@ -3,12 +3,20 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowRight, ClipboardList, Pencil, Users } from 'lucide-react';
+import {
+  ArrowRight,
+  Award,
+  CheckCircle2,
+  ClipboardList,
+  Pencil,
+  RotateCcw,
+  Users,
+} from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
 import { hasRole, useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
-import type { Collection, Course, Enrollment, LessonProgress, Single, User } from '@/lib/types';
+import type { Collection, Course, Enrollment, LessonProgress, QuizResult, Single, User } from '@/lib/types';
 import { Alert, Button, buttonStyle, Card, Empty, LoadingState, ProgressBar } from '@/components/ui';
 import { DetailHeader } from '@/components/course/detail-header';
 import { EnrolPanel } from '@/components/course/enrol-panel';
@@ -38,6 +46,14 @@ const Detail = ({ documentId }: { documentId: string }) => {
   );
 
   const completed = new Set((finished.data?.data ?? []).map((row) => row.lesson?.documentId));
+
+  const detail = course.data?.data;
+  const quizResults = useApi<Collection<QuizResult>>(
+    enrollment && detail?.quiz
+      ? `/quiz-results?filters[quiz][documentId][$eq]=${detail.quiz.documentId}&sort=createdAt:desc`
+      : null
+  );
+  const lastQuizResult = quizResults.data?.data?.[0];
 
   const act = async (run: () => Promise<unknown>) => {
     setBusy(true);
@@ -71,17 +87,10 @@ const Detail = ({ documentId }: { documentId: string }) => {
   };
 
   if (course.loading) {
-    return (
-      <LoadingState
-        message="Loading course curriculum..."
-        subtext="Retrieving syllabus outline, lessons, and assessment status."
-      />
-    );
+    return <LoadingState />;
   }
 
   if (course.error) return <Alert>{course.error}</Alert>;
-
-  const detail = course.data?.data;
 
   if (!detail) return <Empty>This course does not exist.</Empty>;
 
@@ -139,28 +148,29 @@ const Detail = ({ documentId }: { documentId: string }) => {
             <ProgressBar percent={percent} />
           </div>
 
+          {lastQuizResult && (
+            <div className="mt-3 rounded-md bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-900 shadow-2xs">
+              <p className="font-bold flex items-center gap-1.5 text-emerald-800">
+                <CheckCircle2 className="size-3.5 text-emerald-600" />
+                Course Completed
+              </p>
+              <p className="mt-1 text-[11px] text-emerald-700">
+                Quiz Score: <strong className="font-bold text-slate-900">{lastQuizResult.score} / {lastQuizResult.total}</strong> ({Math.round((lastQuizResult.score / lastQuizResult.total) * 100)}%)
+              </p>
+            </div>
+          )}
+
           {next ? (
             <Link href={`/lessons/${next.documentId}`} className={`${buttonStyle()} mt-4 w-full`}>
               {completed.size ? 'Continue' : 'Start the first lesson'}
               <ArrowRight className="size-4" />
             </Link>
-          ) : (
-            detail.quiz && (
-              <Link href={quizLink} className={`${buttonStyle()} mt-4 w-full`}>
-                Open the quiz
-                <ArrowRight className="size-4" />
-              </Link>
-            )
-          )}
-
-          <Button
-            variant="plain"
-            disabled={busy}
-            className="mt-2 w-full"
-            onClick={() => act(() => api.delete(`/enrollments/${enrollment.documentId}`))}
-          >
-            Leave course
-          </Button>
+          ) : detail.quiz && !lastQuizResult ? (
+            <Link href={quizLink} className={`${buttonStyle()} mt-4 w-full`}>
+              <span>Take Quiz Assessment</span>
+              <ArrowRight className="size-4" />
+            </Link>
+          ) : null}
         </div>
       );
     }
@@ -195,7 +205,7 @@ const Detail = ({ documentId }: { documentId: string }) => {
 
       <Alert>{actionError}</Alert>
 
-      <div className="grid gap-8 lg:grid-cols-3 items-start">
+      <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
           <section>
             <h2 className="mb-3 text-lg font-bold text-slate-900">What you will work through</h2>
@@ -224,18 +234,35 @@ const Detail = ({ documentId }: { documentId: string }) => {
               <h2 className="mb-3 text-lg font-bold text-slate-900">Quiz Assessment</h2>
 
               <Card>
-                <div className="flex items-center justify-between gap-4">
-                  <p className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                    <ClipboardList className="size-4 text-violet-600" />
-                    {detail.quiz.title}
-                  </p>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <p className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                      <ClipboardList className="size-4 text-violet-600" />
+                      <span>{detail.quiz.title}</span>
+                      {lastQuizResult && (
+                        <span className="rounded bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 border border-emerald-200">
+                          Score: {lastQuizResult.score} / {lastQuizResult.total}
+                        </span>
+                      )}
+                    </p>
+                    {lastQuizResult && (
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Latest attempt submitted on {new Date(lastQuizResult.createdAt).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
 
                   {readable ? (
                     <Link
                       href={quizLink}
-                      className="rounded-md bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100 transition shadow-2xs"
+                      className={`inline-flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-xs font-bold transition shadow-2xs ${
+                        lastQuizResult
+                          ? 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-brand-600'
+                          : 'bg-brand-50 text-brand-700 hover:bg-brand-100'
+                      }`}
                     >
-                      Start Quiz →
+                      <span>{lastQuizResult ? 'See Quiz Details' : 'Start Quiz'}</span>
+                      <ArrowRight className="size-3.5" />
                     </Link>
                   ) : (
                     <span className="text-xs text-slate-500 font-medium">Opens once you enrol</span>
@@ -247,12 +274,10 @@ const Detail = ({ documentId }: { documentId: string }) => {
         </div>
 
         {/* Sticky Enrol Panel Column */}
-        <aside className="lg:col-span-1">
-          <div className="sticky top-20 z-20 space-y-4">
-            <EnrolPanel course={detail} lessons={lessons.length}>
-              {action()}
-            </EnrolPanel>
-          </div>
+        <aside className="lg:col-span-1 lg:sticky lg:top-24 self-start space-y-4">
+          <EnrolPanel course={detail} lessons={lessons.length}>
+            {action()}
+          </EnrolPanel>
         </aside>
       </div>
     </div>

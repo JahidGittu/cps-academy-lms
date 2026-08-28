@@ -14,7 +14,7 @@ import { Alert, Button, Field } from '@/components/ui';
 export const JoinForm = ({ onAuthenticated }: { onAuthenticated: (who: User) => void }) => {
   const { login, register } = useAuth();
 
-  const [existing, setExisting] = useState(false);
+  const [existing, setExisting] = useState(true);
   const [values, setValues] = useState({ username: '', email: '', password: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -44,10 +44,15 @@ export const JoinForm = ({ onAuthenticated }: { onAuthenticated: (who: User) => 
     setBusy(false);
   };
 
+  const toggleMode = () => {
+    setExisting(!existing);
+    setError('');
+  };
+
   return (
     <form onSubmit={submit} className="space-y-3">
       <Field
-        label={existing ? 'Username or email' : 'Username'}
+        label={existing ? 'Username or Email' : 'Username'}
         value={values.username}
         onChange={set('username')}
         autoComplete="username"
@@ -77,17 +82,17 @@ export const JoinForm = ({ onAuthenticated }: { onAuthenticated: (who: User) => 
       <Alert>{error}</Alert>
 
       <Button type="submit" disabled={busy} className="w-full">
-        {busy ? 'Working' : 'Enrol in this course'}
+        {busy ? 'Working...' : existing ? 'Sign in & Enrol' : 'Create account & Enrol'}
       </Button>
 
       <p className="text-center text-xs text-slate-500">
-        {existing ? 'No account yet?' : 'Already have an account?'}{' '}
+        {existing ? "Don't have an account?" : 'Already have an account?'}{' '}
         <button
           type="button"
-          onClick={() => setExisting(!existing)}
-          className="font-medium text-brand-700 underline"
+          onClick={toggleMode}
+          className="font-semibold text-brand-700 hover:text-brand-800 underline underline-offset-2"
         >
-          {existing ? 'Make one' : 'Sign in'}
+          {existing ? 'Sign up' : 'Sign in'}
         </button>
       </p>
     </form>

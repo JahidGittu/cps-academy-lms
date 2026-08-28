@@ -23,13 +23,24 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
 
     const posts = strapi.db.query('api::blog-post.blog-post');
 
+    // Filter out any orphans
+    const enrollments = await strapi.documents('api::enrollment.enrollment').findMany({
+      populate: ['student', 'course'],
+    });
+    const validEnrollments = enrollments.filter((e) => Boolean(e.student && e.course)).length;
+
+    const quizAttempts = await strapi.documents('api::quiz-result.quiz-result').findMany({
+      populate: ['student', 'quiz'],
+    });
+    const validQuizAttempts = quizAttempts.filter((q) => Boolean(q.student && q.quiz)).length;
+
     return {
       data: {
         users,
         courses: await strapi.db.query('api::course.course').count(),
         lessons: await strapi.db.query('api::lesson.lesson').count(),
-        enrollments: await strapi.db.query('api::enrollment.enrollment').count(),
-        quizAttempts: await strapi.db.query('api::quiz-result.quiz-result').count(),
+        enrollments: validEnrollments,
+        quizAttempts: validQuizAttempts,
         blogPosts: {
           published: await posts.count({ where: { publishState: 'published' } }),
           drafts: await posts.count({ where: { publishState: 'draft' } }),

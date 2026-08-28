@@ -10,18 +10,19 @@ import { useApi } from '@/lib/use-api';
 import type { Course, QuizKey, Single } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
 import { Alert, Button, Empty, LoadingState } from '@/components/ui';
+import { ConfirmModal } from '@/components/confirm-modal';
+import { useSetBreadcrumbs } from '@/components/dashboard-shell';
 import { QuizBuilder } from './builder';
 import { blankQuestion } from './question-fields';
 
 const DeleteQuiz = ({ quiz, course }: { quiz: string; course: string }) => {
   const router = useRouter();
 
+  const [showModal, setShowModal] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const remove = async () => {
-    if (!window.confirm('Delete this quiz? Past attempts and their scores go with it.')) return;
-
+  const confirmRemove = async () => {
     setBusy(true);
     setError('');
 
@@ -31,6 +32,7 @@ const DeleteQuiz = ({ quiz, course }: { quiz: string; course: string }) => {
     } catch (caught) {
       setError(errorMessage(caught));
       setBusy(false);
+      setShowModal(false);
     }
   };
 
@@ -38,9 +40,21 @@ const DeleteQuiz = ({ quiz, course }: { quiz: string; course: string }) => {
     <div className="border-t border-slate-200 pt-6">
       <Alert>{error}</Alert>
 
-      <Button variant="danger" disabled={busy} onClick={remove}>
+      <Button variant="danger" disabled={busy} onClick={() => setShowModal(true)}>
         Delete quiz
       </Button>
+
+      {/* SweetAlert Quiz Deletion Modal */}
+      <ConfirmModal
+        isOpen={showModal}
+        title="Delete This Quiz Assessment?"
+        message="Are you sure you want to permanently delete this quiz? All student attempts, auto-graded records, and question data will be lost."
+        confirmText="Yes, Delete Quiz"
+        cancelText="Cancel"
+        loading={busy}
+        onConfirm={confirmRemove}
+        onClose={() => setShowModal(false)}
+      />
     </div>
   );
 };
@@ -53,13 +67,18 @@ const Screen = ({ documentId }: { documentId: string }) => {
 
   const key = useApi<Single<QuizKey>>(quiz ? `/quizzes/${quiz}/answers` : null);
 
-  if (course.loading || key.loading) {
-    return (
-      <LoadingState
-        message="Loading quiz editor..."
-        subtext="Retrieving questions and answer keys."
-      />
-    );
+  useSetBreadcrumbs(
+    detail
+      ? [
+          { label: 'Courses', href: '/admin/course-management' },
+          { label: detail.title, href: `/courses/${documentId}/edit` },
+          { label: 'Quiz Assessment' },
+        ]
+      : [{ label: 'Courses', href: '/admin/course-management' }, { label: 'Quiz Assessment' }]
+  );
+
+  if ((course.loading && !course.data) || (key.loading && !key.data)) {
+    return <LoadingState />;
   }
 
   if (course.error) return <Alert>{course.error}</Alert>;
@@ -72,14 +91,6 @@ const Screen = ({ documentId }: { documentId: string }) => {
 
   return (
     <div className="space-y-6">
-      <Link
-        href={`/courses/${documentId}/edit`}
-        className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900"
-      >
-        <ArrowLeft className="size-4" />
-        {detail.title}
-      </Link>
-
       <QuizBuilder
         course={documentId}
         quiz={quiz}
@@ -100,12 +111,8 @@ export default function CourseQuizPage() {
   const params = useParams<{ documentId: string }>();
 
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-semibold">Quiz</h1>
-
-      <RequireAuth roles={['Instructor', 'Content Manager', 'Admin']}>
-        <Screen documentId={params.documentId} />
-      </RequireAuth>
-    </div>
+    <RequireAuth roles={['Instructor', 'Content Manager', 'Admin']}>
+      <Screen documentId={params.documentId} />
+    </RequireAuth>
   );
 }

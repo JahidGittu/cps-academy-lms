@@ -134,27 +134,24 @@ export const Spinner = ({
 };
 
 export const LoadingState = ({
-  message = 'Loading workspace...',
-  subtext = 'Please wait a moment while we fetch your data.',
-  minHeight = 'min-h-[50vh]',
+  message,
+  subtext,
+  minHeight = 'min-h-[40vh]',
 }: {
   message?: string;
   subtext?: string;
   minHeight?: string;
 }) => (
   <div
-    className={`flex w-full flex-col items-center justify-center py-16 text-center ${minHeight}`}
+    className={`flex w-full flex-col items-center justify-center py-12 text-center ${minHeight}`}
   >
-    <div className="relative mb-4 flex size-14 items-center justify-center">
-      {/* Outer gentle pulsing halo */}
-      <div className="absolute inset-0 size-14 animate-ping rounded-full bg-brand-500/15" />
-      {/* Clean floating spinner circle */}
-      <div className="relative flex size-12 items-center justify-center rounded-full bg-white border border-slate-200/90 shadow-sm">
-        <Spinner className="size-6" tone="brand" />
+    <div className="relative mb-2 flex size-10 items-center justify-center">
+      <div className="flex size-10 items-center justify-center rounded-full bg-white border border-slate-200/80 shadow-2xs">
+        <Spinner className="size-5" tone="brand" />
       </div>
     </div>
 
-    <h3 className="text-base font-bold text-slate-900 tracking-tight">{message}</h3>
-    {subtext && <p className="mt-1.5 text-xs text-slate-500 max-w-sm font-medium">{subtext}</p>}
+    {message && <p className="text-xs font-semibold text-slate-600">{message}</p>}
+    {subtext && <p className="mt-1 text-[11px] text-slate-400 max-w-sm">{subtext}</p>}
   </div>
 );

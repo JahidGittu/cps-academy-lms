@@ -1,39 +1,61 @@
 'use client';
 
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, CheckCircle2 } from 'lucide-react';
 
 import { useApi } from '@/lib/use-api';
-import type { Collection, CourseProgress, Enrollment, Single } from '@/lib/types';
+import type { Collection, Course, Enrollment, LessonProgress, QuizResult } from '@/lib/types';
 import { Alert, Card, Empty, LoadingState, ProgressBar } from '@/components/ui';
 
-const Row = ({ enrollment }: { enrollment: Enrollment }) => {
-  const course = enrollment.course;
+interface RowProps {
+  course: Course;
+  completedLessonIds: Set<number>;
+  quizResult?: QuizResult | null;
+}
 
-  const progress = useApi<Single<CourseProgress>>(
-    course ? `/courses/${course.documentId}/progress` : null
-  );
+const Row = ({ course, completedLessonIds, quizResult }: RowProps) => {
+  const lessons = useMemo(() => {
+    return [...(course.lessons ?? [])].sort((a, b) => a.order - b.order);
+  }, [course.lessons]);
 
-  if (!course) return null;
+  const totalLessons = lessons.length;
+  const completedCount = lessons.filter((l) => completedLessonIds.has(l.id)).length;
+  const percentComplete = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+  const isDone = totalLessons > 0 && completedCount === totalLessons;
 
-  const summary = progress.data?.data;
-  const mine = summary?.students[0];
-  const isDone = (mine?.percentComplete ?? 0) === 100;
+  const nextLesson = lessons.find((l) => !completedLessonIds.has(l.id));
+
+  // Determine intelligent target navigation link
+  const targetLink = nextLesson
+    ? `/lessons/${nextLesson.documentId}`
+    : isDone && course.quiz
+    ? `/quizzes/${course.quiz.documentId}`
+    : `/courses/${course.documentId}`;
+
+  const buttonLabel =
+    completedCount === 0
+      ? 'Start Lesson'
+      : isDone
+      ? course.quiz && !quizResult
+        ? 'Take Quiz'
+        : 'Retake Quiz'
+      : 'Continue';
 
   return (
     <Card hover className="flex flex-col justify-between">
       <div>
         <div className="flex items-start justify-between gap-3">
-          <Link 
-            href={`/courses/${course.documentId}`} 
+          <Link
+            href={`/courses/${course.documentId}`}
             className="font-semibold text-slate-900 hover:text-brand-600 transition-colors text-base"
           >
             {course.title}
           </Link>
 
-          {mine?.quizTotal ? (
-            <span className="shrink-0 rounded-md bg-purple-50 px-2 py-0.5 text-xs font-semibold text-purple-700 border border-purple-200">
-              Quiz: {mine.quizScore}/{mine.quizTotal}
+          {quizResult && quizResult.score !== undefined && quizResult.total ? (
+            <span className="shrink-0 rounded bg-purple-50 px-2 py-0.5 text-xs font-semibold text-purple-700 border border-purple-200">
+              Quiz: {quizResult.score}/{quizResult.total}
             </span>
           ) : null}
         </div>
@@ -41,13 +63,15 @@ const Row = ({ enrollment }: { enrollment: Enrollment }) => {
         <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
           <span className="flex items-center gap-1.5 font-medium text-slate-700">
             <BookOpen className="size-3.5 text-brand-600" />
-            <span>{mine?.completedLessons ?? 0} of {summary?.totalLessons ?? 0} lessons completed</span>
+            <span>
+              {completedCount} of {totalLessons} lessons completed
+            </span>
           </span>
-          <span className="font-bold text-slate-800">{mine?.percentComplete ?? 0}%</span>
+          <span className="font-bold text-slate-800">{percentComplete}%</span>
         </div>
 
         <div className="mt-2">
-          <ProgressBar percent={mine?.percentComplete ?? 0} />
+          <ProgressBar percent={percentComplete} />
         </div>
       </div>
 
@@ -62,11 +86,11 @@ const Row = ({ enrollment }: { enrollment: Enrollment }) => {
         )}
 
         <Link
-          href={`/courses/${course.documentId}`}
-          className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700"
+          href={targetLink}
+          className="inline-flex items-center gap-1.5 rounded bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100 hover:text-brand-800 transition"
         >
-          <span>Continue</span>
-          <ArrowRight className="size-3" />
+          <span>{buttonLabel}</span>
+          <ArrowRight className="size-3.5" />
         </Link>
       </div>
     </Card>
@@ -74,20 +98,34 @@ const Row = ({ enrollment }: { enrollment: Enrollment }) => {
 };
 
 export const EnrolledCourses = () => {
-  const enrollments = useApi<Collection<Enrollment>>('/enrollments?populate=course');
+  // Unified O(1) single-level queries eliminating N+1 card waterfalls
+  const enrollments = useApi<Collection<Enrollment>>(
+    '/enrollments?populate[course][populate]=lessons,quiz'
+  );
+  const progresses = useApi<Collection<LessonProgress>>('/lesson-progresses?populate=lesson');
+  const quizResults = useApi<Collection<QuizResult>>('/quiz-results?populate=quiz&sort=createdAt:desc');
 
-  if (enrollments.loading) {
-    return (
-      <LoadingState
-        message="Loading your enrolled courses..."
-        subtext="Syncing your sequential lesson progression and quiz scores."
-      />
-    );
+  if (enrollments.loading || progresses.loading || quizResults.loading) {
+    return <LoadingState />;
   }
 
   if (enrollments.error) return <Alert>{enrollments.error}</Alert>;
 
-  const rows = enrollments.data?.data ?? [];
+  const rows = (enrollments.data?.data ?? []).filter((e) => Boolean(e.course));
+
+  const completedSet = new Set(
+    (progresses.data?.data ?? [])
+      .map((p) => p.lesson?.id)
+      .filter((id): id is number => id !== undefined)
+  );
+
+  // Map latest quiz results by quiz documentId
+  const quizResultMap = new Map<string, QuizResult>();
+  for (const qr of quizResults.data?.data ?? []) {
+    if (qr.quiz?.documentId && !quizResultMap.has(qr.quiz.documentId)) {
+      quizResultMap.set(qr.quiz.documentId, qr);
+    }
+  }
 
   return (
     <section>
@@ -103,9 +141,23 @@ export const EnrolledCourses = () => {
 
       {rows.length ? (
         <div className="grid gap-5 sm:grid-cols-2">
-          {rows.map((enrollment) => (
-            <Row key={enrollment.documentId} enrollment={enrollment} />
-          ))}
+          {rows.map((enrollment) => {
+            const course = enrollment.course;
+            if (!course) return null;
+
+            const qr = course.quiz?.documentId
+              ? quizResultMap.get(course.quiz.documentId)
+              : null;
+
+            return (
+              <Row
+                key={enrollment.documentId}
+                course={course}
+                completedLessonIds={completedSet}
+                quizResult={qr}
+              />
+            );
+          })}
         </div>
       ) : (
         <Empty>
