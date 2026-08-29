@@ -3,14 +3,27 @@ import type { Core } from '@strapi/strapi';
 const config: Core.Config.Middlewares = [
   'strapi::logger',
   'strapi::errors',
-  'strapi::security',
+  {
+    name: 'strapi::security',
+    config: {
+      contentSecurityPolicy: {
+        useDefaults: true,
+        directives: {
+          'connect-src': ["'self'", 'https:'],
+          'img-src': ["'self'", 'data:', 'blob:', 'market-assets.strapi.io', 'res.cloudinary.com', '*'],
+          'media-src': ["'self'", 'data:', 'blob:', 'market-assets.strapi.io', 'res.cloudinary.com', '*'],
+          upgradeInsecureRequests: null,
+        },
+      },
+    },
+  },
   {
     name: 'strapi::cors',
     config: {
-      // The default is a wildcard, which is fine while both halves are on localhost and wrong
-      // once the frontend is on Vercel. Read from the environment because the Vercel URL is
-      // not known until it is deployed, and preview deployments each get their own.
-      origin: (process.env.FRONTEND_URLS ?? 'http://localhost:3000').split(','),
+      origin: (process.env.FRONTEND_URLS ?? 'http://localhost:3000,*').split(','),
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
+      headers: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
+      keepHeaderOnError: true,
     },
   },
   'strapi::poweredBy',
