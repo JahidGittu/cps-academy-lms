@@ -30,28 +30,37 @@ export const LessonManager = ({
   // Keep local ordered list for instant optimistic rendering without UI jumping
   const [localLessons, setLocalLessons] = useState<Lesson[]>([]);
   // What the panel on the right is holding: a documentId, the word 'new', or empty
-  const [selected, setSelected] = useState(lessonParam || 'new');
+  const [selected, setSelected] = useState<string>(lessonParam || 'new');
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
 
-  // Synchronize server lessons into local state and auto-open targeted lesson, first lesson, or new form
+  // Synchronize server lessons into local state:
+  // - If lessons exist: default to 1st lesson (or targeted lesson from URL)
+  // - If no lessons: default to 'new' form
   useEffect(() => {
     if (lessons.data?.data) {
       const sorted = [...lessons.data.data].sort((a, b) => a.order - b.order);
       setLocalLessons(sorted);
 
       setSelected((prev) => {
-        // If URL explicitly requested a specific lesson, select it!
+        // 1. If URL explicitly requested a specific lesson, select it
         if (lessonParam && sorted.some((l) => l.documentId === lessonParam)) {
           return lessonParam;
         }
-        // If current selection is valid, keep it
-        if (prev && (prev === 'new' || sorted.some((l) => l.documentId === prev))) {
-          return prev;
+
+        // 2. If lessons exist in syllabus:
+        if (sorted.length > 0) {
+          // If user had already selected an existing lesson, maintain it
+          if (prev && prev !== 'new' && sorted.some((l) => l.documentId === prev)) {
+            return prev;
+          }
+          // Otherwise default to the FIRST lesson
+          return sorted[0].documentId;
         }
-        // Otherwise default to 1st lesson if available, or 'new' form
-        return sorted.length > 0 ? sorted[0].documentId : 'new';
+
+        // 3. If no lessons exist yet, default to 'new' creation form
+        return 'new';
       });
     } else if (!lessons.loading) {
       setSelected('new');
