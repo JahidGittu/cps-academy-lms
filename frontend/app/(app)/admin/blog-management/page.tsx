@@ -9,7 +9,6 @@ import {
   Trash2,
   Eye,
   CheckCircle2,
-  FileEdit,
   RotateCcw,
 } from 'lucide-react';
 
@@ -39,6 +38,8 @@ const BlogManagement = () => {
   const [sortBy, setSortBy] = useState<BlogSortOption>('newest');
 
   const [deletingPost, setDeletingPost] = useState<{ id: string; title: string } | null>(null);
+  const [updatingDocId, setUpdatingDocId] = useState<string | null>(null);
+  const [updatedSuccessDocId, setUpdatedSuccessDocId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
 
@@ -86,6 +87,23 @@ const BlogManagement = () => {
     setActiveTopic('All Topics');
     setStatusFilter('all');
     setSortBy('newest');
+  };
+
+  const handleStatusChange = async (docId: string, nextStatus: 'draft' | 'published') => {
+    setUpdatingDocId(docId);
+    setActionError('');
+    setUpdatedSuccessDocId(null);
+
+    try {
+      await api.put(`/blog-posts/${docId}`, { data: { publishState: nextStatus } });
+      await posts.reload();
+      setUpdatedSuccessDocId(docId);
+      setTimeout(() => setUpdatedSuccessDocId(null), 2500);
+    } catch (caught) {
+      setActionError(errorMessage(caught, 'Could not update publication status'));
+    } finally {
+      setUpdatingDocId(null);
+    }
   };
 
   const confirmDelete = async () => {
@@ -260,12 +278,12 @@ const BlogManagement = () => {
               className="brand-gradient mt-4 inline-flex items-center gap-2 rounded px-4 py-2 text-xs font-bold text-white shadow-xs hover:opacity-95"
             >
               <Plus className="size-4" />
-              <span>Write First Article</span>
+              <span>Write New Post</span>
             </Link>
           )}
         </Empty>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-theme bg-surface shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-theme bg-surface shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs sm:text-sm">
               <thead className="border-b border-subtle bg-canvas text-[11px] font-bold uppercase tracking-wider text-muted">
@@ -281,11 +299,13 @@ const BlogManagement = () => {
               <tbody className="divide-y divide-subtle">
                 {filtered.map((post, idx) => {
                   const isPublished = post.publishState === 'published';
+                  const isPostUpdating = updatingDocId === post.documentId;
+                  const isPostUpdated = updatedSuccessDocId === post.documentId;
                   const cover = post.coverImageUrl || DEFAULT_POST_COVERS[idx % DEFAULT_POST_COVERS.length];
 
                   return (
                     <tr key={post.documentId} className="hover:bg-elevated/50 transition-colors">
-                      {/* Cover & Title */}
+                      {/* Cover & Clean Excerpt */}
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3.5">
                           <div className="size-12 rounded-lg overflow-hidden bg-canvas shrink-0 border border-theme shadow-2xs">
@@ -299,12 +319,12 @@ const BlogManagement = () => {
                           <div className="min-w-0 max-w-md">
                             <Link
                               href={`/blog/${post.documentId}`}
-                              className="font-bold text-primary hover:text-brand transition block truncate"
+                              className="font-bold text-primary hover:text-sky-400 transition block truncate"
                             >
                               {post.title}
                             </Link>
                             <p className="text-xs text-muted truncate mt-0.5">
-                              {excerpt(post.body)}
+                              {excerpt(post.body, 90)}
                             </p>
                           </div>
                         </div>
@@ -320,19 +340,35 @@ const BlogManagement = () => {
                         </span>
                       </td>
 
-                      {/* Status */}
+                      {/* Interactive In-Table Status Dropdown */}
                       <td className="px-5 py-3.5">
-                        {isPublished ? (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-500 border border-emerald-500/20">
-                            <CheckCircle2 className="size-3" />
-                            <span>Published</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-500 border border-amber-500/20">
-                            <FileEdit className="size-3" />
-                            <span>Draft</span>
-                          </span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={post.publishState ?? 'draft'}
+                            disabled={isPostUpdating}
+                            onChange={(e) =>
+                              handleStatusChange(
+                                post.documentId,
+                                e.target.value as 'draft' | 'published'
+                              )
+                            }
+                            className={`rounded-lg border px-2.5 py-1 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-brand-500/20 cursor-pointer ${
+                              isPublished
+                                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25'
+                                : 'bg-amber-500/15 text-amber-400 border-amber-500/30 hover:bg-amber-500/25'
+                            }`}
+                          >
+                            <option value="published">Published</option>
+                            <option value="draft">Draft</option>
+                          </select>
+
+                          {isPostUpdated && (
+                            <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-bold animate-in fade-in duration-200">
+                              <CheckCircle2 className="size-3.5" />
+                              <span>Updated</span>
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Date */}
@@ -349,7 +385,7 @@ const BlogManagement = () => {
                         <div className="inline-flex items-center gap-1.5">
                           <Link
                             href={`/blog/${post.documentId}`}
-                            title="Preview Public Article"
+                            title="Preview Article"
                             className="rounded-lg p-1.5 text-muted hover:bg-elevated hover:text-primary transition"
                           >
                             <Eye className="size-4" />
@@ -357,7 +393,7 @@ const BlogManagement = () => {
                           <Link
                             href={`/blog/${post.documentId}/edit`}
                             title="Edit Article"
-                            className="rounded-lg p-1.5 text-muted hover:bg-elevated hover:text-brand transition"
+                            className="rounded-lg p-1.5 text-muted hover:bg-elevated hover:text-sky-400 transition"
                           >
                             <Pencil className="size-4" />
                           </Link>
@@ -381,11 +417,11 @@ const BlogManagement = () => {
         </div>
       )}
 
-      {/* SweetAlert Article Deletion Modal */}
+      {/* Delete Post Modal */}
       <ConfirmModal
         isOpen={Boolean(deletingPost)}
         title="Delete This Article?"
-        message={`Are you sure you want to permanently delete "${deletingPost?.title}"? This post will be completely removed from the engineering blog.`}
+        message={`Are you sure you want to permanently delete "${deletingPost?.title}"? This action cannot be undone.`}
         confirmText="Yes, Delete Article"
         cancelText="Cancel"
         loading={busy}
