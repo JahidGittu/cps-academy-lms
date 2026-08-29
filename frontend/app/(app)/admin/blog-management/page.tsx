@@ -10,6 +10,9 @@ import {
   Eye,
   CheckCircle2,
   RotateCcw,
+  Tag,
+  Globe,
+  Lock,
 } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
@@ -175,78 +178,119 @@ const BlogManagement = () => {
         </div>
       </div>
 
-      {/* Search, Filter & Sort Controls Bar */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-surface p-3 rounded-xl border border-theme shadow-xs">
-        {/* Search Input */}
-        <div className="relative flex-1 min-w-[240px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted" />
-          <input
-            type="text"
-            placeholder="Search articles by title, content, or author..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 text-xs sm:text-sm rounded-lg border border-theme bg-canvas text-primary focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-active transition"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-primary text-xs"
-            >
-              ✕
-            </button>
-          )}
-        </div>
+      {/* Search, Filter & Tag Bar */}
+      <div className="bg-surface p-4 rounded-xl border border-theme shadow-xs space-y-3.5">
+        {/* Row 1: Search and Sort / Status Pills */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1 min-w-[240px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted" />
+            <input
+              type="text"
+              placeholder="Search articles by title, content, or author..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-1.5 text-xs sm:text-sm rounded-lg border border-theme bg-canvas text-primary focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-active transition"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-primary text-xs"
+              >
+                ✕
+              </button>
+            )}
+          </div>
 
-        {/* Filter Controls */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as 'all' | 'published' | 'draft')}
-            className="rounded-lg border border-theme bg-surface px-2.5 py-1.5 text-xs font-semibold text-secondary focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-active"
-          >
-            <option value="all">All Status ({rows.length})</option>
-            <option value="published">Published ({publishedCount})</option>
-            <option value="draft">Drafts ({draftCount})</option>
-          </select>
-
-          {/* Topic Filter */}
-          <select
-            value={activeTopic}
-            onChange={(e) => setActiveTopic(e.target.value)}
-            className="rounded-lg border border-theme bg-surface px-2.5 py-1.5 text-xs font-semibold text-secondary focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-active"
-          >
-            {TOPICS.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-
-          {/* Sort By Dropdown */}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as BlogSortOption)}
-            className="rounded-lg border border-theme bg-surface px-2.5 py-1.5 text-xs font-semibold text-secondary focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-active"
-          >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="title_asc">Title (A - Z)</option>
-            <option value="title_desc">Title (Z - A)</option>
-          </select>
-
-          {/* Clear Filters Button */}
-          {hasActiveFilters && (
+          {/* Status Filter Buttons */}
+          <div className="flex items-center gap-1.5 bg-canvas p-1 rounded-lg border border-theme">
             <button
               type="button"
-              onClick={resetFilters}
-              className="inline-flex items-center gap-1 rounded-lg border border-theme bg-elevated px-2.5 py-1.5 text-xs font-bold text-secondary hover:text-primary transition"
-              title="Reset all filters"
+              onClick={() => setStatusFilter('all')}
+              className={`px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer ${
+                statusFilter === 'all'
+                  ? 'bg-surface text-primary shadow-xs border border-theme'
+                  : 'text-muted hover:text-primary'
+              }`}
             >
-              <RotateCcw className="size-3" />
-              <span>Reset</span>
+              All ({rows.length})
             </button>
-          )}
+            <button
+              type="button"
+              onClick={() => setStatusFilter('published')}
+              className={`inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer ${
+                statusFilter === 'published'
+                  ? 'bg-emerald-500/15 text-emerald-500 shadow-xs border border-emerald-500/30'
+                  : 'text-muted hover:text-primary'
+              }`}
+            >
+              <Globe className="size-3" />
+              <span>Published ({publishedCount})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('draft')}
+              className={`inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-bold transition cursor-pointer ${
+                statusFilter === 'draft'
+                  ? 'bg-amber-500/15 text-amber-500 shadow-xs border border-amber-500/30'
+                  : 'text-muted hover:text-primary'
+              }`}
+            >
+              <Lock className="size-3" />
+              <span>Drafts ({draftCount})</span>
+            </button>
+          </div>
+
+          {/* Sort By Dropdown & Reset */}
+          <div className="flex items-center gap-2">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as BlogSortOption)}
+              className="rounded-lg border border-theme bg-surface px-2.5 py-1.5 text-xs font-semibold text-secondary focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-active"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="title_asc">Title (A - Z)</option>
+              <option value="title_desc">Title (Z - A)</option>
+            </select>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="inline-flex items-center gap-1 rounded-lg border border-theme bg-elevated px-2.5 py-1.5 text-xs font-bold text-secondary hover:text-primary transition"
+                title="Reset all filters"
+              >
+                <RotateCcw className="size-3" />
+                <span>Reset</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Row 2: Interactive Topic Tag Pills (Matching Public Blog Page) */}
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-subtle">
+          <span className="text-xs font-semibold text-muted mr-1 flex items-center gap-1">
+            <Tag className="size-3.5" /> Filter by Topic:
+          </span>
+
+          {TOPICS.map((topic) => {
+            const isSelected = activeTopic === topic;
+            return (
+              <button
+                key={topic}
+                type="button"
+                onClick={() => setActiveTopic(topic)}
+                className={`rounded-full px-3 py-0.5 text-xs font-bold transition-all cursor-pointer ${
+                  isSelected
+                    ? 'bg-sky-600 dark:bg-sky-500 text-white shadow-xs border border-sky-600 dark:border-sky-500'
+                    : 'bg-canvas text-secondary border border-theme hover:bg-elevated hover:text-primary'
+                }`}
+              >
+                {topic}
+              </button>
+            );
+          })}
         </div>
       </div>
 

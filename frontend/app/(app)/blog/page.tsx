@@ -92,9 +92,9 @@ export default function PublicBlogPage() {
             key={topic}
             type="button"
             onClick={() => setActiveTopic(topic)}
-            className={`rounded-full px-3.5 py-1 text-xs font-semibold transition-all cursor-pointer ${
+            className={`rounded-full px-3.5 py-1 text-xs font-bold transition-all cursor-pointer ${
               activeTopic === topic
-                ? 'bg-brand text-white shadow-xs'
+                ? 'bg-sky-600 dark:bg-sky-500 text-white shadow-xs border border-sky-600 dark:border-sky-500'
                 : 'bg-surface text-secondary border border-theme hover:bg-elevated hover:text-primary'
             }`}
           >
