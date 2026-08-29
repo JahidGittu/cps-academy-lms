@@ -45,8 +45,8 @@ export const LessonList = ({
               key={lesson.documentId}
               className={`group flex items-center justify-between gap-2 rounded-lg p-2.5 transition-all cursor-pointer ${
                 active
-                  ? 'bg-sky-600 text-white font-bold shadow-md shadow-sky-600/25 ring-1 ring-sky-400/60'
-                  : 'border border-theme/60 bg-canvas/60 text-secondary hover:bg-elevated hover:text-primary'
+                  ? 'bg-sky-600 text-white font-bold shadow-md shadow-sky-600/25'
+                  : 'bg-canvas/50 text-secondary hover:bg-elevated hover:text-primary'
               }`}
               onClick={() => onSelect(lesson.documentId)}
             >
@@ -56,7 +56,7 @@ export const LessonList = ({
                   className={`flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-extrabold ${
                     active
                       ? 'bg-white/20 text-white'
-                      : 'bg-elevated text-muted border border-theme/70'
+                      : 'bg-elevated text-muted'
                   }`}
                 >
                   {index + 1}
