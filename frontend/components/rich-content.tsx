@@ -196,6 +196,24 @@ export const RichContent = ({
       return;
     }
 
+    // Embedded image: ![alt](url)
+    const imgMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (imgMatch) {
+      flushList();
+      const alt = imgMatch[1] || 'Embedded image';
+      const src = imgMatch[2];
+      elements.push(
+        <figure key={`img-${index}`} className="my-4 overflow-hidden rounded-xl border border-theme bg-canvas p-1 shadow-xs">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt={alt} className="w-full max-h-[500px] rounded-lg object-contain bg-black/20" />
+          {alt && alt !== 'Embedded image' && (
+            <figcaption className="p-2 text-center text-xs text-muted font-medium">{alt}</figcaption>
+          )}
+        </figure>
+      );
+      return;
+    }
+
     // Regular paragraph or empty line
     flushList();
 

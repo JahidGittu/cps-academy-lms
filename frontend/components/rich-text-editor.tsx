@@ -12,6 +12,7 @@ import {
   ListOrdered,
   Code,
   Link as LinkIcon,
+  Image as ImageIcon,
   Eye,
   Edit3,
 } from 'lucide-react';
@@ -213,24 +214,55 @@ export const RichTextEditor = ({
             </button>
           </div>
 
-          {/* Code & Links */}
+          {/* Code, Links & Image Upload */}
           <div className="flex items-center gap-0.5">
             <button
               type="button"
               title="Code Block"
               onClick={() => handleToolbarAction('code')}
-              className="rounded p-1.5 text-secondary hover:bg-elevated hover:text-brand transition cursor-pointer"
+              className="rounded p-1.5 text-secondary hover:bg-elevated hover:text-brand transition cursor-pointer font-mono"
             >
               <Code className="size-4" />
             </button>
             <button
               type="button"
-              title="Insert Link"
+              title="Insert Hyperlink"
               onClick={() => handleToolbarAction('link')}
               className="rounded p-1.5 text-secondary hover:bg-elevated hover:text-brand transition cursor-pointer"
             >
               <LinkIcon className="size-4" />
             </button>
+            <label
+              title="Upload & Insert Image from computer"
+              className="rounded p-1.5 text-secondary hover:bg-elevated hover:text-brand transition cursor-pointer"
+            >
+              <ImageIcon className="size-4" />
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    const res = await fetch('/api/upload', {
+                      method: 'POST',
+                      body: formData,
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      if (data.url) {
+                        applyFormatting(`\n![${file.name.replace(/\.[^/.]+$/, '')}](${data.url})\n`, '', '');
+                      }
+                    }
+                  } catch (err) {
+                    console.error('Image upload failed', err);
+                  }
+                }}
+              />
+            </label>
           </div>
         </div>
 
