@@ -63,6 +63,7 @@ const BlogManagement = () => {
 
         const matchesTopic =
           activeTopic === 'All Topics' ||
+          (post.topic && post.topic.toLowerCase() === activeTopic.toLowerCase()) ||
           post.title.toLowerCase().includes(activeTopic.toLowerCase()) ||
           post.body.toLowerCase().includes(activeTopic.toLowerCase());
 
@@ -361,12 +362,19 @@ const BlogManagement = () => {
                             />
                           </div>
                           <div className="min-w-0 max-w-md">
-                            <Link
-                              href={`/blog/${post.documentId}`}
-                              className="font-bold text-primary hover:text-sky-400 transition block truncate"
-                            >
-                              {post.title}
-                            </Link>
+                            <div className="flex items-center gap-2">
+                              <Link
+                                href={`/blog/${post.documentId}`}
+                                className="font-bold text-primary hover:text-sky-400 transition truncate"
+                              >
+                                {post.title}
+                              </Link>
+                              {post.topic && (
+                                <span className="rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 text-[10px] font-bold shrink-0">
+                                  {post.topic}
+                                </span>
+                              )}
+                            </div>
                             <p className="text-xs text-muted truncate mt-0.5">
                               {excerpt(post.body, 90)}
                             </p>

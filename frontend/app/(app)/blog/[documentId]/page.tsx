@@ -110,6 +110,12 @@ const Post = ({ documentId }: { documentId: string }) => {
             <span>3 min read</span>
           </span>
 
+          {detail.topic && (
+            <span className="rounded-md bg-sky-500/15 text-sky-400 border border-sky-500/30 px-2.5 py-0.5 text-xs font-bold">
+              {detail.topic}
+            </span>
+          )}
+
           {detail.publishState === 'draft' && (
             <span className="rounded bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-600 dark:text-[#e3b341] border border-amber-500/30">
               Draft Mode

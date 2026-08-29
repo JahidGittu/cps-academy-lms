@@ -22,6 +22,10 @@
     "coverImageUrl": {
       "type": "text"
     },
+    "topic": {
+      "type": "string",
+      "default": "Architecture"
+    },
     "author": {
       "type": "relation",
       "relation": "manyToOne",

@@ -9,10 +9,10 @@ import {
   Lock,
   CheckCircle2,
   RefreshCw,
-  Eye,
   ExternalLink,
   Save,
   Send,
+  Tag,
 } from 'lucide-react';
 
 import { errorMessage } from '@/lib/api';
@@ -25,8 +25,11 @@ export type PostValues = {
   title: string;
   body: string;
   coverImageUrl: string;
+  topic: string;
   publishState: 'draft' | 'published';
 };
+
+const PRESET_TOPICS = ['Architecture', 'Security', 'Tutorial', 'Database', 'DevOps'];
 
 export const PostForm = ({
   post,
@@ -41,6 +44,7 @@ export const PostForm = ({
     title: post?.title ?? '',
     body: post?.body ?? '',
     coverImageUrl: post?.coverImageUrl ?? '',
+    topic: post?.topic ?? 'Architecture',
     publishState: post?.publishState ?? 'draft',
   });
 
@@ -53,6 +57,7 @@ export const PostForm = ({
     title: post?.title ?? '',
     body: post?.body ?? '',
     coverImageUrl: post?.coverImageUrl ?? '',
+    topic: post?.topic ?? 'Architecture',
     publishState: post?.publishState ?? 'draft',
   });
 
@@ -64,13 +69,14 @@ export const PostForm = ({
         title: post.title ?? '',
         body: post.body ?? '',
         coverImageUrl: post.coverImageUrl ?? '',
+        topic: post.topic ?? 'Architecture',
         publishState: post.publishState ?? 'draft',
       };
       setValues(nextValues);
       lastSavedRef.current = { ...nextValues };
       setSaveStatus('idle');
     }
-  }, [post?.documentId, post?.createdAt, post?.publishState]);
+  }, [post?.documentId, post?.createdAt, post?.publishState, post?.topic]);
 
   const set =
     (field: keyof PostValues) =>
@@ -83,6 +89,7 @@ export const PostForm = ({
     (values.title !== lastSavedRef.current.title ||
       values.body !== lastSavedRef.current.body ||
       values.coverImageUrl !== lastSavedRef.current.coverImageUrl ||
+      values.topic !== lastSavedRef.current.topic ||
       values.publishState !== lastSavedRef.current.publishState);
 
   // Debounced auto-save for existing articles (1500ms after user pauses typing)
@@ -241,7 +248,7 @@ export const PostForm = ({
           />
         </div>
 
-        {/* Right Column: Publication State & Cover Image (4 cols) */}
+        {/* Right Column: Publication State, Topic Selector & Cover Image (4 cols) */}
         <div className="space-y-5 lg:col-span-4">
           {/* Publication State Box (Only when editing) */}
           {isEditing && (
@@ -298,6 +305,51 @@ export const PostForm = ({
               </p>
             </div>
           )}
+
+          {/* Topic & Tag Selector Card */}
+          <div className="rounded-xl border border-theme bg-surface p-4 shadow-2xs space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-primary flex items-center gap-1.5">
+                <Tag className="size-3.5 text-sky-400" />
+                <span>Topic Tag / Category</span>
+              </label>
+              {values.topic && (
+                <span className="text-[10px] font-bold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full">
+                  {values.topic}
+                </span>
+              )}
+            </div>
+
+            {/* Quick Topic Badges */}
+            <div className="flex flex-wrap gap-1.5">
+              {PRESET_TOPICS.map((topic) => {
+                const isSelected = values.topic?.toLowerCase() === topic.toLowerCase();
+                return (
+                  <button
+                    key={topic}
+                    type="button"
+                    onClick={() => setValues((prev) => ({ ...prev, topic }))}
+                    className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
+                      isSelected
+                        ? 'bg-sky-600 dark:bg-sky-500 text-white shadow-xs border border-sky-600 dark:border-sky-500'
+                        : 'bg-canvas text-secondary border border-theme hover:bg-elevated hover:text-primary'
+                    }`}
+                  >
+                    {topic}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Or type custom topic */}
+            <input
+              type="text"
+              value={values.topic}
+              onChange={(e) => setValues((prev) => ({ ...prev, topic: e.target.value }))}
+              placeholder="Or type custom topic (e.g. Microservices)"
+              className="w-full rounded-lg border border-theme bg-canvas px-3 py-1.5 text-xs text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
+            />
+          </div>
 
           {/* Dual Upload & URL Image Picker */}
           <ImagePicker

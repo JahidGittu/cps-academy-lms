@@ -34,6 +34,7 @@ export default function PublicBlogPage() {
 
       const matchesTopic =
         activeTopic === 'All' ||
+        (post.topic && post.topic.toLowerCase() === activeTopic.toLowerCase()) ||
         post.title.toLowerCase().includes(activeTopic.toLowerCase()) ||
         post.body.toLowerCase().includes(activeTopic.toLowerCase());
 
@@ -136,6 +137,11 @@ export default function PublicBlogPage() {
                       alt={post.title}
                       className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
+                    {post.topic && (
+                      <span className="absolute top-3 left-3 rounded-md bg-black/60 backdrop-blur-md px-2.5 py-0.5 text-[11px] font-bold text-white border border-white/20">
+                        {post.topic}
+                      </span>
+                    )}
                   </div>
 
                   <div className="p-5 flex-1 flex flex-col justify-between space-y-4">

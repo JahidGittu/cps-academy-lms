@@ -105,6 +105,7 @@ export type BlogPost = {
   title: string;
   body: string;
   coverImageUrl?: string | null;
+  topic?: string | null;
   publishState: 'draft' | 'published';
   createdAt: string;
   author?: User | null;
