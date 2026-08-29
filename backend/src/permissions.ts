@@ -37,6 +37,7 @@ const matrix: Record<string, Record<string, string[]>> = {
     'api::enrollment.enrollment': READ,
     'api::lesson-progress.lesson-progress': READ,
     'api::quiz-result.quiz-result': READ,
+    'plugin::upload.content-api': ['upload', 'destroy', 'find', 'findOne'],
     'plugin::users-permissions.user': ['me'],
     'plugin::users-permissions.auth': ['logout'],
   },
@@ -49,6 +50,7 @@ const matrix: Record<string, Record<string, string[]>> = {
     'api::enrollment.enrollment': READ,
     'api::lesson-progress.lesson-progress': READ,
     'api::quiz-result.quiz-result': READ,
+    'plugin::upload.content-api': ['upload', 'destroy', 'find', 'findOne'],
     'plugin::users-permissions.user': ['me'],
     'plugin::users-permissions.auth': ['logout'],
   },
@@ -61,6 +63,7 @@ const matrix: Record<string, Record<string, string[]>> = {
     'api::enrollment.enrollment': ['find', 'findOne', 'delete'],
     'api::lesson-progress.lesson-progress': ['find', 'findOne', 'delete'],
     'api::quiz-result.quiz-result': ['find', 'findOne', 'delete'],
+    'plugin::upload.content-api': ['upload', 'destroy', 'find', 'findOne'],
     'plugin::users-permissions.user': ['me', 'find', 'findOne', 'count', 'create', 'update', 'destroy'],
     'plugin::users-permissions.role': READ,
     'plugin::users-permissions.auth': ['logout'],
@@ -71,7 +74,8 @@ const matrix: Record<string, Record<string, string[]>> = {
 const isMine = (action: string) =>
   action.startsWith('api::') ||
   action.startsWith('plugin::users-permissions.user.') ||
-  action.startsWith('plugin::users-permissions.role.');
+  action.startsWith('plugin::users-permissions.role.') ||
+  action.startsWith('plugin::upload.');
 
 const ensureRoles = async (strapi: Core.Strapi) => {
   for (const role of roles) {

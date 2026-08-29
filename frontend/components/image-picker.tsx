@@ -32,48 +32,41 @@ export const ImagePicker = ({
     }
   }, [value]);
 
-  // Compress & encode uploaded image to a compact data URL for instant display and storage
-  const processFile = (file: File) => {
+  // Upload file to local static storage endpoint for clean short URL (<= 255 chars)
+  const processFile = async (file: File) => {
     if (!file.type.startsWith('image/')) return;
 
     setLoading(true);
-    const reader = new FileReader();
+    setImageError(false);
 
-    reader.onload = (event) => {
-      const img = new window.Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1200;
-        const MAX_HEIGHT = 800;
-        let width = img.width;
-        let height = img.height;
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
 
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height = Math.round((height * MAX_WIDTH) / width);
-            width = MAX_WIDTH;
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width = Math.round((width * MAX_HEIGHT) / height);
-            height = MAX_HEIGHT;
-          }
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) {
+          onChange(data.url);
+          setLoading(false);
+          return;
         }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, width, height);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-          onChange(dataUrl);
-        }
-        setLoading(false);
-      };
-      img.onerror = () => setLoading(false);
-      if (typeof event.target?.result === 'string') {
-        img.src = event.target.result;
       }
+    } catch (err) {
+      console.warn('API upload fallback', err);
+    }
+
+    // Fallback if upload fails
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (typeof event.target?.result === 'string') {
+        onChange(event.target.result);
+      }
+      setLoading(false);
     };
     reader.onerror = () => setLoading(false);
     reader.readAsDataURL(file);
