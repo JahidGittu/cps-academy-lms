@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import type { ChangeEvent, FormEvent } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import type { FormEvent } from 'react';
 import {
   HelpCircle,
   Plus,
@@ -10,13 +10,12 @@ import {
   AlertCircle,
   FileQuestion,
   RefreshCw,
-  Sparkles,
 } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
 import { useApi } from '@/lib/use-api';
 import type { Course, Quiz, Single } from '@/lib/types';
-import { Alert, Button, Card, Field, inputStyle, LoadingState } from '@/components/ui';
+import { Alert, Button, Field, LoadingState } from '@/components/ui';
 import { ConfirmModal } from '@/components/confirm-modal';
 
 export type DraftQuestion = { text: string; options: string[]; correctIndex: number };
@@ -44,27 +43,115 @@ export const QuizPanel = ({
   const [busy, setBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [error, setError] = useState('');
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'unsaved' | 'saving' | 'saved'>('idle');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // Sync server quiz data when loaded
+  const lastSavedRef = useRef<{ title: string; questions: DraftQuestion[] }>({
+    title: '',
+    questions: [],
+  });
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Sync server quiz data when initially loaded
   useEffect(() => {
     if (quizData.data?.data) {
       const q = quizData.data.data;
-      setTitle(q.title || '');
-      if (q.questions && q.questions.length > 0) {
-        setQuestions(
-          q.questions.map((item) => ({
-            text: item.text,
-            options: item.options && item.options.length >= 2 ? item.options : ['', ''],
-            correctIndex: item.correctIndex ?? 0,
-          }))
-        );
-      }
+      const initialTitle = q.title || '';
+      const initialQuestions =
+        q.questions && q.questions.length > 0
+          ? q.questions.map((item) => ({
+              text: item.text,
+              options: item.options && item.options.length >= 2 ? item.options : ['', ''],
+              correctIndex: item.correctIndex ?? 0,
+            }))
+          : [blankQuestion()];
+
+      setTitle(initialTitle);
+      setQuestions(initialQuestions);
+      lastSavedRef.current = {
+        title: initialTitle,
+        questions: JSON.parse(JSON.stringify(initialQuestions)),
+      };
+      setSaveStatus('idle');
     } else if (!course.quiz && !title) {
-      setTitle(`${course.title} - Final Assessment`);
+      const defaultTitle = `${course.title} - Final Assessment`;
+      const defaultQuestions = [blankQuestion()];
+      setTitle(defaultTitle);
+      setQuestions(defaultQuestions);
+      lastSavedRef.current = {
+        title: defaultTitle,
+        questions: JSON.parse(JSON.stringify(defaultQuestions)),
+      };
     }
-  }, [quizData.data, course.quiz, course.title]);
+  }, [quizData.data?.data?.documentId, course.quiz?.documentId]);
+
+  // Determine if form is dirty (unsaved user modifications)
+  const isDirty =
+    Boolean(title.trim()) &&
+    (title !== lastSavedRef.current.title ||
+      JSON.stringify(questions) !== JSON.stringify(lastSavedRef.current.questions));
+
+  // Debounced background auto-save (1500ms after user pauses typing)
+  useEffect(() => {
+    if (!isDirty || !title.trim() || !questions.length) {
+      if (!isDirty && saveStatus === 'unsaved') {
+        setSaveStatus('idle');
+      }
+      return;
+    }
+
+    // Validate that questions are filled before auto-saving
+    const isValid = questions.every(
+      (q) => q.text.trim().length > 0 && q.options.filter((o) => o.trim().length > 0).length >= 2
+    );
+
+    if (!isValid) {
+      setSaveStatus('unsaved');
+      return;
+    }
+
+    setSaveStatus('unsaved');
+
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(async () => {
+      setSaveStatus('saving');
+      setError('');
+
+      try {
+        const data = {
+          title: title.trim(),
+          questions,
+          course: course.documentId,
+        };
+
+        if (course.quiz?.documentId) {
+          await api.put(`/quizzes/${course.quiz.documentId}`, { data });
+        } else {
+          const res = await api.post<Single<Quiz>>('/quizzes', { data });
+          if (onSaved) await onSaved();
+        }
+
+        lastSavedRef.current = {
+          title: title.trim(),
+          questions: JSON.parse(JSON.stringify(questions)),
+        };
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2500);
+      } catch (caught) {
+        setError(errorMessage(caught));
+        setSaveStatus('idle');
+      }
+    }, 1500);
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [title, questions, isDirty, course.documentId, course.quiz?.documentId]);
 
   const updateQuestion = (at: number, next: DraftQuestion) => {
     setQuestions((prev) => prev.map((q, i) => (i === at ? next : q)));
@@ -113,12 +200,15 @@ export const QuizPanel = ({
   const submit = async (event: FormEvent) => {
     event.preventDefault();
 
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
     if (!questions.length) {
       setError('Quiz assessment must have at least one question.');
       return;
     }
 
-    // Validate that all questions have non-empty text and at least 2 non-empty options
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (!q.text.trim()) {
@@ -147,13 +237,15 @@ export const QuizPanel = ({
         await api.put(`/quizzes/${course.quiz.documentId}`, { data });
       } else {
         await api.post('/quizzes', { data });
+        if (onSaved) await onSaved();
       }
 
-      if (onSaved) await onSaved();
-      if (quizData.reload) await quizData.reload();
-
+      lastSavedRef.current = {
+        title: title.trim(),
+        questions: JSON.parse(JSON.stringify(questions)),
+      };
       setSaveStatus('saved');
-      setTimeout(() => setSaveStatus('idle'), 3000);
+      setTimeout(() => setSaveStatus('idle'), 2500);
     } catch (caught) {
       setError(errorMessage(caught));
       setSaveStatus('idle');
@@ -186,7 +278,7 @@ export const QuizPanel = ({
 
   return (
     <form onSubmit={submit} className="space-y-6">
-      {/* Quiz Studio Header Strip */}
+      {/* Quiz Studio Header Strip with Live Auto-Save Status */}
       <div className="rounded-xl border border-theme bg-surface p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-primary flex items-center gap-2.5">
@@ -214,6 +306,33 @@ export const QuizPanel = ({
                 <span>Quiz Setup In Progress</span>
               </span>
             )}
+
+            {/* Live Auto-Save Status Badge */}
+            <div className="text-xs">
+              {saveStatus === 'saving' && (
+                <span className="inline-flex items-center gap-1.5 font-semibold text-sky-400 animate-pulse">
+                  <RefreshCw className="size-3.5 animate-spin" />
+                  <span>Auto-saving questions...</span>
+                </span>
+              )}
+              {saveStatus === 'saved' && (
+                <span className="inline-flex items-center gap-1 font-bold text-emerald-500">
+                  <CheckCircle2 className="size-4 text-emerald-500" />
+                  <span>All changes synced</span>
+                </span>
+              )}
+              {saveStatus === 'unsaved' && isDirty && (
+                <span className="inline-flex items-center gap-1.5 text-amber-500 font-medium">
+                  <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+                  <span>Unsaved changes</span>
+                </span>
+              )}
+              {saveStatus === 'idle' && !isDirty && (
+                <span className="inline-flex items-center gap-1 text-muted text-xs">
+                  <span>✓ Up to date</span>
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -230,10 +349,10 @@ export const QuizPanel = ({
 
           <Button
             type="submit"
-            disabled={busy}
+            disabled={busy || (!isDirty && saveStatus !== 'saving')}
             className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-2.5 shadow-md shadow-sky-600/25 hover:shadow-sky-500/35 transition-all"
           >
-            {busy ? 'Saving Assessment...' : course.quiz ? 'Update Quiz' : 'Save & Publish Quiz'}
+            {busy ? 'Saving...' : course.quiz ? 'Save changes' : 'Save & Publish Quiz'}
           </Button>
         </div>
       </div>
@@ -403,16 +522,15 @@ export const QuizPanel = ({
         <div className="flex items-center gap-3">
           <Button
             type="submit"
-            disabled={busy}
+            disabled={busy || (!isDirty && saveStatus !== 'saving')}
             className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/25 hover:shadow-sky-500/35"
           >
-            {busy ? 'Saving...' : course.quiz ? 'Update Quiz Assessment' : 'Save Quiz Assessment'}
+            {busy ? 'Saving...' : course.quiz ? 'Save changes' : 'Save & Publish Quiz'}
           </Button>
 
-          {saveStatus === 'saved' && (
-            <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
-              <CheckCircle2 className="size-4" />
-              <span>Assessment saved successfully!</span>
+          {!isDirty && (
+            <span className="text-xs text-muted font-medium">
+              All changes synced
             </span>
           )}
         </div>
