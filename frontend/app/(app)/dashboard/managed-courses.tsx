@@ -18,7 +18,8 @@ import {
 import { api, errorMessage } from '@/lib/api';
 import { useApi } from '@/lib/use-api';
 import type { Collection, Course, Enrollment } from '@/lib/types';
-import { Alert, Button, Empty, LoadingState } from '@/components/ui';
+import { Alert, Button, Empty } from '@/components/ui';
+import { ManagedCoursesSkeleton } from '@/components/page-skeletons';
 import { CourseCover } from '@/components/course-cover';
 import { ConfirmModal } from '@/components/confirm-modal';
 
@@ -98,18 +99,30 @@ export const ManagedCourses = () => {
         return matchesQuery && matchesQuiz && matchesInstructor;
       })
       .sort((a, b) => {
-        if (sortBy === 'title_asc') return a.title.localeCompare(b.title);
-        if (sortBy === 'title_desc') return b.title.localeCompare(a.title);
-        if (sortBy === 'lessons_desc') return (b.lessons?.length ?? 0) - (a.lessons?.length ?? 0);
-        if (sortBy === 'lessons_asc') return (a.lessons?.length ?? 0) - (b.lessons?.length ?? 0);
+        if (sortBy === 'newest') {
+          return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
+        }
         if (sortBy === 'oldest') {
           return new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime();
         }
-        return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
+        if (sortBy === 'title_asc') {
+          return a.title.localeCompare(b.title);
+        }
+        if (sortBy === 'title_desc') {
+          return b.title.localeCompare(a.title);
+        }
+        if (sortBy === 'lessons_desc') {
+          return (b.lessons?.length ?? 0) - (a.lessons?.length ?? 0);
+        }
+        if (sortBy === 'lessons_asc') {
+          return (a.lessons?.length ?? 0) - (b.lessons?.length ?? 0);
+        }
+        return 0;
       });
   }, [rows, query, quizFilter, instructorFilter, sortBy]);
 
-  const hasActiveFilters = query !== '' || quizFilter !== 'all' || instructorFilter !== 'all';
+  const hasActiveFilters =
+    query !== '' || quizFilter !== 'all' || instructorFilter !== 'all' || sortBy !== 'newest';
 
   const resetFilters = () => {
     setQuery('');
@@ -119,7 +132,7 @@ export const ManagedCourses = () => {
   };
 
   if (courses.loading) {
-    return <LoadingState />;
+    return <ManagedCoursesSkeleton />;
   }
 
   if (courses.error) return <Alert>{courses.error}</Alert>;
@@ -128,17 +141,17 @@ export const ManagedCourses = () => {
     <section className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">
             Courses
           </h2>
-          <p className="mt-1 text-xs sm:text-sm text-slate-500">
+          <p className="mt-1 text-xs sm:text-sm text-muted">
             Author structured syllabus, manage sequential lessons, and monitor student completion rates.
           </p>
         </div>
 
         <Link
           href="/courses/new"
-          className="brand-gradient inline-flex items-center gap-2 rounded-md px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:opacity-95 cursor-pointer"
+          className="brand-gradient inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:opacity-95 cursor-pointer"
         >
           <Plus className="size-4" />
           <span>New Course</span>
@@ -149,54 +162,54 @@ export const ManagedCourses = () => {
 
       {/* Real High-Value LMS KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded border border-slate-200 bg-white p-5 shadow-2xs">
+        <div className="rounded-xl border border-theme bg-surface p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Active Courses</p>
-            <div className="size-9 rounded-md bg-brand-50 border border-brand-200 flex items-center justify-center text-brand-600">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted">Active Courses</p>
+            <div className="size-9 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand">
               <BookOpen className="size-4" />
             </div>
           </div>
-          <p className="mt-2 text-3xl font-extrabold text-slate-900">{rows.length}</p>
-          <p className="mt-1 text-[11px] font-medium text-slate-400">Curriculums live in studio</p>
+          <p className="mt-2 text-3xl font-extrabold text-primary">{rows.length}</p>
+          <p className="mt-1 text-[11px] font-medium text-muted">Curriculums live in studio</p>
         </div>
 
-        <div className="rounded border border-slate-200 bg-white p-5 shadow-2xs">
+        <div className="rounded-xl border border-theme bg-surface p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Enrolled Students</p>
-            <div className="size-9 rounded-md bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted">Enrolled Students</p>
+            <div className="size-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
               <Users className="size-4" />
             </div>
           </div>
-          <p className="mt-2 text-3xl font-extrabold text-emerald-600">{totalEnrolledStudents}</p>
-          <p className="mt-1 text-[11px] font-medium text-slate-400">Learners registered across courses</p>
+          <p className="mt-2 text-3xl font-extrabold text-emerald-500">{totalEnrolledStudents}</p>
+          <p className="mt-1 text-[11px] font-medium text-muted">Learners registered across courses</p>
         </div>
 
-        <div className="rounded border border-slate-200 bg-white p-5 shadow-2xs">
+        <div className="rounded-xl border border-theme bg-surface p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Active Instructors</p>
-            <div className="size-9 rounded-md bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted">Active Instructors</p>
+            <div className="size-9 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
               <GraduationCap className="size-4" />
             </div>
           </div>
-          <p className="mt-2 text-3xl font-extrabold text-purple-600">{instructors.length || 1}</p>
-          <p className="mt-1 text-[11px] font-medium text-slate-400">Content creators & faculty</p>
+          <p className="mt-2 text-3xl font-extrabold text-purple-400">{instructors.length || 1}</p>
+          <p className="mt-1 text-[11px] font-medium text-muted">Content creators & faculty</p>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white p-3 rounded border border-slate-200 shadow-2xs">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-surface p-3 rounded-xl border border-theme shadow-xs">
         <div className="relative flex-1 min-w-[240px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted" />
           <input
             type="text"
             placeholder="Search by title, description, instructor..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 text-xs sm:text-sm rounded border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition"
+            className="w-full pl-9 pr-4 py-1.5 text-xs sm:text-sm rounded-lg border border-theme bg-canvas text-primary focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-active transition"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-primary text-xs"
             >
               ✕
             </button>
@@ -207,7 +220,7 @@ export const ManagedCourses = () => {
           <select
             value={quizFilter}
             onChange={(e) => setQuizFilter(e.target.value as QuizFilter)}
-            className="rounded border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+            className="rounded-lg border border-theme bg-surface px-2.5 py-1.5 text-xs font-semibold text-secondary focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-active"
           >
             <option value="all">All Quizzes</option>
             <option value="with_quiz">With Quiz</option>
@@ -218,7 +231,7 @@ export const ManagedCourses = () => {
             <select
               value={instructorFilter}
               onChange={(e) => setInstructorFilter(e.target.value)}
-              className="rounded border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+              className="rounded-lg border border-theme bg-surface px-2.5 py-1.5 text-xs font-semibold text-secondary focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-active"
             >
               <option value="all">All Instructors</option>
               {instructors.map((inst) => (
@@ -233,7 +246,7 @@ export const ManagedCourses = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="rounded border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+              className="rounded-lg border border-theme bg-surface px-2.5 py-1.5 text-xs font-semibold text-secondary focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-active"
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
@@ -248,7 +261,7 @@ export const ManagedCourses = () => {
             <button
               type="button"
               onClick={resetFilters}
-              className="inline-flex items-center gap-1 rounded border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+              className="inline-flex items-center gap-1 rounded-lg border border-theme bg-elevated px-2.5 py-1.5 text-xs font-bold text-secondary hover:text-primary transition"
               title="Reset all filters"
             >
               <RotateCcw className="size-3" />
@@ -258,17 +271,17 @@ export const ManagedCourses = () => {
         </div>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-slate-500 font-medium px-1">
+      <div className="flex items-center justify-between text-xs text-muted font-medium px-1">
         <span>
           Showing <strong>{filteredCourses.length}</strong> of {rows.length} courses
         </span>
       </div>
 
       {filteredCourses.length ? (
-        <div className="overflow-hidden rounded border border-slate-200/90 bg-white shadow-2xs">
+        <div className="overflow-hidden rounded-xl border border-theme bg-surface shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <thead className="border-b border-subtle bg-canvas text-[11px] font-bold uppercase tracking-wider text-muted">
                 <tr>
                   <th className="px-5 py-3.5">Course Title</th>
                   <th className="px-5 py-3.5">Lessons</th>
@@ -278,16 +291,16 @@ export const ManagedCourses = () => {
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-subtle">
                 {filteredCourses.map((course) => {
                   const lessonCount = course.lessons?.length ?? 0;
                   const hasQuiz = Boolean(course.quiz);
 
                   return (
-                    <tr key={course.documentId} className="hover:bg-slate-50/60 transition-colors">
+                    <tr key={course.documentId} className="hover:bg-elevated/50 transition-colors">
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3.5">
-                          <div className="size-12 rounded overflow-hidden bg-slate-100 shrink-0 border border-slate-200/80 relative shadow-2xs">
+                          <div className="size-12 rounded-lg overflow-hidden bg-canvas shrink-0 border border-theme relative shadow-2xs">
                             <CourseCover
                               title={course.title}
                               url={course.coverImageUrl}
@@ -297,11 +310,11 @@ export const ManagedCourses = () => {
                           <div className="min-w-0 max-w-md">
                             <Link
                               href={`/courses/${course.documentId}`}
-                              className="font-bold text-slate-900 hover:text-brand-600 transition block truncate"
+                              className="font-bold text-primary hover:text-brand transition block truncate"
                             >
                               {course.title}
                             </Link>
-                            <p className="text-xs text-slate-400 truncate mt-0.5">
+                            <p className="text-xs text-muted truncate mt-0.5">
                               {course.description || 'Structured technical curriculum'}
                             </p>
                           </div>
@@ -309,8 +322,8 @@ export const ManagedCourses = () => {
                       </td>
 
                       <td className="px-5 py-3.5">
-                        <span className="inline-flex items-center gap-1.5 font-bold text-slate-700">
-                          <BookOpen className="size-3.5 text-brand-600" />
+                        <span className="inline-flex items-center gap-1.5 font-bold text-primary">
+                          <BookOpen className="size-3.5 text-brand" />
                           <span>
                             {lessonCount} {lessonCount === 1 ? 'Lesson' : 'Lessons'}
                           </span>
@@ -319,12 +332,12 @@ export const ManagedCourses = () => {
 
                       <td className="px-5 py-3.5">
                         {hasQuiz ? (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-purple-50 px-2.5 py-1 text-xs font-bold text-purple-700 border border-purple-200">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-purple-500/10 px-2.5 py-1 text-xs font-bold text-purple-400 border border-purple-500/20">
                             <Award className="size-3.5" />
                             <span>MCQ Quiz Added</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-canvas px-2.5 py-1 text-xs font-medium text-muted border border-theme">
                             <span>No Quiz</span>
                           </span>
                         )}
@@ -332,10 +345,10 @@ export const ManagedCourses = () => {
 
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-2">
-                          <span className="flex size-6 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-700 uppercase border border-slate-200">
+                          <span className="flex size-6 items-center justify-center rounded-full bg-canvas text-[10px] font-bold text-primary uppercase border border-theme">
                             {(course.instructor ?? 'CPS').slice(0, 2)}
                           </span>
-                          <span className="font-semibold text-slate-700 text-xs">
+                          <span className="font-semibold text-secondary text-xs">
                             {course.instructor ?? 'Platform Admin'}
                           </span>
                         </div>
@@ -346,7 +359,7 @@ export const ManagedCourses = () => {
                           <Link
                             href={`/courses/${course.documentId}`}
                             title="Preview Public Course"
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                            className="rounded-lg p-1.5 text-muted hover:bg-elevated hover:text-primary transition"
                           >
                             <Eye className="size-4" />
                           </Link>
@@ -354,25 +367,30 @@ export const ManagedCourses = () => {
                           <Link
                             href={`/courses/${course.documentId}/students`}
                             title="Student Progress Roster"
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600 transition"
+                            className="rounded-lg p-1.5 text-muted hover:bg-elevated hover:text-brand transition"
                           >
                             <Users className="size-4" />
                           </Link>
 
                           <Link
                             href={`/courses/${course.documentId}/edit`}
-                            title="Edit Curriculum & Lessons"
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600 transition"
+                            title="Edit Curriculum Syllabus"
+                            className="rounded-lg p-1.5 text-muted hover:bg-elevated hover:text-brand transition"
                           >
                             <Edit className="size-4" />
                           </Link>
 
                           <button
                             type="button"
-                            onClick={() => setDeletingCourse({ id: course.documentId, title: course.title })}
+                            onClick={() =>
+                              setDeletingCourse({
+                                id: course.documentId,
+                                title: course.title,
+                              })
+                            }
                             disabled={busy && deletingCourse?.id === course.documentId}
                             title="Delete Course"
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition cursor-pointer"
+                            className="rounded-lg p-1.5 text-muted hover:bg-red-500/10 hover:text-red-500 transition cursor-pointer"
                           >
                             <Trash2 className="size-4" />
                           </button>
@@ -387,34 +405,35 @@ export const ManagedCourses = () => {
         </div>
       ) : (
         <Empty>
-          <p className="text-base font-bold text-slate-800">
-            {hasActiveFilters ? 'No courses match your search or filters' : 'No courses in your studio yet'}
+          <p className="text-base font-bold text-primary">
+            {hasActiveFilters ? 'No courses match your filter criteria' : 'No courses in your studio yet'}
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="text-xs text-muted mt-1">
             {hasActiveFilters
-              ? 'Try changing your search keywords or resetting the filters.'
-              : 'Create your first course to begin adding sequential lessons and auto-graded quizzes.'}
+              ? 'Try resetting the search keyword or adjusting quiz and instructor filters.'
+              : 'Create your first course, add structured lessons, and publish to the academy.'}
           </p>
           {hasActiveFilters ? (
             <Button variant="plain" onClick={resetFilters} className="mt-4">
-              Clear All Filters
+              Reset Filters
             </Button>
           ) : (
             <Link
               href="/courses/new"
-              className="brand-gradient mt-4 inline-flex items-center gap-2 rounded-md px-4 py-2 text-xs font-bold text-white shadow-xs hover:opacity-95"
+              className="brand-gradient mt-4 inline-flex items-center gap-2 rounded px-4 py-2 text-xs font-bold text-white shadow-xs hover:opacity-95"
             >
               <Plus className="size-4" />
-              <span>Create Course Now</span>
+              <span>Create First Course</span>
             </Link>
           )}
         </Empty>
       )}
 
+      {/* SweetAlert Course Deletion Modal */}
       <ConfirmModal
         isOpen={Boolean(deletingCourse)}
         title="Delete This Course?"
-        message={`Are you sure you want to permanently delete "${deletingCourse?.title}"? All associated lessons, syllabus structure, student progress, and quizzes will be removed.`}
+        message={`Are you sure you want to delete "${deletingCourse?.title}"? All lessons, quizzes, and student enrollments attached to this course will be permanently removed.`}
         confirmText="Yes, Delete Course"
         cancelText="Cancel"
         loading={busy}

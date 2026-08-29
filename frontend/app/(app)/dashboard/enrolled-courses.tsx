@@ -6,7 +6,8 @@ import { ArrowRight, BookOpen, CheckCircle2 } from 'lucide-react';
 
 import { useApi } from '@/lib/use-api';
 import type { Collection, Course, Enrollment, LessonProgress, QuizResult } from '@/lib/types';
-import { Alert, Card, Empty, LoadingState, ProgressBar } from '@/components/ui';
+import { Alert, Card, Empty, ProgressBar } from '@/components/ui';
+import { EnrolledCoursesSkeleton } from '@/components/page-skeletons';
 
 interface RowProps {
   course: Course;
@@ -48,26 +49,26 @@ const Row = ({ course, completedLessonIds, quizResult }: RowProps) => {
         <div className="flex items-start justify-between gap-3">
           <Link
             href={`/courses/${course.documentId}`}
-            className="font-semibold text-slate-900 hover:text-brand-600 transition-colors text-base"
+            className="font-bold text-primary hover:text-brand transition-colors text-base"
           >
             {course.title}
           </Link>
 
           {quizResult && quizResult.score !== undefined && quizResult.total ? (
-            <span className="shrink-0 rounded bg-purple-50 px-2 py-0.5 text-xs font-semibold text-purple-700 border border-purple-200">
+            <span className="shrink-0 rounded-md bg-purple-500/10 px-2 py-0.5 text-xs font-semibold text-purple-400 border border-purple-500/20">
               Quiz: {quizResult.score}/{quizResult.total}
             </span>
           ) : null}
         </div>
 
-        <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
-          <span className="flex items-center gap-1.5 font-medium text-slate-700">
-            <BookOpen className="size-3.5 text-brand-600" />
+        <div className="mt-4 flex items-center justify-between text-xs text-muted">
+          <span className="flex items-center gap-1.5 font-medium text-primary">
+            <BookOpen className="size-3.5 text-brand" />
             <span>
               {completedCount} of {totalLessons} lessons completed
             </span>
           </span>
-          <span className="font-bold text-slate-800">{percentComplete}%</span>
+          <span className="font-bold text-primary">{percentComplete}%</span>
         </div>
 
         <div className="mt-2">
@@ -75,19 +76,19 @@ const Row = ({ course, completedLessonIds, quizResult }: RowProps) => {
         </div>
       </div>
 
-      <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
+      <div className="mt-5 pt-3 border-t border-subtle flex items-center justify-between">
         {isDone ? (
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400">
             <CheckCircle2 className="size-3.5" />
             <span>All Lessons Completed</span>
           </span>
         ) : (
-          <span className="text-xs text-slate-500 font-medium">In Progress</span>
+          <span className="text-xs text-muted font-medium">In Progress</span>
         )}
 
         <Link
           href={targetLink}
-          className="inline-flex items-center gap-1.5 rounded bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100 hover:text-brand-800 transition"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-subtle px-3 py-1.5 text-xs font-bold text-brand hover:opacity-90 transition"
         >
           <span>{buttonLabel}</span>
           <ArrowRight className="size-3.5" />
@@ -106,7 +107,7 @@ export const EnrolledCourses = () => {
   const quizResults = useApi<Collection<QuizResult>>('/quiz-results?populate=quiz&sort=createdAt:desc');
 
   if (enrollments.loading || progresses.loading || quizResults.loading) {
-    return <LoadingState />;
+    return <EnrolledCoursesSkeleton />;
   }
 
   if (enrollments.error) return <Alert>{enrollments.error}</Alert>;
@@ -131,10 +132,10 @@ export const EnrolledCourses = () => {
     <section>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">My Enrolled Courses</h2>
-          <p className="text-sm text-slate-500">Resume your lessons and track overall course completion.</p>
+          <h2 className="text-xl font-bold text-primary">My Enrolled Courses</h2>
+          <p className="text-sm text-muted">Resume your lessons and track overall course completion.</p>
         </div>
-        <span className="rounded bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 border border-slate-200">
+        <span className="rounded-lg bg-surface px-2.5 py-1 text-xs font-semibold text-secondary border border-theme">
           {rows.length} {rows.length === 1 ? 'course' : 'courses'}
         </span>
       </div>
@@ -161,9 +162,9 @@ export const EnrolledCourses = () => {
         </div>
       ) : (
         <Empty>
-          <p className="text-base font-medium text-slate-700">No active enrollments</p>
-          <p className="mt-1 text-sm text-slate-500">Browse the course catalogue to start learning.</p>
-          <Link href="/courses" className="mt-4 inline-block font-semibold text-brand-600 hover:underline">
+          <p className="text-base font-medium text-primary">No active enrollments</p>
+          <p className="mt-1 text-sm text-muted">Browse the course catalogue to start learning.</p>
+          <Link href="/courses" className="mt-4 inline-block font-semibold text-brand hover:underline">
             Explore Courses →
           </Link>
         </Empty>

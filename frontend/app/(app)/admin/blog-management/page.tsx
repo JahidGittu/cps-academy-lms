@@ -11,9 +11,6 @@ import {
   CheckCircle2,
   FileEdit,
   RotateCcw,
-  BookOpen,
-  ArrowUpDown,
-  Filter,
 } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
@@ -21,7 +18,8 @@ import { excerpt } from '@/lib/excerpt';
 import { useApi } from '@/lib/use-api';
 import type { BlogPost, Collection } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
-import { Alert, Button, Empty, LoadingState } from '@/components/ui';
+import { Alert, Button, Empty } from '@/components/ui';
+import { BlogManagementSkeleton } from '@/components/page-skeletons';
 import { ConfirmModal } from '@/components/confirm-modal';
 
 const TOPICS = ['All Topics', 'Architecture', 'Security', 'Tutorial', 'Database'];
@@ -108,7 +106,7 @@ const BlogManagementStudio = () => {
   };
 
   if (posts.loading) {
-    return <LoadingState />;
+    return <BlogManagementSkeleton />;
   }
 
   if (posts.error) return <Alert>{posts.error}</Alert>;
@@ -118,17 +116,17 @@ const BlogManagementStudio = () => {
       {/* Top Header & New Post Button */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">
             Blogs
           </h2>
-          <p className="mt-1 text-xs sm:text-sm text-slate-500">
+          <p className="mt-1 text-xs sm:text-sm text-muted">
             Author, edit, publish, and manage drafts and live technical articles across the platform.
           </p>
         </div>
 
         <Link
           href="/blog/new"
-          className="brand-gradient inline-flex items-center gap-2 rounded-md px-4 py-2 text-xs font-bold text-white shadow-xs hover:opacity-95 transition cursor-pointer"
+          className="brand-gradient inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold text-white shadow-xs hover:opacity-95 transition cursor-pointer"
         >
           <Plus className="size-4" />
           <span>Write New Post</span>
@@ -139,42 +137,42 @@ const BlogManagementStudio = () => {
 
       {/* KPI Metric Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-        <div className="rounded border border-slate-200 bg-white p-4 shadow-2xs">
-          <p className="text-xs font-semibold text-slate-500">Total Articles</p>
-          <p className="mt-1 text-2xl font-extrabold text-slate-900">{rows.length}</p>
+        <div className="rounded-xl border border-theme bg-surface p-4 shadow-sm">
+          <p className="text-xs font-semibold text-muted">Total Articles</p>
+          <p className="mt-1 text-2xl font-extrabold text-primary">{rows.length}</p>
         </div>
-        <div className="rounded border border-slate-200 bg-white p-4 shadow-2xs">
-          <p className="text-xs font-semibold text-slate-500">Published</p>
-          <p className="mt-1 text-2xl font-extrabold text-emerald-600">{publishedCount}</p>
+        <div className="rounded-xl border border-theme bg-surface p-4 shadow-sm">
+          <p className="text-xs font-semibold text-muted">Published</p>
+          <p className="mt-1 text-2xl font-extrabold text-emerald-500">{publishedCount}</p>
         </div>
-        <div className="rounded border border-slate-200 bg-white p-4 shadow-2xs">
-          <p className="text-xs font-semibold text-slate-500">Drafts</p>
-          <p className="mt-1 text-2xl font-extrabold text-amber-600">{draftCount}</p>
+        <div className="rounded-xl border border-theme bg-surface p-4 shadow-sm">
+          <p className="text-xs font-semibold text-muted">Drafts</p>
+          <p className="mt-1 text-2xl font-extrabold text-amber-500">{draftCount}</p>
         </div>
-        <div className="rounded border border-slate-200 bg-white p-4 shadow-2xs">
-          <p className="text-xs font-semibold text-slate-500">Topics Covered</p>
-          <p className="mt-1 text-2xl font-extrabold text-brand-600">
+        <div className="rounded-xl border border-theme bg-surface p-4 shadow-sm">
+          <p className="text-xs font-semibold text-muted">Topics Covered</p>
+          <p className="mt-1 text-2xl font-extrabold text-brand">
             {TOPICS.length - 1}
           </p>
         </div>
       </div>
 
       {/* Search, Filter & Sort Controls Bar */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white p-3 rounded border border-slate-200 shadow-2xs">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-surface p-3 rounded-xl border border-theme shadow-xs">
         {/* Search Input */}
         <div className="relative flex-1 min-w-[240px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted" />
           <input
             type="text"
             placeholder="Search articles by title, content, or author..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 text-xs sm:text-sm rounded border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition"
+            className="w-full pl-9 pr-4 py-1.5 text-xs sm:text-sm rounded-lg border border-theme bg-canvas text-primary focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-active transition"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-primary text-xs"
             >
               ✕
             </button>
@@ -187,7 +185,7 @@ const BlogManagementStudio = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as 'all' | 'published' | 'draft')}
-            className="rounded border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+            className="rounded-lg border border-theme bg-surface px-2.5 py-1.5 text-xs font-semibold text-secondary focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-active"
           >
             <option value="all">All Status ({rows.length})</option>
             <option value="published">Published ({publishedCount})</option>
@@ -198,7 +196,7 @@ const BlogManagementStudio = () => {
           <select
             value={activeTopic}
             onChange={(e) => setActiveTopic(e.target.value)}
-            className="rounded border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+            className="rounded-lg border border-theme bg-surface px-2.5 py-1.5 text-xs font-semibold text-secondary focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-active"
           >
             {TOPICS.map((t) => (
               <option key={t} value={t}>
@@ -211,7 +209,7 @@ const BlogManagementStudio = () => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as BlogSortOption)}
-            className="rounded border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+            className="rounded-lg border border-theme bg-surface px-2.5 py-1.5 text-xs font-semibold text-secondary focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-active"
           >
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>
@@ -224,7 +222,7 @@ const BlogManagementStudio = () => {
             <button
               type="button"
               onClick={resetFilters}
-              className="inline-flex items-center gap-1 rounded border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+              className="inline-flex items-center gap-1 rounded-lg border border-theme bg-elevated px-2.5 py-1.5 text-xs font-bold text-secondary hover:text-primary transition"
               title="Reset all filters"
             >
               <RotateCcw className="size-3" />
@@ -235,7 +233,7 @@ const BlogManagementStudio = () => {
       </div>
 
       {/* Results Header Count */}
-      <div className="flex items-center justify-between text-xs text-slate-500 font-medium px-1">
+      <div className="flex items-center justify-between text-xs text-muted font-medium px-1">
         <span>
           Showing <strong>{filtered.length}</strong> of {rows.length} articles
         </span>
@@ -244,10 +242,10 @@ const BlogManagementStudio = () => {
       {/* Blog Management Data Table */}
       {filtered.length === 0 ? (
         <Empty>
-          <p className="text-base font-bold text-slate-800">
+          <p className="text-base font-bold text-primary">
             {hasActiveFilters ? 'No articles found matching your criteria' : 'No articles in your studio yet'}
           </p>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-muted mt-1">
             {hasActiveFilters
               ? 'Try changing your search keywords or resetting the status and topic filters.'
               : 'Write your first technical article and publish it to the engineering blog.'}
@@ -267,10 +265,10 @@ const BlogManagementStudio = () => {
           )}
         </Empty>
       ) : (
-        <div className="overflow-hidden rounded border border-slate-200/90 bg-white shadow-2xs">
+        <div className="overflow-hidden rounded-xl border border-theme bg-surface shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <thead className="border-b border-subtle bg-canvas text-[11px] font-bold uppercase tracking-wider text-muted">
                 <tr>
                   <th className="px-5 py-3.5">Article Title</th>
                   <th className="px-5 py-3.5">Author</th>
@@ -280,17 +278,17 @@ const BlogManagementStudio = () => {
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-subtle">
                 {filtered.map((post, idx) => {
                   const isPublished = post.publishState === 'published';
                   const cover = post.coverImageUrl || DEFAULT_POST_COVERS[idx % DEFAULT_POST_COVERS.length];
 
                   return (
-                    <tr key={post.documentId} className="hover:bg-slate-50/60 transition-colors">
+                    <tr key={post.documentId} className="hover:bg-elevated/50 transition-colors">
                       {/* Cover & Title */}
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3.5">
-                          <div className="size-12 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-200/80 shadow-2xs">
+                          <div className="size-12 rounded-lg overflow-hidden bg-canvas shrink-0 border border-theme shadow-2xs">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={cover}
@@ -301,11 +299,11 @@ const BlogManagementStudio = () => {
                           <div className="min-w-0 max-w-md">
                             <Link
                               href={`/blog/${post.documentId}`}
-                              className="font-bold text-slate-900 hover:text-brand-600 transition block truncate"
+                              className="font-bold text-primary hover:text-brand transition block truncate"
                             >
                               {post.title}
                             </Link>
-                            <p className="text-xs text-slate-400 truncate mt-0.5">
+                            <p className="text-xs text-muted truncate mt-0.5">
                               {excerpt(post.body)}
                             </p>
                           </div>
@@ -313,9 +311,9 @@ const BlogManagementStudio = () => {
                       </td>
 
                       {/* Author */}
-                      <td className="px-5 py-3.5 font-medium text-slate-600 text-xs">
+                      <td className="px-5 py-3.5 font-medium text-secondary text-xs">
                         <span className="inline-flex items-center gap-1.5">
-                          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-600 uppercase border border-slate-200">
+                          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-canvas text-[10px] font-bold text-primary uppercase border border-theme">
                             {(post.author?.username || 'Staff').slice(0, 2)}
                           </span>
                           <span className="truncate">{post.author?.username || 'Staff Editor'}</span>
@@ -325,12 +323,12 @@ const BlogManagementStudio = () => {
                       {/* Status */}
                       <td className="px-5 py-3.5">
                         {isPublished ? (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-500 border border-emerald-500/20">
                             <CheckCircle2 className="size-3" />
                             <span>Published</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 border border-amber-200">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-500 border border-amber-500/20">
                             <FileEdit className="size-3" />
                             <span>Draft</span>
                           </span>
@@ -338,7 +336,7 @@ const BlogManagementStudio = () => {
                       </td>
 
                       {/* Date */}
-                      <td className="px-5 py-3.5 text-xs text-slate-500 font-medium">
+                      <td className="px-5 py-3.5 text-xs text-muted font-medium">
                         {new Date(post.createdAt).toLocaleDateString(undefined, {
                           month: 'short',
                           day: 'numeric',
@@ -352,14 +350,14 @@ const BlogManagementStudio = () => {
                           <Link
                             href={`/blog/${post.documentId}`}
                             title="Preview Public Article"
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                            className="rounded-lg p-1.5 text-muted hover:bg-elevated hover:text-primary transition"
                           >
                             <Eye className="size-4" />
                           </Link>
                           <Link
                             href={`/blog/${post.documentId}/edit`}
                             title="Edit Article"
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600 transition"
+                            className="rounded-lg p-1.5 text-muted hover:bg-elevated hover:text-brand transition"
                           >
                             <Pencil className="size-4" />
                           </Link>
@@ -368,7 +366,7 @@ const BlogManagementStudio = () => {
                             onClick={() => setDeletingPost({ id: post.documentId, title: post.title })}
                             disabled={busy && deletingPost?.id === post.documentId}
                             title="Delete Article"
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition cursor-pointer"
+                            className="rounded-lg p-1.5 text-muted hover:bg-red-500/10 hover:text-red-500 transition cursor-pointer"
                           >
                             <Trash2 className="size-4" />
                           </button>

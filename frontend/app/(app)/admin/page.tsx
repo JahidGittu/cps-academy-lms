@@ -15,10 +15,10 @@ const AdminOverview = () => {
       {/* 2. Quick Management Studios Grid */}
       <section className="space-y-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900">
+          <h2 className="text-xl font-bold tracking-tight text-primary">
             Administrative Hubs
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500">
+          <p className="text-xs sm:text-sm text-muted">
             Direct access to govern curriculum, engineering blogs, and platform users.
           </p>
         </div>
@@ -27,20 +27,20 @@ const AdminOverview = () => {
           {/* Courses Hub */}
           <Link
             href="/admin/course-management"
-            className="group rounded-lg border border-slate-200/90 bg-white p-5 shadow-2xs hover:border-brand-300 hover:shadow-sm transition-all flex flex-col justify-between"
+            className="group rounded-xl border border-theme bg-surface p-5 shadow-sm hover:border-active hover:bg-elevated transition-all flex flex-col justify-between"
           >
             <div>
-              <div className="flex size-10 items-center justify-center rounded-md bg-violet-50 text-violet-600 border border-violet-100 group-hover:scale-105 transition-transform">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-violet-500/10 text-violet-400 border border-violet-500/20 group-hover:scale-105 transition-transform">
                 <BookOpen className="size-5" />
               </div>
-              <h3 className="mt-4 text-base font-bold text-slate-900 group-hover:text-brand-600 transition-colors">
+              <h3 className="mt-4 text-base font-bold text-primary group-hover:text-brand transition-colors">
                 Courses
               </h3>
-              <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+              <p className="mt-1 text-xs text-secondary leading-relaxed">
                 Author sequential lessons, create structured syllabus, and configure auto-graded quizzes.
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-violet-600">
+            <div className="mt-4 pt-3 border-t border-subtle flex items-center justify-between text-xs font-bold text-violet-400">
               <span>Open Studio</span>
               <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
             </div>
@@ -49,20 +49,20 @@ const AdminOverview = () => {
           {/* Blogs Hub */}
           <Link
             href="/admin/blog-management"
-            className="group rounded-lg border border-slate-200/90 bg-white p-5 shadow-2xs hover:border-brand-300 hover:shadow-sm transition-all flex flex-col justify-between"
+            className="group rounded-xl border border-theme bg-surface p-5 shadow-sm hover:border-active hover:bg-elevated transition-all flex flex-col justify-between"
           >
             <div>
-              <div className="flex size-10 items-center justify-center rounded-md bg-rose-50 text-rose-600 border border-rose-100 group-hover:scale-105 transition-transform">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 group-hover:scale-105 transition-transform">
                 <FileText className="size-5" />
               </div>
-              <h3 className="mt-4 text-base font-bold text-slate-900 group-hover:text-brand-600 transition-colors">
+              <h3 className="mt-4 text-base font-bold text-primary group-hover:text-brand transition-colors">
                 Blogs
               </h3>
-              <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+              <p className="mt-1 text-xs text-secondary leading-relaxed">
                 Draft, edit, and publish technical engineering articles across the platform.
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-rose-600">
+            <div className="mt-4 pt-3 border-t border-subtle flex items-center justify-between text-xs font-bold text-rose-400">
               <span>Open Studio</span>
               <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
             </div>
@@ -71,20 +71,20 @@ const AdminOverview = () => {
           {/* Users Hub */}
           <Link
             href="/admin/user-management"
-            className="group rounded-lg border border-slate-200/90 bg-white p-5 shadow-2xs hover:border-brand-300 hover:shadow-sm transition-all flex flex-col justify-between"
+            className="group rounded-xl border border-theme bg-surface p-5 shadow-sm hover:border-active hover:bg-elevated transition-all flex flex-col justify-between"
           >
             <div>
-              <div className="flex size-10 items-center justify-center rounded-md bg-indigo-50 text-indigo-600 border border-indigo-100 group-hover:scale-105 transition-transform">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 group-hover:scale-105 transition-transform">
                 <Users className="size-5" />
               </div>
-              <h3 className="mt-4 text-base font-bold text-slate-900 group-hover:text-brand-600 transition-colors">
+              <h3 className="mt-4 text-base font-bold text-primary group-hover:text-brand transition-colors">
                 Users
               </h3>
-              <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+              <p className="mt-1 text-xs text-secondary leading-relaxed">
                 Assign permission roles (Admin, Instructor, Manager, Student) and govern platform privileges.
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-indigo-600">
+            <div className="mt-4 pt-3 border-t border-subtle flex items-center justify-between text-xs font-bold text-indigo-400">
               <span>Open Console</span>
               <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
             </div>
@@ -102,4 +102,3 @@ export default function AdminPage() {
     </RequireAuth>
   );
 }
-

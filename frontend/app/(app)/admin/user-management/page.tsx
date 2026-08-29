@@ -9,8 +9,6 @@ import {
   Search,
   RotateCcw,
   Trash2,
-  AlertCircle,
-  GraduationCap,
 } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
@@ -18,14 +16,15 @@ import { useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { Role, User } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
-import { Alert, Button, Empty, LoadingState } from '@/components/ui';
+import { Alert, Button, Empty } from '@/components/ui';
+import { UserManagementSkeleton } from '@/components/page-skeletons';
 import { ConfirmModal } from '@/components/confirm-modal';
 
 const roleBadgeColor: Record<string, string> = {
-  Admin: 'bg-purple-50 text-purple-700 border-purple-200',
-  'Content Manager': 'bg-amber-50 text-amber-700 border-amber-200',
-  Instructor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  Student: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  Admin: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  'Content Manager': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  Instructor: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+  Student: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
 };
 
 const VALID_ROLES = ['Admin', 'Instructor', 'Content Manager', 'Student'];
@@ -114,7 +113,7 @@ const UserManagementStudio = () => {
   };
 
   if (users.loading || roles.loading) {
-    return <LoadingState />;
+    return <UserManagementSkeleton />;
   }
 
   if (users.error) return <Alert>{users.error}</Alert>;
@@ -123,10 +122,10 @@ const UserManagementStudio = () => {
     <div className="space-y-6">
       {/* Top Header */}
       <div>
-        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">
           Users
         </h2>
-        <p className="mt-1 text-xs sm:text-sm text-slate-500">
+        <p className="mt-1 text-xs sm:text-sm text-muted">
           Manage user accounts, assign system permission roles, and control administrative access.
         </p>
       </div>
@@ -135,40 +134,40 @@ const UserManagementStudio = () => {
 
       {/* KPI Metric Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-        <div className="rounded border border-slate-200 bg-white p-4 shadow-2xs">
-          <p className="text-xs font-semibold text-slate-500">Total Accounts</p>
-          <p className="mt-1 text-2xl font-extrabold text-slate-900">{rows.length}</p>
+        <div className="rounded-xl border border-theme bg-surface p-4 shadow-sm">
+          <p className="text-xs font-semibold text-muted">Total Accounts</p>
+          <p className="mt-1 text-2xl font-extrabold text-primary">{rows.length}</p>
         </div>
-        <div className="rounded border border-slate-200 bg-white p-4 shadow-2xs">
-          <p className="text-xs font-semibold text-slate-500">Instructors</p>
-          <p className="mt-1 text-2xl font-extrabold text-indigo-600">{instructorCount}</p>
+        <div className="rounded-xl border border-theme bg-surface p-4 shadow-sm">
+          <p className="text-xs font-semibold text-muted">Instructors</p>
+          <p className="mt-1 text-2xl font-extrabold text-indigo-400">{instructorCount}</p>
         </div>
-        <div className="rounded border border-slate-200 bg-white p-4 shadow-2xs">
-          <p className="text-xs font-semibold text-slate-500">Content Managers</p>
-          <p className="mt-1 text-2xl font-extrabold text-amber-600">{managerCount}</p>
+        <div className="rounded-xl border border-theme bg-surface p-4 shadow-sm">
+          <p className="text-xs font-semibold text-muted">Content Managers</p>
+          <p className="mt-1 text-2xl font-extrabold text-amber-400">{managerCount}</p>
         </div>
-        <div className="rounded border border-slate-200 bg-white p-4 shadow-2xs">
-          <p className="text-xs font-semibold text-slate-500">Students</p>
-          <p className="mt-1 text-2xl font-extrabold text-emerald-600">{studentCount}</p>
+        <div className="rounded-xl border border-theme bg-surface p-4 shadow-sm">
+          <p className="text-xs font-semibold text-muted">Students</p>
+          <p className="mt-1 text-2xl font-extrabold text-emerald-400">{studentCount}</p>
         </div>
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded border border-slate-200 shadow-2xs">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-surface p-3 rounded-xl border border-theme shadow-xs">
         {/* Search Input */}
         <div className="relative flex-1 min-w-[240px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted" />
           <input
             type="text"
             placeholder="Search by username or email..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 text-xs sm:text-sm rounded border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition"
+            className="w-full pl-9 pr-4 py-1.5 text-xs sm:text-sm rounded-lg border border-theme bg-canvas text-primary focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-active transition"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-primary text-xs"
             >
               ✕
             </button>
@@ -180,7 +179,7 @@ const UserManagementStudio = () => {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="rounded border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+            className="rounded-lg border border-theme bg-surface px-3 py-1.5 text-xs font-semibold text-secondary focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-active"
           >
             <option value="all">All Roles ({rows.length})</option>
             <option value="Admin">Admin ({adminCount})</option>
@@ -193,7 +192,7 @@ const UserManagementStudio = () => {
             <button
               type="button"
               onClick={resetFilters}
-              className="inline-flex items-center gap-1 rounded border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+              className="inline-flex items-center gap-1 rounded-lg border border-theme bg-elevated px-2.5 py-1.5 text-xs font-bold text-secondary hover:text-primary transition"
             >
               <RotateCcw className="size-3" />
               <span>Reset</span>
@@ -203,7 +202,7 @@ const UserManagementStudio = () => {
       </div>
 
       {/* Results Count Header */}
-      <div className="flex items-center justify-between text-xs text-slate-500 font-medium px-1">
+      <div className="flex items-center justify-between text-xs text-muted font-medium px-1">
         <span>
           Showing <strong>{filteredUsers.length}</strong> of {rows.length} users
         </span>
@@ -212,8 +211,8 @@ const UserManagementStudio = () => {
       {/* User Management Table */}
       {filteredUsers.length === 0 ? (
         <Empty>
-          <p className="text-base font-bold text-slate-800">No users match your search criteria</p>
-          <p className="text-xs text-slate-500 mt-1">Try resetting the search keywords or role filters.</p>
+          <p className="text-base font-bold text-primary">No users match your search criteria</p>
+          <p className="text-xs text-muted mt-1">Try resetting the search keywords or role filters.</p>
           {hasActiveFilters && (
             <Button variant="plain" onClick={resetFilters} className="mt-4">
               Clear All Filters
@@ -221,10 +220,10 @@ const UserManagementStudio = () => {
           )}
         </Empty>
       ) : (
-        <div className="overflow-hidden rounded border border-slate-200/90 bg-white shadow-2xs">
+        <div className="overflow-hidden rounded-xl border border-theme bg-surface shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs sm:text-sm text-slate-600">
-              <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            <table className="w-full text-left text-xs sm:text-sm text-secondary">
+              <thead className="bg-canvas border-b border-subtle text-[11px] font-bold uppercase tracking-wider text-muted">
                 <tr>
                   <th className="px-5 py-3.5">User Profile</th>
                   <th className="px-5 py-3.5">Current Role</th>
@@ -233,31 +232,31 @@ const UserManagementStudio = () => {
                   <th className="px-5 py-3.5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-subtle">
                 {filteredUsers.map((row) => {
                   const self = row.id === me?.id;
                   const roleName = row.role?.name ?? 'Student';
                   const badgeStyle =
-                    roleBadgeColor[roleName] ?? 'bg-slate-50 text-slate-700 border-slate-200';
+                    roleBadgeColor[roleName] ?? 'bg-elevated text-secondary border-theme';
 
                   return (
-                    <tr key={row.id} className="hover:bg-slate-50/60 transition-colors">
+                    <tr key={row.id} className="hover:bg-elevated/50 transition-colors">
                       {/* Avatar & Info */}
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <span className="flex size-8 items-center justify-center rounded bg-brand-100 text-xs font-bold text-brand-700 uppercase border border-brand-200 shadow-2xs shrink-0">
+                          <span className="flex size-8 items-center justify-center rounded-lg bg-brand-subtle text-xs font-bold text-brand uppercase border border-brand-border shadow-2xs shrink-0">
                             {row.username.slice(0, 2)}
                           </span>
                           <div className="min-w-0">
-                            <span className="block font-bold text-slate-900 truncate">
+                            <span className="block font-bold text-primary truncate">
                               {row.username}{' '}
                               {self && (
-                                <span className="text-[11px] font-semibold text-brand-600 ml-1">
+                                <span className="text-[11px] font-semibold text-brand ml-1">
                                   (You)
                                 </span>
                               )}
                             </span>
-                            <span className="block text-xs text-slate-400 truncate">{row.email}</span>
+                            <span className="block text-xs text-muted truncate">{row.email}</span>
                           </div>
                         </div>
                       </td>
@@ -265,7 +264,7 @@ const UserManagementStudio = () => {
                       {/* Current Role Badge */}
                       <td className="px-5 py-3.5">
                         <span
-                          className={`inline-flex items-center gap-1.5 rounded border px-2.5 py-1 text-xs font-bold ${badgeStyle}`}
+                          className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-bold ${badgeStyle}`}
                         >
                           {roleName === 'Admin' ? (
                             <Shield className="size-3.5" />
@@ -279,8 +278,8 @@ const UserManagementStudio = () => {
                       {/* Role Assignment Dropdown */}
                       <td className="px-5 py-3.5">
                         {self ? (
-                          <span className="inline-flex items-center gap-1 text-xs text-slate-400 italic">
-                            <Shield className="size-3 text-slate-400" />
+                          <span className="inline-flex items-center gap-1 text-xs text-muted italic">
+                            <Shield className="size-3 text-muted" />
                             <span>Self role protected</span>
                           </span>
                         ) : (
@@ -288,7 +287,7 @@ const UserManagementStudio = () => {
                             disabled={busyId === row.id}
                             value={row.role?.id ?? ''}
                             onChange={(e) => void changeRole(row.id, Number(e.target.value))}
-                            className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-50 cursor-pointer"
+                            className="rounded-lg border border-theme bg-canvas px-3 py-1.5 text-xs font-semibold text-primary outline-none transition focus:border-active focus:ring-2 focus:ring-brand-500/20 disabled:opacity-50 cursor-pointer"
                           >
                             {availableRoles.map((role) => (
                               <option key={role.id} value={role.id}>
@@ -302,18 +301,18 @@ const UserManagementStudio = () => {
                       {/* Account Status Badge */}
                       <td className="px-5 py-3.5">
                         {busyId === row.id ? (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 animate-pulse bg-brand-50 px-2 py-0.5 rounded border border-brand-200">
-                            <span className="size-1.5 rounded-full bg-brand-600 animate-ping" />
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-brand animate-pulse bg-brand-subtle px-2.5 py-1 rounded-md border border-brand-border">
+                            <span className="size-1.5 rounded-full bg-brand animate-ping" />
                             <span>Updating...</span>
                           </span>
                         ) : successId === row.id ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                            <CheckCircle2 className="size-3.5 text-emerald-600" />
+                          <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
+                            <CheckCircle2 className="size-3.5 text-emerald-400" />
                             <span>Saved!</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/80">
-                            <span className="size-1.5 rounded-full bg-emerald-500" />
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
+                            <span className="size-1.5 rounded-full bg-emerald-400" />
                             <span>Active</span>
                           </span>
                         )}
@@ -327,12 +326,12 @@ const UserManagementStudio = () => {
                             onClick={() => setDeletingUser({ id: row.id, username: row.username })}
                             disabled={deleteBusy && deletingUser?.id === row.id}
                             title="Delete User Account"
-                            className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition cursor-pointer"
+                            className="rounded-lg p-1.5 text-muted hover:bg-red-500/10 hover:text-red-500 transition cursor-pointer"
                           >
                             <Trash2 className="size-4" />
                           </button>
                         ) : (
-                          <span className="text-xs text-slate-300">—</span>
+                          <span className="text-xs text-muted">—</span>
                         )}
                       </td>
                     </tr>
@@ -366,4 +365,3 @@ export default function UserManagementPage() {
     </RequireAuth>
   );
 }
-
