@@ -147,7 +147,7 @@ const BlogManagement = () => {
         </div>
 
         <Link
-          href="/blog/new"
+          href="/admin/blog-management/new"
           className="brand-gradient inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold text-white shadow-xs hover:opacity-95 transition cursor-pointer"
         >
           <Plus className="size-4" />
@@ -319,7 +319,7 @@ const BlogManagement = () => {
             </Button>
           ) : (
             <Link
-              href="/blog/new"
+              href="/admin/blog-management/new"
               className="brand-gradient mt-4 inline-flex items-center gap-2 rounded px-4 py-2 text-xs font-bold text-white shadow-xs hover:opacity-95"
             >
               <Plus className="size-4" />
@@ -451,7 +451,7 @@ const BlogManagement = () => {
                             <Eye className="size-4" />
                           </Link>
                           <Link
-                            href={`/blog/${post.documentId}/edit`}
+                            href={`/admin/blog-management/${post.documentId}/edit`}
                             title="Edit Article"
                             className="rounded-lg p-1.5 text-muted hover:bg-elevated hover:text-sky-400 transition"
                           >

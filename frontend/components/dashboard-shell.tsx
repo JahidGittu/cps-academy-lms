@@ -110,14 +110,17 @@ const getRouteMetadata = (pathname: string, roleName: string) => {
       breadcrumb: 'Quiz Builder',
     };
   }
-  if (pathname === '/blog/new') {
+  if (pathname === '/blog/new' || pathname === '/admin/blog-management/new') {
     return {
       title: 'Publish Engineering Post',
       subtitle: 'Write and publish technical articles across the platform.',
       breadcrumb: 'New Article',
     };
   }
-  if (pathname.startsWith('/blog/') && pathname.endsWith('/edit')) {
+  if (
+    (pathname.startsWith('/blog/') && pathname.endsWith('/edit')) ||
+    (pathname.startsWith('/admin/blog-management/') && pathname.endsWith('/edit'))
+  ) {
     return {
       title: 'Edit Article',
       subtitle: 'Update publication state and article content.',
@@ -264,7 +267,15 @@ export const DashboardShell = ({
                   const Icon = item.icon;
                   const active =
                     pathname === item.href ||
-                    (item.href !== '/dashboard' && item.href !== '/admin' && pathname.startsWith(`${item.href}/`));
+                    (item.href !== '/dashboard' && item.href !== '/admin' && pathname.startsWith(`${item.href}/`)) ||
+                    (item.href === '/admin/blog-management' &&
+                      (pathname.startsWith('/admin/blog-management') ||
+                        pathname === '/blog/new' ||
+                        (pathname.startsWith('/blog/') && pathname.endsWith('/edit')))) ||
+                    (item.href === '/admin/course-management' &&
+                      (pathname.startsWith('/admin/course-management') ||
+                        pathname === '/courses/new' ||
+                        (pathname.startsWith('/courses/') && pathname.includes('/edit'))));
 
                   return (
                     <Link
