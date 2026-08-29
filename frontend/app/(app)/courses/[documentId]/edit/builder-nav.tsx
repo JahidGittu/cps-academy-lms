@@ -46,19 +46,19 @@ export const BuilderNav = ({
               type="button"
               disabled={isLocked}
               onClick={() => !isLocked && onSelect(key)}
-              className={`flex shrink-0 items-center gap-2.5 rounded border px-3 py-2.5 text-left transition ${
+              className={`flex shrink-0 items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition ${
                 isLocked
-                  ? 'opacity-60 cursor-not-allowed bg-slate-50/80 border-slate-200/60 text-slate-400'
+                  ? 'opacity-60 cursor-not-allowed bg-canvas border-theme text-muted'
                   : section === key
-                  ? 'border-brand-300 bg-brand-50/90 text-brand-800 font-bold shadow-2xs cursor-pointer'
-                  : 'border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 cursor-pointer'
+                  ? 'border-brand-border bg-brand-subtle text-brand font-bold shadow-2xs cursor-pointer'
+                  : 'border-theme bg-surface text-secondary hover:bg-elevated hover:text-primary cursor-pointer'
               }`}
             >
-              <Icon className={`size-4 shrink-0 ${section === key && !isLocked ? 'text-brand-600' : 'text-slate-400'}`} />
+              <Icon className={`size-4 shrink-0 ${section === key && !isLocked ? 'text-brand' : 'text-muted'}`} />
 
               <span className="leading-tight">
                 <span className="block text-xs sm:text-sm">{label}</span>
-                <span className="hidden text-xs text-slate-400 font-normal lg:block">{hint}</span>
+                <span className="hidden text-xs text-muted font-normal lg:block">{hint}</span>
               </span>
             </button>
           );
@@ -66,20 +66,20 @@ export const BuilderNav = ({
       </div>
 
       {courseId && (
-        <div className="hidden lg:flex lg:flex-col gap-1.5 pt-3 border-t border-slate-200/80">
+        <div className="hidden lg:flex lg:flex-col gap-1.5 pt-3 border-t border-subtle">
           <Link
             href={`/courses/${courseId}/students`}
-            className="flex items-center gap-2.5 rounded border border-slate-200/80 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition"
+            className="flex items-center gap-2.5 rounded-lg border border-theme bg-surface px-3 py-2 text-xs font-semibold text-secondary hover:bg-elevated hover:text-brand transition"
           >
-            <Users className="size-4 text-slate-400" />
+            <Users className="size-4 text-muted" />
             <span>Students Roster</span>
           </Link>
 
           <Link
             href={`/courses/${courseId}`}
-            className="flex items-center gap-2.5 rounded border border-slate-200/80 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition"
+            className="flex items-center gap-2.5 rounded-lg border border-theme bg-surface px-3 py-2 text-xs font-semibold text-secondary hover:bg-elevated hover:text-brand transition"
           >
-            <Eye className="size-4 text-slate-400" />
+            <Eye className="size-4 text-muted" />
             <span>Preview Course</span>
           </Link>
         </div>

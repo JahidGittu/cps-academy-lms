@@ -7,10 +7,7 @@ import { api, errorMessage } from '@/lib/api';
 import { Alert, Button, Field } from '@/components/ui';
 import { blankQuestion, QuestionFields, type Draft } from './question-fields';
 
-// A save sends the whole question list, because that is what Strapi does with a repeatable
-// component: what arrives replaces what was there. It is also why the screen loads the answer key
-// before showing anything. Questions rebuilt from an ordinary read would have no key in them, and
-// saving would write that emptiness over the real one.
+// A save sends the whole question list
 export const QuizBuilder = ({
   course,
   quiz,
@@ -38,7 +35,6 @@ export const QuizBuilder = ({
 
     if (!questions.length) {
       setError('A quiz needs at least one question.');
-
       return;
     }
 
@@ -47,8 +43,6 @@ export const QuizBuilder = ({
     setSaved(false);
 
     try {
-      // course goes in the body on both paths. On a create it is what the ownership policy reads to
-      // decide whether this account may add a quiz here at all.
       const data = { title, questions, course };
 
       if (quiz) await api.put(`/quizzes/${quiz}`, { data });
@@ -92,12 +86,12 @@ export const QuizBuilder = ({
 
       <Alert>{error}</Alert>
 
-      <div className="flex items-center gap-3 border-t border-slate-200 pt-4">
+      <div className="flex items-center gap-3 border-t border-subtle pt-4">
         <Button type="submit" disabled={busy}>
-          {busy ? 'Saving' : 'Save quiz'}
+          {busy ? 'Saving...' : 'Save quiz'}
         </Button>
 
-        {saved && <span className="text-sm text-slate-500">Saved.</span>}
+        {saved && <span className="text-sm text-muted">Saved.</span>}
       </div>
     </form>
   );

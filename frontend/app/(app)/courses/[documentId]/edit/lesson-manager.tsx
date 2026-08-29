@@ -6,12 +6,11 @@ import { api, errorMessage } from '@/lib/api';
 import { useApi } from '@/lib/use-api';
 import type { Collection, Lesson, Single } from '@/lib/types';
 import { Alert, Empty, LoadingState } from '@/components/ui';
+import { ConfirmModal } from '@/components/confirm-modal';
 import { LessonEditor, type LessonValues } from './lesson-editor';
 import { LessonList } from './lesson-list';
 
-// The course is passed as its documentId because that is what a lesson write has to send: the
-// owns-parent-course policy reads data.course out of the body and follows it to an owner before the
-// create is allowed through.
+// The course is passed as its documentId
 export const LessonManager = ({
   course,
   onChanged,
@@ -23,12 +22,13 @@ export const LessonManager = ({
     `/lessons?filters[course][documentId][$eq]=${course}&sort=order:asc`
   );
 
-  // Keep local ordered list for instant optimistic rendering without UI jumping or deselecting
+  // Keep local ordered list for instant optimistic rendering without UI jumping
   const [localLessons, setLocalLessons] = useState<Lesson[]>([]);
   // What the panel on the right is holding: a documentId, the word 'new', or empty
   const [selected, setSelected] = useState('');
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
+  const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
 
   // Synchronize server lessons into local state
   useEffect(() => {
@@ -78,7 +78,7 @@ export const LessonManager = ({
     setSelected(data.data.documentId);
   };
 
-  // Instant optimistic reorder that maintains active lesson state and zero UI flickering
+  // Instant optimistic reorder that maintains active lesson state
   const move = (index: number, delta: number) =>
     run(async () => {
       const moving = rows[index];
@@ -110,10 +110,9 @@ export const LessonManager = ({
       }
     });
 
-  const remove = (lesson: Lesson) => {
-    if (!window.confirm(`Delete "${lesson.title}"? Any student progress recorded against it will also be deleted.`)) {
-      return;
-    }
+  const confirmDeleteLesson = () => {
+    if (!lessonToDelete) return;
+    const lesson = lessonToDelete;
 
     void run(async () => {
       // Optimistic removal
@@ -124,10 +123,11 @@ export const LessonManager = ({
 
       await api.delete(`/lessons/${lesson.documentId}`);
       await refresh();
+      setLessonToDelete(null);
     });
   };
 
-  // Guard initial loading only (do not unmount on subsequent background reloads)
+  // Guard initial loading only
   if (lessons.loading && !lessons.data) {
     return <LoadingState />;
   }
@@ -146,7 +146,7 @@ export const LessonManager = ({
           onSelect={setSelected}
           onAdd={() => setSelected('new')}
           onMove={move}
-          onRemove={remove}
+          onRemove={(lesson) => setLessonToDelete(lesson)}
         />
 
         {/* Keyed on the selection so switching lessons builds a fresh form */}
@@ -159,11 +159,22 @@ export const LessonManager = ({
           />
         ) : (
           <Empty>
-            <p className="text-base font-bold text-slate-800">No Lesson Selected</p>
-            <p className="text-xs text-slate-500 mt-1">Select a lesson from the syllabus or add a new one.</p>
+            <p className="text-base font-bold text-primary">No Lesson Selected</p>
+            <p className="text-xs text-muted mt-1">Select a lesson from the syllabus or add a new one.</p>
           </Empty>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={Boolean(lessonToDelete)}
+        title="Delete This Lesson?"
+        message={`Are you sure you want to delete "${lessonToDelete?.title}"? Any student progress recorded against it will also be deleted.`}
+        confirmText="Yes, Delete Lesson"
+        cancelText="Cancel"
+        loading={busy}
+        onConfirm={confirmDeleteLesson}
+        onClose={() => setLessonToDelete(null)}
+      />
     </div>
   );
 };

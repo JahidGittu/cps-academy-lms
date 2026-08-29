@@ -99,36 +99,36 @@ export const LessonEditor = ({
   return (
     <form
       onSubmit={submit}
-      className="space-y-4 rounded border border-slate-200 bg-white p-5 shadow-2xs"
+      className="space-y-4 rounded-lg border border-theme bg-surface p-5 shadow-2xs"
     >
-      <div className="flex items-baseline justify-between gap-3 border-b border-slate-200 pb-3">
-        <h2 className="truncate text-sm font-bold text-slate-900">
+      <div className="flex items-baseline justify-between gap-3 border-b border-subtle pb-3">
+        <h2 className="truncate text-sm font-bold text-primary">
           {lesson ? lesson.title : 'New Lesson'}
         </h2>
 
         {lesson ? (
           <div className="text-xs">
             {saveStatus === 'saving' && (
-              <span className="inline-flex items-center gap-1.5 font-semibold text-brand-600 animate-pulse">
+              <span className="inline-flex items-center gap-1.5 font-semibold text-brand animate-pulse">
                 <RefreshCw className="size-3 animate-spin" />
                 <span>Auto-saving...</span>
               </span>
             )}
             {saveStatus === 'saved' && (
-              <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
+              <span className="inline-flex items-center gap-1 font-bold text-emerald-500">
                 <CheckCircle2 className="size-3.5 text-emerald-500" />
                 <span>Saved</span>
               </span>
             )}
             {saveStatus === 'unsaved' && (
-              <span className="inline-flex items-center gap-1.5 text-slate-400 font-medium">
+              <span className="inline-flex items-center gap-1.5 text-muted font-medium">
                 <span className="size-1.5 rounded-full bg-amber-500" />
                 <span>Unsaved changes</span>
               </span>
             )}
           </div>
         ) : (
-          saveStatus === 'saved' && <span className="shrink-0 text-xs font-bold text-emerald-600">✓ Created!</span>
+          saveStatus === 'saved' && <span className="shrink-0 text-xs font-bold text-emerald-500">✓ Created!</span>
         )}
       </div>
 
@@ -149,7 +149,7 @@ export const LessonEditor = ({
         rows={12}
       />
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-muted">
         A lesson can be a video, a written page, or both. Whatever is filled in is what students see.
       </p>
 
@@ -165,7 +165,7 @@ export const LessonEditor = ({
         </Button>
 
         {lesson && saveStatus === 'saved' && (
-          <span className="text-xs font-medium text-slate-500 hidden sm:inline">
+          <span className="text-xs font-medium text-muted hidden sm:inline">
             ✓ Auto-synced with cloud
           </span>
         )}

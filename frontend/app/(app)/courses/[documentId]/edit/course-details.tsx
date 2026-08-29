@@ -32,10 +32,10 @@ const Delete = ({ course }: { course: Course }) => {
 
   return (
     <>
-      <Card className="border-red-200 bg-red-50/20">
-        <h2 className="text-sm font-bold text-red-700">Delete this course</h2>
+      <Card className="border-red-500/30 bg-red-500/10">
+        <h2 className="text-sm font-bold text-red-500">Delete this course</h2>
 
-        <p className="mt-1 text-xs text-slate-600">
+        <p className="mt-1 text-xs text-muted">
           The lessons, the quiz and every student enrolment go with it, and none of it can be recovered.
         </p>
 
@@ -48,7 +48,7 @@ const Delete = ({ course }: { course: Course }) => {
         </div>
       </Card>
 
-      {/* SweetAlert Course Deletion Modal */}
+      {/* Course Deletion Modal */}
       <ConfirmModal
         isOpen={showModal}
         title="Delete This Course?"

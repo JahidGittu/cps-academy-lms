@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Check, Lock, Play } from 'lucide-react';
+import { Check, Lock } from 'lucide-react';
 
 import type { Lesson } from '@/lib/types';
 import { Empty } from '@/components/ui';
@@ -16,7 +16,7 @@ export const Syllabus = ({
   if (!lessons.length) return <Empty>No lessons yet.</Empty>;
 
   return (
-    <ol className="divide-y divide-slate-100 overflow-hidden rounded-md border border-slate-200/90 bg-white shadow-2xs">
+    <ol className="divide-y divide-subtle overflow-hidden rounded-lg border border-theme bg-surface shadow-2xs">
       {lessons.map((lesson, index) => {
         const finished = done(lesson.documentId);
         const reachable = open(index);
@@ -25,17 +25,17 @@ export const Syllabus = ({
           <li
             key={lesson.documentId}
             className={`flex items-center gap-3.5 px-4 py-3.5 text-xs sm:text-sm transition-colors ${
-              reachable ? 'bg-white hover:bg-slate-50/80' : 'bg-slate-50/50'
+              reachable ? 'bg-surface hover:bg-elevated' : 'bg-canvas opacity-75'
             }`}
           >
             {/* Status Number / Check Indicator */}
             <span
               className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                 finished
-                  ? 'bg-emerald-100 text-emerald-700'
+                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-[#3fb950]'
                   : reachable
-                  ? 'bg-brand-100 text-brand-700'
-                  : 'bg-slate-200 text-slate-500'
+                  ? 'bg-brand-subtle text-brand'
+                  : 'bg-elevated text-muted'
               }`}
             >
               {finished ? <Check className="size-3.5 stroke-[3]" /> : index + 1}
@@ -45,23 +45,23 @@ export const Syllabus = ({
             {reachable ? (
               <Link
                 href={`/lessons/${lesson.documentId}`}
-                className="flex-1 font-semibold text-slate-900 hover:text-brand-600 transition-colors flex items-center justify-between gap-2 group"
+                className="flex-1 font-semibold text-primary hover:text-brand transition-colors flex items-center justify-between gap-2 group"
               >
                 <span className="truncate">{lesson.title}</span>
-                <span className="text-xs font-bold text-brand-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                <span className="text-xs font-bold text-brand opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                   Open Lesson →
                 </span>
               </Link>
             ) : (
-              <div className="flex-1 flex items-center justify-between gap-2 text-slate-400">
+              <div className="flex-1 flex items-center justify-between gap-2 text-muted">
                 <span className="truncate font-medium">{lesson.title}</span>
 
                 {/* Locked Tooltip Badge */}
                 <span
                   title="Complete previous lessons to unlock"
-                  className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500 border border-slate-200 cursor-help"
+                  className="inline-flex items-center gap-1 rounded bg-elevated px-2 py-0.5 text-[11px] font-semibold text-muted border border-theme cursor-help"
                 >
-                  <Lock className="size-3 text-slate-400" />
+                  <Lock className="size-3 text-muted" />
                   <span>Locked</span>
                 </span>
               </div>

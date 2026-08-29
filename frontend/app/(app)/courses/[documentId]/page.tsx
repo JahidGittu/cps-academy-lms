@@ -5,11 +5,9 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   ArrowRight,
-  Award,
   CheckCircle2,
   ClipboardList,
   Pencil,
-  RotateCcw,
   Users,
 } from 'lucide-react';
 
@@ -32,8 +30,6 @@ const Detail = ({ documentId }: { documentId: string }) => {
 
   const course = useApi<Single<Course>>(`/courses/${documentId}`);
 
-  // Asked as a filter on the course rather than by listing every enrollment and searching the
-  // result, so the answer does not get longer as the student signs up for more courses.
   const mine = `/enrollments?filters[course][documentId][$eq]=${documentId}`;
 
   const enrollments = useApi<Collection<Enrollment>>(isStudent ? mine : null);
@@ -71,10 +67,6 @@ const Detail = ({ documentId }: { documentId: string }) => {
 
   const enrol = () => act(() => api.post('/enrollments', { data: { course: documentId } }));
 
-  // Handed the account by the form in the panel, because this component has not re-rendered with it
-  // yet. A new account is a student with nothing on it, so the enrolment goes straight through.
-  // Signing in instead could be an account already enrolled, or the instructor who owns the course,
-  // and posting an enrollment for either would come back as an error nobody asked for.
   const joined = async (who: User) => {
     await course.reload();
 
@@ -97,14 +89,8 @@ const Detail = ({ documentId }: { documentId: string }) => {
   const lessons = detail.lessons ?? [];
   const percent = lessons.length ? Math.round((completed.size / lessons.length) * 100) : 0;
 
-  // The same line the lesson controller draws: a student reads a lesson body once enrolled, and the
-  // roles that run the course read it because it is theirs. For anyone else the title is all there
-  // is, so it is not a link to a request that would come back 404.
   const readable = isStudent ? Boolean(enrollment) : Boolean(detail.owned);
 
-  // A student works through the syllabus in order, so the first lesson they have not finished is as
-  // far down the list as the links go. The lesson route refuses the ones past it too; this is so the
-  // page does not offer a link that comes back 403.
   const nextUp = lessons.findIndex((lesson) => !completed.has(lesson.documentId));
   const next = nextUp === -1 ? null : lessons[nextUp];
 
@@ -113,7 +99,6 @@ const Detail = ({ documentId }: { documentId: string }) => {
 
   const quizLink = detail.quiz ? `/quizzes/${detail.quiz.documentId}` : '';
 
-  // Four people can be looking at this panel and each of them wants a different button.
   const action = () => {
     if (detail.owned) {
       return (
@@ -138,10 +123,10 @@ const Detail = ({ documentId }: { documentId: string }) => {
       return (
         <div>
           <div className="flex items-baseline justify-between text-sm">
-            <span className="font-medium">
+            <span className="font-medium text-primary">
               {completed.size} of {lessons.length} done
             </span>
-            <span className="text-slate-500">{percent}%</span>
+            <span className="text-muted">{percent}%</span>
           </div>
 
           <div className="mt-2">
@@ -149,13 +134,13 @@ const Detail = ({ documentId }: { documentId: string }) => {
           </div>
 
           {lastQuizResult && (
-            <div className="mt-3 rounded-md bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-900 shadow-2xs">
-              <p className="font-bold flex items-center gap-1.5 text-emerald-800">
-                <CheckCircle2 className="size-3.5 text-emerald-600" />
+            <div className="mt-3 rounded-md bg-emerald-500/15 border border-emerald-500/30 p-3 text-xs text-emerald-700 dark:text-[#3fb950] shadow-2xs">
+              <p className="font-bold flex items-center gap-1.5">
+                <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-[#3fb950]" />
                 Course Completed
               </p>
-              <p className="mt-1 text-[11px] text-emerald-700">
-                Quiz Score: <strong className="font-bold text-slate-900">{lastQuizResult.score} / {lastQuizResult.total}</strong> ({Math.round((lastQuizResult.score / lastQuizResult.total) * 100)}%)
+              <p className="mt-1 text-[11px]">
+                Quiz Score: <strong className="font-bold text-primary">{lastQuizResult.score} / {lastQuizResult.total}</strong> ({Math.round((lastQuizResult.score / lastQuizResult.total) * 100)}%)
               </p>
             </div>
           )}
@@ -185,16 +170,14 @@ const Detail = ({ documentId }: { documentId: string }) => {
 
     if (user) {
       return (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted">
           Enrolling is a student thing to do, and this account is signed in as{' '}
           {user.role?.name ?? 'something else'}.
         </p>
       );
     }
 
-    // Nothing until the session is known, or a student who is already enrolled watches a signup form
-    // flash past on the first paint.
-    if (knowingUser) return <p className="text-sm text-slate-400">One moment</p>;
+    if (knowingUser) return <p className="text-sm text-muted">One moment</p>;
 
     return <JoinForm onAuthenticated={joined} />;
   };
@@ -208,7 +191,7 @@ const Detail = ({ documentId }: { documentId: string }) => {
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
           <section>
-            <h2 className="mb-3 text-lg font-bold text-slate-900">What you will work through</h2>
+            <h2 className="mb-3 text-lg font-bold text-primary">What you will work through</h2>
 
             <Syllabus
               lessons={lessons}
@@ -217,13 +200,13 @@ const Detail = ({ documentId }: { documentId: string }) => {
             />
 
             {isStudent && readable && nextUp !== -1 && (
-              <p className="mt-2 text-xs text-slate-500 font-medium">
+              <p className="mt-2 text-xs text-muted font-medium">
                 Lessons open one at a time. Mark the open one as complete to unlock the next.
               </p>
             )}
 
             {!readable && lessons.length > 0 && (
-              <p className="mt-2 text-xs text-slate-500 font-medium">
+              <p className="mt-2 text-xs text-muted font-medium">
                 Titles are open to read. Enrolling is what opens the lessons themselves.
               </p>
             )}
@@ -231,22 +214,22 @@ const Detail = ({ documentId }: { documentId: string }) => {
 
           {detail.quiz && (
             <section>
-              <h2 className="mb-3 text-lg font-bold text-slate-900">Quiz Assessment</h2>
+              <h2 className="mb-3 text-lg font-bold text-primary">Quiz Assessment</h2>
 
               <Card>
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <p className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                      <ClipboardList className="size-4 text-violet-600" />
+                    <p className="flex items-center gap-2 text-sm font-semibold text-primary">
+                      <ClipboardList className="size-4 text-purple-500" />
                       <span>{detail.quiz.title}</span>
                       {lastQuizResult && (
-                        <span className="rounded bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 border border-emerald-200">
+                        <span className="rounded bg-emerald-500/15 px-2 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-[#3fb950] border border-emerald-500/30">
                           Score: {lastQuizResult.score} / {lastQuizResult.total}
                         </span>
                       )}
                     </p>
                     {lastQuizResult && (
-                      <p className="text-xs text-slate-500 mt-0.5">
+                      <p className="text-xs text-muted mt-0.5">
                         Latest attempt submitted on {new Date(lastQuizResult.createdAt).toLocaleDateString()}
                       </p>
                     )}
@@ -255,17 +238,17 @@ const Detail = ({ documentId }: { documentId: string }) => {
                   {readable ? (
                     <Link
                       href={quizLink}
-                      className={`inline-flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-xs font-bold transition shadow-2xs ${
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition shadow-2xs ${
                         lastQuizResult
-                          ? 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-brand-600'
-                          : 'bg-brand-50 text-brand-700 hover:bg-brand-100'
+                          ? 'border border-theme bg-surface text-secondary hover:bg-elevated hover:text-brand'
+                          : 'bg-brand-subtle text-brand hover:bg-brand-subtle/80 border border-brand-border'
                       }`}
                     >
                       <span>{lastQuizResult ? 'See Quiz Details' : 'Start Quiz'}</span>
                       <ArrowRight className="size-3.5" />
                     </Link>
                   ) : (
-                    <span className="text-xs text-slate-500 font-medium">Opens once you enrol</span>
+                    <span className="text-xs text-muted font-medium">Opens once you enrol</span>
                   )}
                 </div>
               </Card>
@@ -287,8 +270,5 @@ const Detail = ({ documentId }: { documentId: string }) => {
 export default function CoursePage() {
   const params = useParams<{ documentId: string }>();
 
-  // Open to a visitor, because a course page is what a search result or a shared link lands on. The
-  // titles are all it gives away; the lesson bodies are behind their own route and the enrollment
-  // check that comes with it.
   return <Detail documentId={params.documentId} />;
 }

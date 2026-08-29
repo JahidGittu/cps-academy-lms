@@ -8,9 +8,7 @@ export type Draft = { text: string; options: string[]; correctIndex: number };
 
 export const blankQuestion = (): Draft => ({ text: '', options: ['', ''], correctIndex: 0 });
 
-// One question, edited in place. The radio is the answer key: whichever option it sits on is the
-// index the grader compares an answer against, and it is the only place on the site that index is
-// visible at all.
+// One question, edited in place.
 export const QuestionFields = ({
   index,
   draft,
@@ -28,8 +26,6 @@ export const QuestionFields = ({
       options: draft.options.map((option, i) => (i === at ? event.target.value : option)),
     });
 
-  // Dropping an option moves everything after it up a place, so the stored index has to move with
-  // them. Left alone it would quietly start pointing at a different answer than the one ticked.
   const removeOption = (at: number) => {
     const correctIndex =
       at === draft.correctIndex
@@ -42,14 +38,14 @@ export const QuestionFields = ({
   };
 
   return (
-    <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+    <div className="space-y-3 rounded-lg border border-theme bg-surface p-4 shadow-2xs">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-medium">Question {index + 1}</span>
+        <span className="text-sm font-medium text-primary">Question {index + 1}</span>
 
         <button
           type="button"
           onClick={onRemove}
-          className="text-xs text-red-600 underline hover:text-red-800"
+          className="text-xs text-red-500 underline hover:text-red-400 cursor-pointer"
         >
           Remove question
         </button>
@@ -63,7 +59,7 @@ export const QuestionFields = ({
       />
 
       <div className="space-y-2">
-        <span className="block text-sm font-medium text-slate-700">
+        <span className="block text-sm font-medium text-primary">
           Options, with the correct one ticked
         </span>
 
@@ -74,7 +70,7 @@ export const QuestionFields = ({
               name={`correct-${index}`}
               checked={draft.correctIndex === at}
               onChange={() => onChange({ ...draft, correctIndex: at })}
-              className="size-4 shrink-0"
+              className="size-4 shrink-0 accent-blue-600 cursor-pointer"
               aria-label={`Option ${at + 1} is correct`}
             />
 
@@ -86,12 +82,11 @@ export const QuestionFields = ({
               className={inputStyle}
             />
 
-            {/* Two is the fewest a multiple choice question can have and still ask anything. */}
             {draft.options.length > 2 && (
               <button
                 type="button"
                 onClick={() => removeOption(at)}
-                className="shrink-0 text-xs text-slate-500 underline hover:text-slate-900"
+                className="shrink-0 text-xs text-muted underline hover:text-primary cursor-pointer"
               >
                 Drop
               </button>

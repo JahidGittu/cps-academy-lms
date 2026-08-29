@@ -120,27 +120,27 @@ export const CourseForm = ({
   return (
     <form onSubmit={submit} className="space-y-6">
       {/* Header with Live Auto-Save Status */}
-      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h2 className="text-sm font-bold text-slate-900">
+      <div className="flex items-center justify-between border-b border-subtle pb-3">
+        <h2 className="text-sm font-bold text-primary">
           {course ? 'Course Overview & Settings' : 'Create New Course'}
         </h2>
 
         {course && (
           <div className="text-xs">
             {saveStatus === 'saving' && (
-              <span className="inline-flex items-center gap-1.5 font-semibold text-brand-600 animate-pulse">
+              <span className="inline-flex items-center gap-1.5 font-semibold text-brand animate-pulse">
                 <RefreshCw className="size-3 animate-spin" />
                 <span>Auto-saving...</span>
               </span>
             )}
             {saveStatus === 'saved' && (
-              <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
+              <span className="inline-flex items-center gap-1 font-bold text-emerald-500">
                 <CheckCircle2 className="size-3.5 text-emerald-500" />
                 <span>Saved</span>
               </span>
             )}
             {saveStatus === 'unsaved' && (
-              <span className="inline-flex items-center gap-1.5 text-slate-400 font-medium">
+              <span className="inline-flex items-center gap-1.5 text-muted font-medium">
                 <span className="size-1.5 rounded-full bg-amber-500" />
                 <span>Unsaved changes</span>
               </span>
@@ -181,7 +181,7 @@ export const CourseForm = ({
         </Button>
 
         {course && saveStatus === 'saved' && (
-          <span className="text-xs font-medium text-slate-500">
+          <span className="text-xs font-medium text-muted">
             ✓ All changes automatically synced
           </span>
         )}

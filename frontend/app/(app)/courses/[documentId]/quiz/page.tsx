@@ -37,7 +37,7 @@ const DeleteQuiz = ({ quiz, course }: { quiz: string; course: string }) => {
   };
 
   return (
-    <div className="border-t border-slate-200 pt-6">
+    <div className="border-t border-subtle pt-6">
       <Alert>{error}</Alert>
 
       <Button variant="danger" disabled={busy} onClick={() => setShowModal(true)}>
