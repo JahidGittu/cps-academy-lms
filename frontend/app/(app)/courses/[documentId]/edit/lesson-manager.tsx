@@ -75,9 +75,14 @@ export const LessonManager = ({
     }
   };
 
-  // Save lesson handler
+  // Save lesson handler with optimistic in-place title update
   const save = async (values: LessonValues) => {
     if (editing) {
+      // Optimistic update in list immediately
+      setLocalLessons((prev) =>
+        prev.map((l) => (l.documentId === editing.documentId ? { ...l, ...values } : l))
+      );
+
       await api.put(`/lessons/${editing.documentId}`, { data: values });
       await refresh();
       return;
@@ -93,34 +98,34 @@ export const LessonManager = ({
     setSelected(data.data.documentId);
   };
 
-  // Instant optimistic reorder that maintains active lesson state
-  const move = (index: number, delta: number) =>
-    run(async () => {
-      const moving = rows[index];
-      const other = rows[index + delta];
+  // Truly instant optimistic reorder with zero-buffering background sync
+  const move = async (index: number, delta: number) => {
+    const moving = rows[index];
+    const other = rows[index + delta];
 
-      if (!moving || !other) return;
+    if (!moving || !other) return;
 
-      const currentSelected = selected;
+    // 1. Instant local swap and order assignment
+    const reordered = [...rows];
+    const newOrderMoving = other.order;
+    const newOrderOther = moving.order;
 
-      // Optimistic swap
-      const reordered = [...rows];
-      reordered[index] = other;
-      reordered[index + delta] = moving;
-      setLocalLessons(reordered);
-      setSelected(currentSelected);
+    reordered[index] = { ...other, order: newOrderOther };
+    reordered[index + delta] = { ...moving, order: newOrderMoving };
 
-      try {
-        await Promise.all([
-          api.put(`/lessons/${moving.documentId}`, { data: { order: other.order } }),
-          api.put(`/lessons/${other.documentId}`, { data: { order: moving.order } }),
-        ]);
-        await refresh();
-      } catch (err) {
-        await lessons.reload();
-        throw err;
-      }
-    });
+    setLocalLessons(reordered);
+
+    // 2. Perform database order update quietly in background without full page reloads
+    try {
+      await Promise.all([
+        api.put(`/lessons/${moving.documentId}`, { data: { order: newOrderMoving } }),
+        api.put(`/lessons/${other.documentId}`, { data: { order: newOrderOther } }),
+      ]);
+    } catch (caught) {
+      setActionError(errorMessage(caught));
+      await lessons.reload();
+    }
+  };
 
   // Delete lesson confirmation
   const confirmDeleteLesson = () => {
