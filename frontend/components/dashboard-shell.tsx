@@ -304,15 +304,19 @@ export const DashboardShell = ({
 
             {/* Bottom Profile Info & Sign Out */}
             <div className="pt-4 border-t border-subtle flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-brand-subtle text-xs font-bold text-brand uppercase shadow-2xs">
+              <Link
+                href="/profile"
+                title="View Profile & Settings"
+                className="flex items-center gap-2.5 min-w-0 flex-1 rounded-lg p-1.5 -ml-1.5 hover:bg-elevated transition group cursor-pointer"
+              >
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-brand-subtle text-xs font-bold text-brand uppercase shadow-2xs group-hover:scale-105 transition-transform">
                   {user.username.slice(0, 2)}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <span className="block text-xs font-bold text-primary truncate">{user.username}</span>
+                  <span className="block text-xs font-bold text-primary truncate group-hover:text-brand transition-colors">{user.username}</span>
                   <span className="block text-[10px] font-medium text-muted capitalize truncate">{roleName}</span>
                 </div>
-              </div>
+              </Link>
 
               <button
                 type="button"

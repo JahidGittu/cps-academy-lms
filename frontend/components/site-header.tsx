@@ -278,6 +278,16 @@ export const SiteHeader = () => {
                         <span>My Courses</span>
                       </Link>
                     )}
+
+                    {/* Profile & Account Settings */}
+                    <Link
+                      href="/profile"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2 rounded-md px-2.5 py-1.5 hover:bg-elevated hover:text-brand transition-colors text-primary font-bold"
+                    >
+                      <UserCheck className="size-3.5 text-sky-400" />
+                      <span>Profile & Settings</span>
+                    </Link>
                   </div>
 
                   {/* Divider & Sign out */}

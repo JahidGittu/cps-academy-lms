@@ -33,7 +33,7 @@ const matrix: Record<string, Record<string, string[]>> = {
     'api::lesson-progress.lesson-progress': ['find', 'findOne', 'create', 'delete'],
     'api::quiz-result.quiz-result': ['find', 'findOne', 'create'],
     'plugin::users-permissions.user': ['me'],
-    'plugin::users-permissions.auth': ['logout'],
+    'plugin::users-permissions.auth': ['logout', 'changePassword'],
   },
 
   Instructor: {
@@ -46,7 +46,7 @@ const matrix: Record<string, Record<string, string[]>> = {
     'api::quiz-result.quiz-result': READ,
     'plugin::upload.content-api': ['upload', 'destroy', 'find', 'findOne'],
     'plugin::users-permissions.user': ['me'],
-    'plugin::users-permissions.auth': ['logout'],
+    'plugin::users-permissions.auth': ['logout', 'changePassword'],
   },
 
   'Content Manager': {
@@ -59,7 +59,7 @@ const matrix: Record<string, Record<string, string[]>> = {
     'api::quiz-result.quiz-result': READ,
     'plugin::upload.content-api': ['upload', 'destroy', 'find', 'findOne'],
     'plugin::users-permissions.user': ['me'],
-    'plugin::users-permissions.auth': ['logout'],
+    'plugin::users-permissions.auth': ['logout', 'changePassword'],
   },
 
   Admin: {
@@ -73,15 +73,14 @@ const matrix: Record<string, Record<string, string[]>> = {
     'plugin::upload.content-api': ['upload', 'destroy', 'find', 'findOne'],
     'plugin::users-permissions.user': ['me', 'find', 'findOne', 'count', 'create', 'update', 'destroy'],
     'plugin::users-permissions.role': READ,
-    'plugin::users-permissions.auth': ['logout'],
+    'plugin::users-permissions.auth': ['logout', 'changePassword'],
     'api::stats.stats': ['find'],
   },
 };
 
 const isMine = (action: string) =>
   action.startsWith('api::') ||
-  action.startsWith('plugin::users-permissions.user.') ||
-  action.startsWith('plugin::users-permissions.role.') ||
+  action.startsWith('plugin::users-permissions.') ||
   action.startsWith('plugin::upload.');
 
 const ensureRoles = async (strapi: StrapiCore) => {
@@ -138,27 +137,33 @@ const applyMatrix = async (strapi: StrapiCore) => {
 
 type AdvancedSettings = { default_role: string };
 
-const setSignupRole = async (strapi: StrapiCore, type: string) => {
-  const store = strapi.store({ type: 'plugin', name: 'users-permissions' });
-  const role = await strapi.db
+const ensureDefaultRole = async (strapi: StrapiCore) => {
+  const student = await strapi.db
     .query('plugin::users-permissions.role')
-    .findOne({ where: { type } });
+    .findOne({ where: { type: 'student' } });
 
-  if (!role) return;
-
-  const current = (await store.get({ key: 'advanced' })) as AdvancedSettings | null;
-
-  if (current && String(current.default_role) !== String(role.id)) {
-    await store.set({ key: 'advanced', value: { ...current, default_role: role.id } });
+  if (!student) {
+    strapi.log.error('cannot set default role: student role does not exist');
+    return;
   }
+
+  const store = strapi.store({ type: 'plugin', name: 'users-permissions' });
+  const current = ((await store.get({ key: 'advanced' })) as AdvancedSettings | null) ?? null;
+
+  if (current && current.default_role === student.type) {
+    return;
+  }
+
+  await store.set({
+    key: 'advanced',
+    value: { ...(current ?? {}), default_role: student.type },
+  });
+
+  strapi.log.info(`default registration role set to ${student.name} (${student.type})`);
 };
 
-export const applyPermissions = async (strapi: StrapiCore) => {
+export const syncPermissions = async (strapi: StrapiCore) => {
   await ensureRoles(strapi);
   await applyMatrix(strapi);
-  await setSignupRole(strapi, 'student');
-};
-
-export default async ({ strapi }: { strapi: StrapiCore }) => {
-  await applyPermissions(strapi);
+  await ensureDefaultRole(strapi);
 };
