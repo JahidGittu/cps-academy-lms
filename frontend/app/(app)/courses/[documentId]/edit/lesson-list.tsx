@@ -44,12 +44,6 @@ export const LessonList = ({
           <span>Order saved & synced!</span>
         </span>
       )}
-
-      {!reorderStatus && (
-        <span className="rounded-full bg-sky-500/15 border border-sky-500/30 px-2.5 py-0.5 text-xs font-bold text-sky-400">
-          {rows.length} {rows.length === 1 ? 'Lesson' : 'Lessons'}
-        </span>
-      )}
     </div>
 
     {/* Syllabus Items List */}
