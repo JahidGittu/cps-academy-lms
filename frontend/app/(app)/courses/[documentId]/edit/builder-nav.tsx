@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BookOpen, ClipboardList, Settings, Users, Eye, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
+import { BookOpen, ClipboardList, Info, Users, Eye, Lock, ArrowRight, ArrowLeft, Layers, HelpCircle } from 'lucide-react';
 
 export type Section = 'details' | 'lessons' | 'quiz';
 
@@ -8,6 +8,7 @@ export const BuilderNav = ({
   lessons,
   hasQuiz,
   courseId,
+  courseTitle = 'Course Studio',
   isNewCourse = false,
   onSelect,
 }: {
@@ -15,30 +16,56 @@ export const BuilderNav = ({
   lessons: number;
   hasQuiz: boolean;
   courseId?: string;
+  courseTitle?: string;
   isNewCourse?: boolean;
   onSelect: (next: Section) => void;
 }) => {
   const items = [
-    { key: 'details' as const, icon: Settings, label: 'Course Details', hint: isNewCourse ? 'Step 1: Setup' : 'Title & cover' },
+    {
+      key: 'details' as const,
+      icon: Info,
+      label: 'Course Info',
+      hint: isNewCourse ? 'Step 1: Setup' : 'Title & Thumbnail',
+    },
     {
       key: 'lessons' as const,
-      icon: isNewCourse ? Lock : BookOpen,
-      label: 'Lessons',
-      hint: isNewCourse ? 'Step 2 (Locked)' : `${lessons} in syllabus`,
+      icon: isNewCourse ? Lock : Layers,
+      label: 'Curriculum',
+      hint: isNewCourse ? 'Step 2 (Locked)' : `${lessons} Lessons in Syllabus`,
     },
     {
       key: 'quiz' as const,
-      icon: isNewCourse ? Lock : ClipboardList,
-      label: 'Quiz',
-      hint: isNewCourse ? 'Step 3 (Locked)' : (hasQuiz ? 'Added' : 'None'),
+      icon: isNewCourse ? Lock : HelpCircle,
+      label: 'Quiz Assessment',
+      hint: isNewCourse ? 'Step 3 (Locked)' : (hasQuiz ? '1 Quiz Added' : 'Not Added'),
     },
   ];
 
   return (
     <nav className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0 lg:sticky lg:top-20 z-10">
+      {/* Studio Header Card */}
+      <div className="hidden lg:block rounded-xl border border-theme bg-surface p-3.5 shadow-2xs mb-2">
+        <div className="flex items-center gap-2.5">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-500/15 text-sky-400 border border-sky-500/30">
+            <BookOpen className="size-4.5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-bold text-primary">{courseTitle}</p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-semibold tracking-wider text-muted uppercase">
+                {isNewCourse ? 'Draft' : 'Studio Mode'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Tabs Navigation */}
       <div className="flex gap-1.5 overflow-x-auto lg:flex-col">
         {items.map(({ key, icon: Icon, label, hint }) => {
           const isLocked = isNewCourse && key !== 'details';
+          const isActive = section === key;
 
           return (
             <button
@@ -46,36 +73,36 @@ export const BuilderNav = ({
               type="button"
               disabled={isLocked}
               onClick={() => !isLocked && onSelect(key)}
-              className={`flex shrink-0 items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition ${
+              className={`flex shrink-0 items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-all cursor-pointer ${
                 isLocked
-                  ? 'opacity-60 cursor-not-allowed bg-canvas border-theme text-muted'
-                  : section === key
-                  ? 'border-brand-border bg-brand-subtle text-brand font-bold shadow-2xs cursor-pointer'
-                  : 'border-theme bg-surface text-secondary hover:bg-elevated hover:text-primary cursor-pointer'
+                  ? 'opacity-50 cursor-not-allowed bg-canvas border-theme text-muted'
+                  : isActive
+                  ? 'border-sky-500/40 bg-sky-500/15 text-sky-400 font-bold shadow-xs'
+                  : 'border-theme bg-surface text-secondary hover:bg-elevated hover:text-primary'
               }`}
             >
-              <Icon className={`size-4 shrink-0 ${section === key && !isLocked ? 'text-brand' : 'text-muted'}`} />
+              <Icon className={`size-4.5 shrink-0 ${isActive && !isLocked ? 'text-sky-400' : 'text-muted'}`} />
 
               <span className="leading-tight">
-                <span className="block text-xs sm:text-sm">{label}</span>
-                <span className="hidden text-xs text-muted font-normal lg:block">{hint}</span>
+                <span className="block text-xs sm:text-sm font-semibold">{label}</span>
+                <span className="hidden text-[11px] text-muted font-normal lg:block mt-0.5">{hint}</span>
               </span>
             </button>
           );
         })}
       </div>
 
-      {/* Step Navigation Actions */}
+      {/* Step Progression: Save & Next Action Button */}
       {!isNewCourse && (
-        <div className="hidden lg:flex lg:flex-col gap-2 pt-3 border-t border-subtle">
+        <div className="hidden lg:flex lg:flex-col gap-2 pt-3 border-t border-subtle mt-1">
           {section === 'details' && (
             <button
               type="button"
               onClick={() => onSelect('lessons')}
-              className="brand-gradient flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs font-bold text-white shadow-xs hover:opacity-95 cursor-pointer transition-all"
+              className="flex items-center justify-between gap-2 rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-3 text-xs font-bold text-white shadow-md shadow-sky-600/20 hover:shadow-sky-500/30 cursor-pointer transition-all"
             >
-              <span>Next: Lessons</span>
-              <ArrowRight className="size-3.5" />
+              <span>Save & Next (Curriculum)</span>
+              <ArrowRight className="size-4" />
             </button>
           )}
 
@@ -83,10 +110,10 @@ export const BuilderNav = ({
             <button
               type="button"
               onClick={() => onSelect('quiz')}
-              className="brand-gradient flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs font-bold text-white shadow-xs hover:opacity-95 cursor-pointer transition-all"
+              className="flex items-center justify-between gap-2 rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-3 text-xs font-bold text-white shadow-md shadow-sky-600/20 hover:shadow-sky-500/30 cursor-pointer transition-all"
             >
-              <span>Next: Quiz</span>
-              <ArrowRight className="size-3.5" />
+              <span>Save & Next (Quiz)</span>
+              <ArrowRight className="size-4" />
             </button>
           )}
 
@@ -94,22 +121,23 @@ export const BuilderNav = ({
             <button
               type="button"
               onClick={() => onSelect('lessons')}
-              className="flex items-center justify-between gap-2 rounded-lg border border-theme bg-surface px-3 py-2.5 text-xs font-bold text-secondary hover:bg-elevated hover:text-primary cursor-pointer transition-all"
+              className="flex items-center justify-between gap-2 rounded-xl border border-theme bg-surface px-4 py-3 text-xs font-bold text-secondary hover:bg-elevated hover:text-primary cursor-pointer transition-all"
             >
               <span className="flex items-center gap-1.5">
-                <ArrowLeft className="size-3.5" />
-                <span>Back to Lessons</span>
+                <ArrowLeft className="size-4" />
+                <span>Back to Curriculum</span>
               </span>
             </button>
           )}
         </div>
       )}
 
+      {/* Quick Studio Links */}
       {courseId && (
         <div className="hidden lg:flex lg:flex-col gap-1.5 pt-3 border-t border-subtle">
           <Link
             href={`/courses/${courseId}/students`}
-            className="flex items-center gap-2.5 rounded-lg border border-theme bg-surface px-3 py-2 text-xs font-semibold text-secondary hover:bg-elevated hover:text-brand transition"
+            className="flex items-center gap-2.5 rounded-xl border border-theme bg-surface px-3.5 py-2.5 text-xs font-semibold text-secondary hover:bg-elevated hover:text-sky-400 transition"
           >
             <Users className="size-4 text-muted" />
             <span>Students Roster</span>
@@ -117,7 +145,7 @@ export const BuilderNav = ({
 
           <Link
             href={`/courses/${courseId}`}
-            className="flex items-center gap-2.5 rounded-lg border border-theme bg-surface px-3 py-2 text-xs font-semibold text-secondary hover:bg-elevated hover:text-brand transition"
+            className="flex items-center gap-2.5 rounded-xl border border-theme bg-surface px-3.5 py-2.5 text-xs font-semibold text-secondary hover:bg-elevated hover:text-sky-400 transition"
           >
             <Eye className="size-4 text-muted" />
             <span>Preview Course</span>

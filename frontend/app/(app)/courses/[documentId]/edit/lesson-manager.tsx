@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { BookOpen, Layers, Plus, Video, FileText } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
 import { useApi } from '@/lib/use-api';
@@ -51,6 +52,9 @@ export const LessonManager = ({
 
   const rows = localLessons;
   const editing = rows.find((row) => row.documentId === selected) ?? null;
+
+  const videoLessonsCount = rows.filter((r) => Boolean(r.videoUrl)).length;
+  const textLessonsCount = rows.length - videoLessonsCount;
 
   // The header counts lessons off the course read, so a write here has to refresh both.
   const refresh = async () => {
@@ -143,10 +147,49 @@ export const LessonManager = ({
   if (lessons.error) return <Alert>{lessons.error}</Alert>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      {/* Top Curriculum Studio Header Strip */}
+      <div className="rounded-xl border border-theme bg-surface p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-primary flex items-center gap-2.5">
+            <Layers className="size-6 text-sky-400" />
+            <span>Curriculum & Syllabus Track</span>
+          </h1>
+          <p className="text-xs text-muted mt-1">
+            Sequential lesson progression &bull; Students unlock and complete lessons in this exact order.
+          </p>
+
+          {/* Quick Stats Strip */}
+          <div className="flex flex-wrap items-center gap-3 mt-3 text-xs font-semibold">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-500/15 text-sky-400 border border-sky-500/30 px-2.5 py-1">
+              <BookOpen className="size-3.5" />
+              <span>{rows.length} Total Lessons</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-rose-500/15 text-rose-400 border border-rose-500/30 px-2.5 py-1">
+              <Video className="size-3.5" />
+              <span>{videoLessonsCount} Video Lectures</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2.5 py-1">
+              <FileText className="size-3.5" />
+              <span>{textLessonsCount} Reading Materials</span>
+            </span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setSelected('new')}
+          className="flex items-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white px-4 py-2.5 text-xs font-bold shadow-md shadow-sky-600/25 hover:shadow-sky-500/35 cursor-pointer transition-all"
+        >
+          <Plus className="size-4" />
+          <span>Add New Lesson</span>
+        </button>
+      </div>
+
       <Alert>{actionError}</Alert>
 
-      <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start">
+      {/* Split Studio Grid: Syllabus Tree on Left (360px) and Editor on Right */}
+      <div className="grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
         <LessonList
           rows={rows}
           selected={selected}

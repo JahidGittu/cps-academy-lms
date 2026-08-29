@@ -2,15 +2,18 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
-import { CheckCircle2, RefreshCw } from 'lucide-react';
+import { CheckCircle2, RefreshCw, Sparkles, BookOpen } from 'lucide-react';
 
 import { errorMessage } from '@/lib/api';
 import type { Course } from '@/lib/types';
 import { Alert, Button, Field, TextField } from '@/components/ui';
 import { ImagePicker } from '@/components/image-picker';
-import { DEFAULT_COVERS } from '@/components/course-cover';
 
-export type CourseValues = { title: string; description: string; coverImageUrl: string };
+export type CourseValues = {
+  title: string;
+  description: string;
+  coverImageUrl: string;
+};
 
 export const CourseForm = ({
   course,
@@ -21,13 +24,10 @@ export const CourseForm = ({
   save: (values: CourseValues) => Promise<void>;
   label: string;
 }) => {
-  const getInitialCover = (c?: Course) =>
-    c?.coverImageUrl || (c?.title ? DEFAULT_COVERS[c.title] : '') || '';
-
   const getSnapshot = (c?: Course): CourseValues => ({
     title: c?.title ?? '',
     description: c?.description ?? '',
-    coverImageUrl: getInitialCover(c),
+    coverImageUrl: c?.coverImageUrl ?? '',
   });
 
   const [values, setValues] = useState<CourseValues>(() => getSnapshot(course));
@@ -35,30 +35,26 @@ export const CourseForm = ({
   const [error, setError] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'unsaved' | 'saving' | 'saved'>('idle');
 
-  // Keep a record of the last confirmed saved server state to prevent false dirty states & loops
   const lastSavedRef = useRef<CourseValues>(getSnapshot(course));
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const latestValues = useRef(values);
   latestValues.current = values;
 
-  // Sync state if course prop updates externally without triggering fake dirty save
+  // Sync state if course prop updates without triggering false dirty save
   useEffect(() => {
-    if (course) {
-      const snapshot = getSnapshot(course);
-      lastSavedRef.current = snapshot;
-      setValues(snapshot);
-      setSaveStatus('idle');
-    }
-  }, [course?.documentId, course?.updatedAt]);
+    const snapshot = getSnapshot(course);
+    lastSavedRef.current = snapshot;
+    setValues(snapshot);
+    setSaveStatus('idle');
+  }, [course?.documentId, course?.id]);
 
-  // Check if form has actual unsaved modifications compared to server
   const isDirty =
     Boolean(course) &&
     (values.title !== lastSavedRef.current.title ||
       values.description !== lastSavedRef.current.description ||
       values.coverImageUrl !== lastSavedRef.current.coverImageUrl);
 
-  // Auto-Save ONLY when the user has made actual unsaved changes (1500ms debounce)
+  // Debounced auto-save ONLY when actual unsaved changes exist (1500ms debounce)
   useEffect(() => {
     if (!course || !isDirty || !values.title.trim()) {
       if (!isDirty && saveStatus === 'unsaved') {
@@ -126,33 +122,39 @@ export const CourseForm = ({
   return (
     <form onSubmit={submit} className="space-y-6">
       {/* Header with Live Auto-Save Status */}
-      <div className="flex items-center justify-between border-b border-subtle pb-3">
-        <h2 className="text-sm font-bold text-primary">
-          {course ? 'Course Overview & Settings' : 'Create New Course'}
-        </h2>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-subtle pb-4">
+        <div>
+          <h2 className="text-base sm:text-lg font-bold text-primary flex items-center gap-2">
+            <BookOpen className="size-5 text-sky-400" />
+            <span>{course ? 'Course Information & Metadata' : 'Create New Course'}</span>
+          </h2>
+          <p className="text-xs text-muted mt-0.5">
+            Configure the course core title, comprehensive description, and public cover thumbnail.
+          </p>
+        </div>
 
         {course && (
           <div className="text-xs">
             {saveStatus === 'saving' && (
-              <span className="inline-flex items-center gap-1.5 font-semibold text-brand animate-pulse">
-                <RefreshCw className="size-3 animate-spin" />
-                <span>Auto-saving...</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-sky-400 animate-pulse">
+                <RefreshCw className="size-3.5 animate-spin" />
+                <span>Saving changes...</span>
               </span>
             )}
             {saveStatus === 'saved' && (
               <span className="inline-flex items-center gap-1 font-bold text-emerald-500">
-                <CheckCircle2 className="size-3.5 text-emerald-500" />
-                <span>Saved</span>
+                <CheckCircle2 className="size-4 text-emerald-500" />
+                <span>All changes synced</span>
               </span>
             )}
             {saveStatus === 'unsaved' && isDirty && (
               <span className="inline-flex items-center gap-1.5 text-amber-500 font-medium">
-                <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
+                <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
                 <span>Unsaved changes</span>
               </span>
             )}
             {saveStatus === 'idle' && !isDirty && (
-              <span className="inline-flex items-center gap-1 text-muted text-[11px]">
+              <span className="inline-flex items-center gap-1 text-muted text-xs">
                 <span>✓ Up to date</span>
               </span>
             )}
@@ -160,42 +162,50 @@ export const CourseForm = ({
         )}
       </div>
 
-      <Field
-        label="Course Title"
-        value={values.title}
-        onChange={set('title')}
-        placeholder="e.g. Modern Full-Stack Development"
-        required
-      />
+      {/* 2-Column Responsive Layout Matching Studio Mockup */}
+      <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
+        {/* Left Column: Core Info (7 cols) */}
+        <div className="space-y-5 lg:col-span-7">
+          <Field
+            label="Course Title"
+            value={values.title}
+            onChange={set('title')}
+            placeholder="e.g. Modern Full-Stack Cloud Architecture & Microservices"
+            required
+          />
 
-      <TextField
-        label="Course Description"
-        value={values.description}
-        onChange={set('description')}
-        placeholder="Brief summary of syllabus and learning objectives..."
-        rows={4}
-      />
+          <TextField
+            label="Course Description & Curriculum Overview"
+            value={values.description}
+            onChange={set('description')}
+            placeholder="Provide a detailed overview of what students will learn, real-world projects built, and prerequisites..."
+            rows={7}
+          />
+        </div>
 
-      {/* Dual Upload & URL Image Picker */}
-      <ImagePicker
-        label="Course Thumbnail / Cover Image"
-        value={values.coverImageUrl}
-        onChange={(url) => setValues((prev) => ({ ...prev, coverImageUrl: url }))}
-      />
+        {/* Right Column: Media & Thumbnail (5 cols) */}
+        <div className="space-y-4 lg:col-span-5">
+          <ImagePicker
+            label="Course Thumbnail / Cover Image"
+            value={values.coverImageUrl}
+            onChange={(url) => setValues((prev) => ({ ...prev, coverImageUrl: url }))}
+          />
+        </div>
+      </div>
 
       <Alert>{error}</Alert>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 border-t border-subtle pt-4">
         <Button
           type="submit"
           disabled={busy || (Boolean(course) && !isDirty && saveStatus !== 'saving')}
-          className="w-full sm:w-auto"
+          className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/20 hover:shadow-sky-500/30 transition-all"
         >
-          {busy ? 'Saving Course...' : label}
+          {busy ? 'Saving...' : label}
         </Button>
 
-        {course && !isDirty && (
-          <span className="text-xs font-medium text-muted">
+        {Boolean(course) && !isDirty && (
+          <span className="text-xs text-muted font-medium">
             All changes synced
           </span>
         )}

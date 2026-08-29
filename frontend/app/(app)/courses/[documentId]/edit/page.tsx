@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import { useApi } from '@/lib/use-api';
 import type { Course, Single } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
-import { Alert, Empty, LoadingState } from '@/components/ui';
+import { Alert, Empty } from '@/components/ui';
 import { useSetBreadcrumbs } from '@/components/dashboard-shell';
 import { BuilderNav, type Section } from './builder-nav';
 import { CourseDetails } from './course-details';
@@ -16,7 +16,7 @@ import { QuizPanel } from './quiz-panel';
 const Builder = ({ documentId }: { documentId: string }) => {
   const course = useApi<Single<Course>>(`/courses/${documentId}`);
 
-  // Default to 1st tab (Details & Overview) when opening course edit
+  // Default to 1st tab (Course Info) when opening course studio
   const [section, setSection] = useState<Section>('details');
 
   const detail = course.data?.data;
@@ -27,12 +27,12 @@ const Builder = ({ documentId }: { documentId: string }) => {
           { label: 'Courses', href: '/admin/course-management' },
           { label: detail.title },
         ]
-      : [{ label: 'Courses', href: '/admin/course-management' }, { label: 'Edit Course' }]
+      : [{ label: 'Courses', href: '/admin/course-management' }, { label: 'Course Studio' }]
   );
 
   if (course.loading && !course.data) {
     return (
-      <div className="grid gap-6 lg:grid-cols-[200px_minmax(0,1fr)] lg:items-start animate-in fade-in duration-200">
+      <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start animate-in fade-in duration-200">
         <BuilderNav
           section="details"
           lessons={0}
@@ -54,23 +54,24 @@ const Builder = ({ documentId }: { documentId: string }) => {
 
   if (!detail) return <Empty>This course does not exist.</Empty>;
 
-  // owned is the server's own answer to "may this account change the course", so the screen and the
-  // policy behind the save agree. Hiding the form is politeness; the put would be refused anyway.
   if (!detail.owned) return <Empty>This course belongs to someone else.</Empty>;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[200px_minmax(0,1fr)] lg:items-start">
+    <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start">
       <BuilderNav
         section={section}
         lessons={detail.lessons?.length ?? 0}
         hasQuiz={Boolean(detail.quiz)}
         courseId={documentId}
+        courseTitle={detail.title}
         onSelect={setSection}
       />
 
-      {section === 'details' && <CourseDetails course={detail} onSaved={course.reload} />}
-      {section === 'lessons' && <LessonManager course={documentId} onChanged={course.reload} />}
-      {section === 'quiz' && <QuizPanel course={detail} />}
+      <div className="min-w-0">
+        {section === 'details' && <CourseDetails course={detail} onSaved={course.reload} />}
+        {section === 'lessons' && <LessonManager course={documentId} onChanged={course.reload} />}
+        {section === 'quiz' && <QuizPanel course={detail} />}
+      </div>
     </div>
   );
 };
