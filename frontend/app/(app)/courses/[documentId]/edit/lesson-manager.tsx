@@ -37,35 +37,37 @@ export const LessonManager = ({
 
   // Synchronize server lessons into local state:
   // - If lessons exist: default to 1st lesson (or targeted lesson from URL)
-  // - If no lessons: default to 'new' form
+  // - If user has 'new' selected, KEEP 'new'
   useEffect(() => {
     if (lessons.data?.data) {
       const sorted = [...lessons.data.data].sort((a, b) => a.order - b.order);
       setLocalLessons(sorted);
 
       setSelected((prev) => {
-        // 1. If URL explicitly requested a specific lesson, select it
+        // 1. If user has actively selected 'new' creation form, keep it
+        if (prev === 'new') {
+          return 'new';
+        }
+
+        // 2. If URL explicitly requested a specific lesson, select it
         if (lessonParam && sorted.some((l) => l.documentId === lessonParam)) {
           return lessonParam;
         }
 
-        // 2. If lessons exist in syllabus:
+        // 3. If user had already selected an existing lesson that still exists, maintain it
+        if (prev && sorted.some((l) => l.documentId === prev)) {
+          return prev;
+        }
+
+        // 4. Otherwise default to the FIRST lesson
         if (sorted.length > 0) {
-          // If user had already selected an existing lesson, maintain it
-          if (prev && prev !== 'new' && sorted.some((l) => l.documentId === prev)) {
-            return prev;
-          }
-          // Otherwise default to the FIRST lesson
           return sorted[0].documentId;
         }
 
-        // 3. If no lessons exist yet, default to 'new' creation form
         return 'new';
       });
-    } else if (!lessons.loading) {
-      setSelected('new');
     }
-  }, [lessons.data, lessons.loading, lessonParam]);
+  }, [lessons.data, lessonParam]);
 
   const handleSelect = (id: string) => {
     setSelected(id);
@@ -78,12 +80,6 @@ export const LessonManager = ({
 
   const videoLessonsCount = rows.filter((r) => Boolean(r.videoUrl?.trim())).length;
   const readingMaterialsCount = rows.filter((r) => Boolean(r.content?.trim())).length;
-
-  // The header counts lessons off the course read, so a write here has to refresh both.
-  const refresh = async () => {
-    await lessons.reload();
-    await onChanged();
-  };
 
   const run = async (work: () => Promise<void>) => {
     setBusy(true);
@@ -107,7 +103,8 @@ export const LessonManager = ({
       );
 
       await api.put(`/lessons/${editing.documentId}`, { data: values });
-      await refresh();
+      lessons.reload();
+      onChanged();
       return;
     }
 
@@ -117,8 +114,14 @@ export const LessonManager = ({
       data: { ...values, order, course },
     });
 
-    await refresh();
-    handleSelect(data.data.documentId);
+    // Optimistically add the new lesson into local state
+    const createdLesson = data.data;
+    setLocalLessons((prev) => [...prev, createdLesson]);
+    handleSelect(createdLesson.documentId);
+
+    // Background sync
+    lessons.reload();
+    onChanged();
   };
 
   // Truly instant optimistic reorder with zero-buffering background sync
@@ -150,19 +153,21 @@ export const LessonManager = ({
     }
   };
 
-  // Delete lesson confirmation
+  // Delete lesson confirmation with optimistic removal
   const confirmDeleteLesson = () => {
     if (!lessonToDelete) return;
     const lesson = lessonToDelete;
 
     run(async () => {
+      const remaining = rows.filter((r) => r.documentId !== lesson.documentId);
+      setLocalLessons(remaining);
       if (selected === lesson.documentId) {
-        const remaining = rows.filter((r) => r.documentId !== lesson.documentId);
         handleSelect(remaining.length > 0 ? remaining[0].documentId : 'new');
       }
 
       await api.delete(`/lessons/${lesson.documentId}`);
-      await refresh();
+      lessons.reload();
+      onChanged();
       setLessonToDelete(null);
     });
   };
