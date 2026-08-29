@@ -327,10 +327,10 @@ export const DashboardShell = ({
               <div className="flex items-center gap-3 min-w-0">
                 <Link
                   href={exitUrl}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-theme bg-surface px-3 py-1.5 text-xs font-bold text-primary hover:bg-elevated hover:text-brand transition shadow-2xs"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-theme bg-surface px-3 py-1.5 text-xs font-bold text-primary hover:bg-elevated hover:text-sky-400 transition shadow-2xs"
                 >
                   <ChevronRight className="size-3.5 rotate-180 text-muted" />
-                  <span>Exit Studio</span>
+                  <span>Back to Courses</span>
                 </Link>
 
                 <div className="h-4 w-px bg-theme hidden sm:block" />

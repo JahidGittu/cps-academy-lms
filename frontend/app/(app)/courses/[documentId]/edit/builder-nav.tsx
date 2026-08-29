@@ -54,7 +54,7 @@ export const BuilderNav = ({
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[10px] font-semibold tracking-wider text-muted uppercase">
-                {isNewCourse ? 'Draft' : 'Studio Mode'}
+                {isNewCourse ? 'Draft' : 'Course Builder'}
               </span>
             </div>
           </div>
