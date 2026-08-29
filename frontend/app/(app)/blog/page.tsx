@@ -41,8 +41,6 @@ export default function PublicBlogPage() {
     });
   }, [rows, query, activeTopic]);
 
-  const featured = filtered[0];
-
   if (posts.loading) {
     return <LoadingState />;
   }
@@ -52,32 +50,32 @@ export default function PublicBlogPage() {
   return (
     <div className="space-y-10">
       {/* Blog Hero Header & Search Banner */}
-      <div className="relative overflow-hidden rounded-md bg-slate-900 px-6 py-8 sm:px-10 sm:py-10 text-white border border-slate-800 shadow-md">
-        <div className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full bg-brand-500/20 blur-3xl" />
-        <div className="pointer-events-none absolute left-1/3 -bottom-16 size-64 rounded-full bg-violet-600/20 blur-3xl" />
+      <div className="relative overflow-hidden rounded-xl bg-surface border border-theme px-6 py-8 sm:px-10 sm:py-10 shadow-md">
+        <div className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full bg-brand-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute left-1/3 -bottom-16 size-64 rounded-full bg-violet-600/10 blur-3xl" />
 
         <div className="relative max-w-2xl">
-          <div className="inline-flex items-center gap-1.5 rounded-md bg-brand-500/10 border border-brand-500/20 px-3 py-1 text-xs font-semibold text-brand-300 backdrop-blur mb-3">
+          <div className="inline-flex items-center gap-1.5 rounded-md bg-brand-subtle border border-brand-border px-3 py-1 text-xs font-semibold text-brand backdrop-blur mb-3">
             <Sparkles className="size-3.5" />
             <span>Articles & Insights</span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">
             Engineering Blog & Guides
           </h1>
-          <p className="mt-2 text-xs sm:text-sm text-slate-300 leading-relaxed">
+          <p className="mt-2 text-xs sm:text-sm text-secondary leading-relaxed">
             In-depth writeups on architecture, backend access control, and software engineering.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[260px]">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted" />
               <input
                 type="text"
                 placeholder="Search articles by title or keyword..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full rounded-md border border-slate-700 bg-slate-800/90 pl-10 pr-4 py-2 text-xs sm:text-sm text-white placeholder:text-slate-400 outline-none transition focus:border-brand-400 focus:ring-1 focus:ring-brand-500/20"
+                className="w-full rounded-lg border border-theme bg-canvas pl-10 pr-4 py-2 text-xs sm:text-sm text-primary placeholder:text-muted outline-none transition focus:border-active focus:ring-2 focus:ring-brand-500/20"
               />
             </div>
           </div>
@@ -85,8 +83,8 @@ export default function PublicBlogPage() {
       </div>
 
       {/* Topics / Filter Pills */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-4">
-        <span className="text-xs font-semibold text-slate-500 mr-2 flex items-center gap-1">
+      <div className="flex flex-wrap items-center gap-2 border-b border-subtle pb-4">
+        <span className="text-xs font-semibold text-muted mr-2 flex items-center gap-1">
           <Tag className="size-3.5" /> Filter by:
         </span>
         {TOPICS.map((topic) => (
@@ -94,10 +92,10 @@ export default function PublicBlogPage() {
             key={topic}
             type="button"
             onClick={() => setActiveTopic(topic)}
-            className={`rounded-full px-3.5 py-1 text-xs font-semibold transition-all ${
+            className={`rounded-full px-3.5 py-1 text-xs font-semibold transition-all cursor-pointer ${
               activeTopic === topic
-                ? 'bg-brand-600 text-white shadow-xs'
-                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                ? 'bg-brand text-white shadow-xs'
+                : 'bg-surface text-secondary border border-theme hover:bg-elevated hover:text-primary'
             }`}
           >
             {topic}
@@ -108,8 +106,8 @@ export default function PublicBlogPage() {
       {/* Articles Feed */}
       {filtered.length === 0 ? (
         <Empty>
-          <p className="font-semibold text-slate-700">No matching articles found</p>
-          <p className="text-xs text-slate-500 mt-1">Try searching for a different keyword or topic.</p>
+          <p className="font-semibold text-primary">No matching articles found</p>
+          <p className="text-xs text-muted mt-1">Try searching for a different keyword or topic.</p>
           {(query || activeTopic !== 'All') && (
             <button
               type="button"
@@ -117,7 +115,7 @@ export default function PublicBlogPage() {
                 setQuery('');
                 setActiveTopic('All');
               }}
-              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:underline cursor-pointer"
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-brand hover:underline cursor-pointer"
             >
               Clear All Filters ✕
             </button>
@@ -130,8 +128,8 @@ export default function PublicBlogPage() {
 
             return (
               <Link key={post.documentId} href={`/blog/${post.documentId}`} className="block group">
-                <Card hover className="flex flex-col h-full overflow-hidden p-0 rounded-md border-slate-200/90 shadow-2xs">
-                  <div className="h-44 w-full overflow-hidden bg-slate-900 relative">
+                <Card hover className="flex flex-col h-full overflow-hidden p-0 rounded-lg border-theme shadow-2xs">
+                  <div className="h-44 w-full overflow-hidden bg-canvas relative">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={cover}
@@ -142,7 +140,7 @@ export default function PublicBlogPage() {
 
                   <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-muted">
                         <Calendar className="size-3" />
                         <span>
                           {new Date(post.createdAt).toLocaleDateString(undefined, {
@@ -153,16 +151,16 @@ export default function PublicBlogPage() {
                         </span>
                       </div>
 
-                      <h2 className="font-bold text-slate-900 group-hover:text-brand-600 transition line-clamp-2 text-base">
+                      <h2 className="font-bold text-primary group-hover:text-brand transition line-clamp-2 text-base">
                         {post.title}
                       </h2>
 
-                      <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                      <p className="text-xs text-secondary line-clamp-3 leading-relaxed">
                         {excerpt(post.body)}
                       </p>
                     </div>
 
-                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-brand-600">
+                    <div className="pt-3 border-t border-subtle flex items-center justify-between text-xs font-semibold text-brand">
                       <span>Read Full Article</span>
                       <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
                     </div>

@@ -89,7 +89,7 @@ export const PostForm = ({
 
       <div>
         <label className="block">
-          <span className="mb-1.5 block text-sm font-medium text-slate-700">Publication State</span>
+          <span className="mb-1.5 block text-sm font-medium text-primary">Publication State</span>
           <select
             value={values.publishState}
             onChange={set('publishState')}

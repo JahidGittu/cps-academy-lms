@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import Markdown from 'react-markdown';
 import { ArrowLeft, Calendar, Edit3, User, Clock } from 'lucide-react';
 
 import { hasRole, useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { BlogPost, Single } from '@/lib/types';
 import { Alert, Empty, LoadingState } from '@/components/ui';
+import { RichContent } from '@/components/rich-content';
 
 const DEFAULT_POST_COVERS = [
   'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1200&auto=format&fit=crop&q=80',
@@ -36,8 +36,8 @@ const Post = ({ documentId }: { documentId: string }) => {
   if (post.status === 404) {
     return (
       <Empty>
-        <p className="font-semibold text-slate-800">Post not found</p>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="font-semibold text-primary">Post not found</p>
+        <p className="mt-1 text-sm text-muted">
           This post either does not exist or has not been published yet.
         </p>
       </Empty>
@@ -55,10 +55,10 @@ const Post = ({ documentId }: { documentId: string }) => {
 
   return (
     <article className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      <div className="flex items-center justify-between gap-4 pb-4 border-b border-subtle">
         <Link
           href="/blog"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-brand-600 transition"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-brand transition"
         >
           <ArrowLeft className="size-4" />
           <span>Back to Articles</span>
@@ -67,7 +67,7 @@ const Post = ({ documentId }: { documentId: string }) => {
         {canEdit && (
           <Link
             href={`/blog/${documentId}/edit`}
-            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
+            className="inline-flex items-center gap-1.5 rounded-md border border-theme bg-surface px-3 py-1.5 text-xs font-semibold text-primary hover:bg-elevated transition shadow-2xs"
           >
             <Edit3 className="size-3.5" />
             <span>Edit Article</span>
@@ -76,7 +76,7 @@ const Post = ({ documentId }: { documentId: string }) => {
       </div>
 
       {/* High-res Blog Cover Image Banner */}
-      <div className="overflow-hidden rounded-md border border-slate-200/90 shadow-sm bg-slate-900">
+      <div className="overflow-hidden rounded-lg border border-theme shadow-sm bg-black/40">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={coverImage}
@@ -86,9 +86,9 @@ const Post = ({ documentId }: { documentId: string }) => {
       </div>
 
       <div>
-        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 font-medium mb-3">
+        <div className="flex flex-wrap items-center gap-4 text-xs text-muted font-medium mb-3">
           <span className="flex items-center gap-1.5">
-            <Calendar className="size-3.5 text-slate-400" />
+            <Calendar className="size-3.5 text-muted" />
             <span>
               {new Date(detail.createdAt).toLocaleDateString(undefined, {
                 month: 'long',
@@ -99,31 +99,31 @@ const Post = ({ documentId }: { documentId: string }) => {
           </span>
 
           {detail.author?.username && (
-            <span className="flex items-center gap-1.5 text-slate-700 font-semibold">
-              <User className="size-3.5 text-slate-400" />
+            <span className="flex items-center gap-1.5 text-primary font-semibold">
+              <User className="size-3.5 text-muted" />
               <span>{detail.author.username}</span>
             </span>
           )}
 
-          <span className="flex items-center gap-1 text-slate-400">
+          <span className="flex items-center gap-1 text-muted">
             <Clock className="size-3.5" />
             <span>3 min read</span>
           </span>
 
           {detail.publishState === 'draft' && (
-            <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800 border border-amber-200">
+            <span className="rounded bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-600 dark:text-[#e3b341] border border-amber-500/30">
               Draft Mode
             </span>
           )}
         </div>
 
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary tracking-tight leading-tight">
           {detail.title}
         </h1>
       </div>
 
-      <div className="prose prose-slate max-w-none rounded-md bg-white p-6 sm:p-10 border border-slate-200/90 shadow-xs leading-relaxed text-slate-700">
-        <Markdown>{detail.body}</Markdown>
+      <div className="rounded-lg bg-surface p-6 sm:p-10 border border-theme shadow-xs leading-relaxed text-secondary">
+        <RichContent content={detail.body} />
       </div>
     </article>
   );

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import Markdown from 'react-markdown';
 import {
   ArrowLeft,
   ArrowRight,
@@ -22,6 +21,7 @@ import { useApi } from '@/lib/use-api';
 import type { Collection, Lesson, LessonProgress, Single } from '@/lib/types';
 import { Alert, Button, Empty, LoadingState } from '@/components/ui';
 import { RequireAuth } from '@/components/require-auth';
+import { RichContent } from '@/components/rich-content';
 
 const lessonQuery = (documentId: string) =>
   `/lessons/${documentId}?populate[course][fields]=title,documentId` +
@@ -217,8 +217,8 @@ const Viewer = ({ documentId }: { documentId: string }) => {
 
           {/* Written Content */}
           {detail.content && (
-            <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed rounded-md bg-white p-6 sm:p-8 border border-slate-200/90 shadow-2xs">
-              <Markdown>{detail.content}</Markdown>
+            <div className="rounded-lg bg-surface p-6 sm:p-8 border border-theme shadow-2xs leading-relaxed text-secondary">
+              <RichContent content={detail.content} />
             </div>
           )}
 
