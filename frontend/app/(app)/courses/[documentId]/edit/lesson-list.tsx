@@ -83,10 +83,10 @@ export const LessonList = ({
                 </span>
               </div>
 
-              {/* Action Controls with Soft Tag Badge Styling */}
+              {/* Action Controls with High-Contrast Crisp White Tag Badges */}
               <div
-                className={`flex shrink-0 items-center gap-1 ${
-                  active ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'
+                className={`flex shrink-0 items-center gap-1.5 ${
+                  active ? 'opacity-100' : 'opacity-85 group-hover:opacity-100'
                 }`}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -96,13 +96,13 @@ export const LessonList = ({
                   title="Move Up in Syllabus"
                   disabled={busy || index === 0}
                   onClick={() => onMove(index, -1)}
-                  className={`flex size-6 items-center justify-center rounded-md border text-xs transition-all disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer ${
+                  className={`flex size-7 items-center justify-center rounded-lg border text-white transition-all disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer ${
                     active
-                      ? 'bg-white/20 hover:bg-white/30 text-white border-white/25 shadow-2xs'
-                      : 'bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border-sky-500/20 dark:border-sky-400/20'
+                      ? 'bg-white/25 hover:bg-white/35 border-white/40 shadow-xs'
+                      : 'bg-slate-800/90 dark:bg-slate-700/90 hover:bg-sky-600 dark:hover:bg-sky-500 border-slate-600/80 dark:border-slate-500/80 shadow-xs'
                   }`}
                 >
-                  <ArrowUp className="size-3" />
+                  <ArrowUp className="size-4 stroke-[2.5] text-white" />
                 </button>
 
                 {/* Down Arrow Tag */}
@@ -111,13 +111,13 @@ export const LessonList = ({
                   title="Move Down in Syllabus"
                   disabled={busy || index === rows.length - 1}
                   onClick={() => onMove(index, 1)}
-                  className={`flex size-6 items-center justify-center rounded-md border text-xs transition-all disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer ${
+                  className={`flex size-7 items-center justify-center rounded-lg border text-white transition-all disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer ${
                     active
-                      ? 'bg-white/20 hover:bg-white/30 text-white border-white/25 shadow-2xs'
-                      : 'bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border-sky-500/20 dark:border-sky-400/20'
+                      ? 'bg-white/25 hover:bg-white/35 border-white/40 shadow-xs'
+                      : 'bg-slate-800/90 dark:bg-slate-700/90 hover:bg-sky-600 dark:hover:bg-sky-500 border-slate-600/80 dark:border-slate-500/80 shadow-xs'
                   }`}
                 >
-                  <ArrowDown className="size-3" />
+                  <ArrowDown className="size-4 stroke-[2.5] text-white" />
                 </button>
 
                 {/* Delete Tag */}
@@ -126,13 +126,13 @@ export const LessonList = ({
                   title="Delete Lesson"
                   disabled={busy}
                   onClick={() => onRemove(lesson)}
-                  className={`flex size-6 items-center justify-center rounded-md border text-xs transition-all cursor-pointer ${
+                  className={`flex size-7 items-center justify-center rounded-lg border text-white transition-all cursor-pointer ${
                     active
-                      ? 'bg-rose-500/30 hover:bg-rose-500 text-white border-rose-300/40 shadow-2xs'
-                      : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/20 dark:border-rose-400/20'
+                      ? 'bg-rose-500/40 hover:bg-rose-500 border-rose-300/50 shadow-xs'
+                      : 'bg-slate-800/90 dark:bg-slate-700/90 hover:bg-rose-600 dark:hover:bg-rose-500 border-slate-600/80 dark:border-slate-500/80 shadow-xs'
                   }`}
                 >
-                  <Trash2 className="size-3" />
+                  <Trash2 className="size-4 stroke-[2.2] text-white" />
                 </button>
               </div>
             </li>
