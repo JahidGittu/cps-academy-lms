@@ -160,10 +160,6 @@ const Viewer = ({ documentId }: { documentId: string }) => {
           <span className="text-muted">/</span>
           <span className="font-bold text-primary truncate max-w-md">{detail.title}</span>
         </div>
-
-        <span className="rounded-lg bg-surface border border-theme px-3 py-1 text-xs font-bold text-sky-400">
-          Lesson {at + 1} of {siblings.length}
-        </span>
       </div>
 
       {/* Main Grid: Content & Syllabus Playlist */}
