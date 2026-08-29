@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BookOpen, ClipboardList, Info, Users, Eye, Lock, ArrowRight, ArrowLeft, Layers, HelpCircle, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Users, Eye, Lock, ArrowRight, ArrowLeft, Layers, HelpCircle, ExternalLink } from 'lucide-react';
 
 export type Section = 'details' | 'lessons' | 'quiz';
 
@@ -23,13 +23,13 @@ export const BuilderNav = ({
   const items = [
     {
       key: 'details' as const,
-      icon: Info,
+      icon: Layers,
       label: 'Course Info',
       hint: isNewCourse ? 'Step 1: Setup' : 'Title & Thumbnail',
     },
     {
       key: 'lessons' as const,
-      icon: isNewCourse ? Lock : Layers,
+      icon: isNewCourse ? Lock : BookOpen,
       label: 'Curriculum',
       hint: isNewCourse ? 'Step 2 (Locked)' : `${lessons} Lessons in Syllabus`,
     },
@@ -119,13 +119,15 @@ export const BuilderNav = ({
 
           {section === 'quiz' && courseId && (
             <div className="space-y-2">
-              <Link
+              <a
                 href={`/courses/${courseId}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center justify-between gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-3 text-xs font-bold text-white shadow-md shadow-emerald-600/20 hover:shadow-emerald-500/30 transition-all"
               >
-                <span>Finish & Preview Course</span>
-                <Eye className="size-4" />
-              </Link>
+                <span>View Live Course ↗</span>
+                <ExternalLink className="size-4" />
+              </a>
 
               <button
                 type="button"
@@ -153,13 +155,15 @@ export const BuilderNav = ({
             <span>Students Roster</span>
           </Link>
 
-          <Link
+          <a
             href={`/courses/${courseId}`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex items-center gap-2.5 rounded-xl border border-theme bg-surface px-3.5 py-2.5 text-xs font-semibold text-secondary hover:bg-elevated hover:text-sky-400 transition"
           >
             <Eye className="size-4 text-muted" />
-            <span>Live Course Page</span>
-          </Link>
+            <span>Live Course Page ↗</span>
+          </a>
         </div>
       )}
     </nav>

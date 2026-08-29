@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   HelpCircle,
   Plus,
@@ -13,7 +12,7 @@ import {
   RefreshCw,
   Sparkles,
   Rocket,
-  ArrowRight,
+  ExternalLink,
   Eye,
 } from 'lucide-react';
 
@@ -38,7 +37,6 @@ export const QuizPanel = ({
   course: Course;
   onSaved?: () => Promise<void>;
 }) => {
-  const router = useRouter();
   const quizDocId = course.quiz?.documentId;
   const quizData = useApi<Single<Quiz>>(
     quizDocId ? `/quizzes/${quizDocId}?populate=questions` : null
@@ -263,7 +261,7 @@ export const QuizPanel = ({
     }
   };
 
-  // Final Publish Course & View Live Flow
+  // Final Publish Course Flow (Sets state and enables new-tab viewing)
   const handlePublishCourse = async () => {
     setPublishBusy(true);
     setError('');
@@ -273,11 +271,10 @@ export const QuizPanel = ({
         await saveQuizData();
       }
       setPublishedSuccess(true);
-      setTimeout(() => {
-        router.push(`/courses/${course.documentId}`);
-      }, 1200);
+      if (onSaved) await onSaved();
     } catch (caught) {
       setError(errorMessage(caught));
+    } finally {
       setPublishBusy(false);
     }
   };
@@ -300,6 +297,8 @@ export const QuizPanel = ({
     }
   };
 
+  const isCoursePublished = Boolean(course.quiz || publishedSuccess);
+
   if (quizDocId && quizData.loading && !quizData.data) {
     return <LoadingState />;
   }
@@ -308,11 +307,23 @@ export const QuizPanel = ({
     <form onSubmit={submit} className="space-y-6">
       {/* Celebration Banner when Published */}
       {publishedSuccess && (
-        <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/15 p-4 text-emerald-400 flex items-center gap-3 shadow-md animate-in fade-in zoom-in-95 duration-200">
-          <Sparkles className="size-6 text-emerald-400 shrink-0" />
-          <div className="text-xs sm:text-sm font-bold">
-            🎉 Course Successfully Published & Live in Catalogue! Redirecting to student view...
+        <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/15 p-4 text-emerald-400 flex items-center justify-between gap-3 shadow-md animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex items-center gap-2.5">
+            <Sparkles className="size-5 text-emerald-400 shrink-0" />
+            <div className="text-xs sm:text-sm font-bold">
+              🎉 Course Successfully Published & Live in Catalogue!
+            </div>
           </div>
+
+          <a
+            href={`/courses/${course.documentId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 text-xs shadow-xs transition"
+          >
+            <span>View Live Course</span>
+            <ExternalLink className="size-3.5" />
+          </a>
         </div>
       )}
 
@@ -385,15 +396,28 @@ export const QuizPanel = ({
             </button>
           )}
 
-          <button
-            type="button"
-            onClick={handlePublishCourse}
-            disabled={publishBusy}
-            className="flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 text-xs shadow-md shadow-emerald-600/25 hover:shadow-emerald-500/35 transition-all cursor-pointer"
-          >
-            <Rocket className="size-4" />
-            <span>{publishBusy ? 'Publishing...' : 'Publish Course'}</span>
-          </button>
+          {isCoursePublished ? (
+            <a
+              href={`/courses/${course.documentId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 text-xs shadow-md shadow-emerald-600/25 hover:shadow-emerald-500/35 transition-all"
+            >
+              <Eye className="size-4" />
+              <span>View Course</span>
+              <ExternalLink className="size-3.5 opacity-80" />
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={handlePublishCourse}
+              disabled={publishBusy}
+              className="flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 text-xs shadow-md shadow-emerald-600/25 hover:shadow-emerald-500/35 transition-all cursor-pointer"
+            >
+              <Rocket className="size-4" />
+              <span>{publishBusy ? 'Publishing...' : 'Publish Course'}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -576,15 +600,28 @@ export const QuizPanel = ({
         </div>
 
         {/* Final Course Publish & Live View Button */}
-        <button
-          type="button"
-          onClick={handlePublishCourse}
-          disabled={publishBusy}
-          className="flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 text-xs sm:text-sm shadow-lg shadow-emerald-600/25 hover:shadow-emerald-500/35 transition-all cursor-pointer"
-        >
-          <Rocket className="size-4" />
-          <span>{publishBusy ? 'Publishing...' : '🚀 Save & Publish Course to Catalogue'}</span>
-        </button>
+        {isCoursePublished ? (
+          <a
+            href={`/courses/${course.documentId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 text-xs sm:text-sm shadow-lg shadow-emerald-600/25 hover:shadow-emerald-500/35 transition-all cursor-pointer"
+          >
+            <Eye className="size-4" />
+            <span>View Course (Live Preview)</span>
+            <ExternalLink className="size-4 opacity-80" />
+          </a>
+        ) : (
+          <button
+            type="button"
+            onClick={handlePublishCourse}
+            disabled={publishBusy}
+            className="flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 text-xs sm:text-sm shadow-lg shadow-emerald-600/25 hover:shadow-emerald-500/35 transition-all cursor-pointer"
+          >
+            <Rocket className="size-4" />
+            <span>{publishBusy ? 'Publishing...' : 'Save & Publish Course to Catalogue'}</span>
+          </button>
+        )}
       </div>
 
       {/* Delete Quiz Confirmation Modal */}
