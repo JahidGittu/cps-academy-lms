@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
-import { Newspaper, Globe, Lock, Sparkles } from 'lucide-react';
+import { Newspaper, Globe, Lock, CheckCircle2, RefreshCw } from 'lucide-react';
 
 import { errorMessage } from '@/lib/api';
 import type { BlogPost } from '@/lib/types';
@@ -35,15 +35,28 @@ export const PostForm = ({
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'unsaved' | 'saving' | 'saved'>('idle');
+
+  const lastSavedRef = useRef<PostValues>({
+    title: post?.title ?? '',
+    body: post?.body ?? '',
+    coverImageUrl: post?.coverImageUrl ?? '',
+    publishState: post?.publishState ?? 'draft',
+  });
+
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (post) {
-      setValues({
+      const nextValues: PostValues = {
         title: post.title ?? '',
         body: post.body ?? '',
         coverImageUrl: post.coverImageUrl ?? '',
         publishState: post.publishState ?? 'draft',
-      });
+      };
+      setValues(nextValues);
+      lastSavedRef.current = { ...nextValues };
+      setSaveStatus('idle');
     }
   }, [post?.documentId, post?.createdAt]);
 
@@ -52,15 +65,71 @@ export const PostForm = ({
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | { target: { value: string } }) =>
       setValues((prev) => ({ ...prev, [field]: event.target.value }));
 
+  // Check if form has unsaved modifications
+  const isDirty =
+    Boolean(values.title.trim()) &&
+    (values.title !== lastSavedRef.current.title ||
+      values.body !== lastSavedRef.current.body ||
+      values.coverImageUrl !== lastSavedRef.current.coverImageUrl ||
+      values.publishState !== lastSavedRef.current.publishState);
+
+  // Debounced auto-save for existing articles (1500ms after user pauses typing)
+  useEffect(() => {
+    if (!post || !isDirty || !values.title.trim()) {
+      if (!isDirty && saveStatus === 'unsaved') {
+        setSaveStatus('idle');
+      }
+      return;
+    }
+
+    setSaveStatus('unsaved');
+
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(async () => {
+      setSaveStatus('saving');
+      setError('');
+
+      try {
+        await save(values);
+        lastSavedRef.current = { ...values };
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2500);
+      } catch (caught) {
+        setError(errorMessage(caught));
+        setSaveStatus('idle');
+      }
+    }, 1500);
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [post, values, isDirty, save]);
+
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
     setBusy(true);
     setError('');
+    setSaveStatus('saving');
 
     try {
       await save(values);
+      lastSavedRef.current = { ...values };
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2500);
     } catch (caught) {
       setError(errorMessage(caught));
+      setSaveStatus('idle');
+    } finally {
       setBusy(false);
     }
   };
@@ -68,7 +137,7 @@ export const PostForm = ({
   return (
     <form onSubmit={submit} className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-subtle pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-subtle pb-4">
         <div>
           <h2 className="text-base sm:text-lg font-bold text-primary flex items-center gap-2">
             <Newspaper className="size-5 text-sky-400" />
@@ -79,16 +148,47 @@ export const PostForm = ({
           </p>
         </div>
 
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-bold border flex items-center gap-1.5 ${
-            values.publishState === 'published'
-              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-              : 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-          }`}
-        >
-          {values.publishState === 'published' ? <Globe className="size-3.5" /> : <Lock className="size-3.5" />}
-          <span>{values.publishState === 'published' ? 'Public Article' : 'Draft Mode'}</span>
-        </span>
+        <div className="flex items-center gap-3">
+          {/* Live Auto-Save Status */}
+          {post && (
+            <div className="text-xs font-semibold">
+              {saveStatus === 'saving' && (
+                <span className="inline-flex items-center gap-1.5 text-sky-400 animate-pulse">
+                  <RefreshCw className="size-3.5 animate-spin" />
+                  <span>Auto-saving article...</span>
+                </span>
+              )}
+              {saveStatus === 'saved' && (
+                <span className="inline-flex items-center gap-1 text-emerald-400">
+                  <CheckCircle2 className="size-4 text-emerald-400" />
+                  <span>All changes synced</span>
+                </span>
+              )}
+              {saveStatus === 'unsaved' && isDirty && (
+                <span className="inline-flex items-center gap-1.5 text-amber-400">
+                  <span className="size-2 rounded-full bg-amber-400 animate-pulse" />
+                  <span>Unsaved changes</span>
+                </span>
+              )}
+              {saveStatus === 'idle' && !isDirty && (
+                <span className="text-muted text-xs font-normal">
+                  ✓ Up to date
+                </span>
+              )}
+            </div>
+          )}
+
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-bold border flex items-center gap-1.5 ${
+              values.publishState === 'published'
+                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                : 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+            }`}
+          >
+            {values.publishState === 'published' ? <Globe className="size-3.5" /> : <Lock className="size-3.5" />}
+            <span>{values.publishState === 'published' ? 'Public Article' : 'Draft Mode'}</span>
+          </span>
+        </div>
       </div>
 
       {/* 2-Column Responsive Layout */}
@@ -168,11 +268,17 @@ export const PostForm = ({
       <div className="flex items-center gap-3 border-t border-subtle pt-4">
         <Button
           type="submit"
-          disabled={busy}
+          disabled={busy || (post && !isDirty && saveStatus !== 'saving')}
           className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/20 hover:shadow-sky-500/30"
         >
-          {busy ? 'Saving Article...' : label}
+          {busy ? 'Saving Article...' : post ? 'Save changes' : label}
         </Button>
+
+        {post && !isDirty && (
+          <span className="text-xs text-muted font-medium">
+            All changes synced
+          </span>
+        )}
       </div>
     </form>
   );

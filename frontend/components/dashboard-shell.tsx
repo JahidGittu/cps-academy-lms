@@ -253,7 +253,7 @@ export const DashboardShell = ({
                 <div className="leading-tight min-w-0">
                   <span className="block font-bold text-primary tracking-tight text-base">CPS Academy</span>
                   <span className="block text-[11px] font-semibold text-brand capitalize">
-                    {isAdmin ? 'Admin Console' : isInstructor ? 'Instructor Studio' : isContentManager ? 'Content Studio' : 'Student Hub'}
+                    {isAdmin ? 'Admin Console' : isInstructor ? 'Instructor Console' : isContentManager ? 'Content Console' : 'Student Hub'}
                   </span>
                 </div>
               </Link>

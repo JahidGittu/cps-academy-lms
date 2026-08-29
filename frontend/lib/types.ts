@@ -11,9 +11,12 @@ export type Role = {
 
 export type User = {
   id: number;
+  documentId?: string;
   username: string;
   email: string;
   role?: Role;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type Course = {

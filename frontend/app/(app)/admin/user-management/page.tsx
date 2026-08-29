@@ -16,7 +16,7 @@ import { useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { Role, User } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
-import { Alert, Button, Empty } from '@/components/ui';
+import { Alert, Empty } from '@/components/ui';
 import { UserManagementSkeleton } from '@/components/page-skeletons';
 import { ConfirmModal } from '@/components/confirm-modal';
 
@@ -29,7 +29,7 @@ const roleBadgeColor: Record<string, string> = {
 
 const VALID_ROLES = ['Admin', 'Instructor', 'Content Manager', 'Student'];
 
-const UserManagementStudio = () => {
+const UserManagement = () => {
   const { user: me } = useAuth();
   const [query, setQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -123,7 +123,7 @@ const UserManagementStudio = () => {
       {/* Top Header */}
       <div>
         <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">
-          Users
+          User Management
         </h2>
         <p className="mt-1 text-xs sm:text-sm text-muted">
           Manage user accounts, assign system permission roles, and control administrative access.
@@ -201,138 +201,138 @@ const UserManagementStudio = () => {
         </div>
       </div>
 
-      {/* Results Count Header */}
+      {/* Results Header Count */}
       <div className="flex items-center justify-between text-xs text-muted font-medium px-1">
         <span>
-          Showing <strong>{filteredUsers.length}</strong> of {rows.length} users
+          Showing <strong>{filteredUsers.length}</strong> of {rows.length} platform users
         </span>
       </div>
 
-      {/* User Management Table */}
+      {/* User Management Data Table */}
       {filteredUsers.length === 0 ? (
         <Empty>
-          <p className="text-base font-bold text-primary">No users match your search criteria</p>
-          <p className="text-xs text-muted mt-1">Try resetting the search keywords or role filters.</p>
-          {hasActiveFilters && (
-            <Button variant="plain" onClick={resetFilters} className="mt-4">
-              Clear All Filters
-            </Button>
-          )}
+          <p className="text-base font-bold text-primary">No users found</p>
+          <p className="text-xs text-muted mt-1">
+            {hasActiveFilters
+              ? 'No users match your filter criteria. Try resetting the search keyword or role filter.'
+              : 'There are no user accounts in the platform yet.'}
+          </p>
         </Empty>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-theme bg-surface shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-theme bg-surface shadow-xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs sm:text-sm text-secondary">
-              <thead className="bg-canvas border-b border-subtle text-[11px] font-bold uppercase tracking-wider text-muted">
-                <tr>
-                  <th className="px-5 py-3.5">User Profile</th>
-                  <th className="px-5 py-3.5">Current Role</th>
-                  <th className="px-5 py-3.5">Assign Role</th>
-                  <th className="px-5 py-3.5">Account Status</th>
-                  <th className="px-5 py-3.5 text-right">Actions</th>
+            <table className="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr className="border-b border-subtle bg-elevated/40 text-[11px] font-bold text-muted uppercase tracking-wider">
+                  <th className="py-3.5 px-4">User</th>
+                  <th className="py-3.5 px-4">Current Role</th>
+                  <th className="py-3.5 px-4">Joined Platform</th>
+                  <th className="py-3.5 px-4 text-right">Assign Role / Action</th>
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-subtle">
-                {filteredUsers.map((row) => {
-                  const self = row.id === me?.id;
-                  const roleName = row.role?.name ?? 'Student';
-                  const badgeStyle =
-                    roleBadgeColor[roleName] ?? 'bg-elevated text-secondary border-theme';
+                {filteredUsers.map((user) => {
+                  const roleName = user.role?.name ?? 'Student';
+                  const isCurrentLoggedUser = me?.id === user.id;
+                  const isUserBusy = busyId === user.id;
+                  const isUpdated = successId === user.id;
 
                   return (
-                    <tr key={row.id} className="hover:bg-elevated/50 transition-colors">
-                      {/* Avatar & Info */}
-                      <td className="px-5 py-3.5">
+                    <tr
+                      key={user.id}
+                      className="hover:bg-elevated/30 transition-colors group"
+                    >
+                      {/* User Identity Column */}
+                      <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <span className="flex size-8 items-center justify-center rounded-lg bg-brand-subtle text-xs font-bold text-brand uppercase border border-brand-border shadow-2xs shrink-0">
-                            {row.username.slice(0, 2)}
-                          </span>
-                          <div className="min-w-0">
-                            <span className="block font-bold text-primary truncate">
-                              {row.username}{' '}
-                              {self && (
-                                <span className="text-[11px] font-semibold text-brand ml-1">
-                                  (You)
+                          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-subtle text-xs font-bold text-brand uppercase border border-brand-border">
+                            {user.username.slice(0, 2)}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-primary">{user.username}</span>
+                              {isCurrentLoggedUser && (
+                                <span className="rounded bg-sky-500/15 text-sky-400 px-1.5 py-0.2 text-[10px] font-bold border border-sky-500/25">
+                                  You
                                 </span>
                               )}
-                            </span>
-                            <span className="block text-xs text-muted truncate">{row.email}</span>
+                            </div>
+                            <span className="text-xs text-muted block">{user.email}</span>
                           </div>
                         </div>
                       </td>
 
-                      {/* Current Role Badge */}
-                      <td className="px-5 py-3.5">
+                      {/* Role Pill Column */}
+                      <td className="py-3.5 px-4">
                         <span
-                          className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-bold ${badgeStyle}`}
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold border ${
+                            roleBadgeColor[roleName] ?? 'bg-muted/10 text-muted border-theme'
+                          }`}
                         >
-                          {roleName === 'Admin' ? (
-                            <Shield className="size-3.5" />
-                          ) : (
-                            <UserCheck className="size-3.5" />
-                          )}
+                          <Shield className="size-3" />
                           <span>{roleName}</span>
                         </span>
                       </td>
 
-                      {/* Role Assignment Dropdown */}
-                      <td className="px-5 py-3.5">
-                        {self ? (
-                          <span className="inline-flex items-center gap-1 text-xs text-muted italic">
-                            <Shield className="size-3 text-muted" />
-                            <span>Self role protected</span>
-                          </span>
-                        ) : (
-                          <select
-                            disabled={busyId === row.id}
-                            value={row.role?.id ?? ''}
-                            onChange={(e) => void changeRole(row.id, Number(e.target.value))}
-                            className="rounded-lg border border-theme bg-canvas px-3 py-1.5 text-xs font-semibold text-primary outline-none transition focus:border-active focus:ring-2 focus:ring-brand-500/20 disabled:opacity-50 cursor-pointer"
-                          >
-                            {availableRoles.map((role) => (
-                              <option key={role.id} value={role.id}>
-                                {role.name}
-                              </option>
-                            ))}
-                          </select>
-                        )}
+                      {/* Joined Date Column */}
+                      <td className="py-3.5 px-4 text-muted text-xs">
+                        {user.createdAt
+                          ? new Date(user.createdAt).toLocaleDateString(undefined, {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                            })
+                          : 'N/A'}
                       </td>
 
-                      {/* Account Status Badge */}
-                      <td className="px-5 py-3.5">
-                        {busyId === row.id ? (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-brand animate-pulse bg-brand-subtle px-2.5 py-1 rounded-md border border-brand-border">
-                            <span className="size-1.5 rounded-full bg-brand animate-ping" />
-                            <span>Updating...</span>
-                          </span>
-                        ) : successId === row.id ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
-                            <CheckCircle2 className="size-3.5 text-emerald-400" />
-                            <span>Saved!</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
-                            <span className="size-1.5 rounded-full bg-emerald-400" />
-                            <span>Active</span>
-                          </span>
-                        )}
-                      </td>
+                      {/* Role Assignment & Delete Action */}
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {isUpdated && (
+                            <span className="inline-flex items-center gap-1 text-xs text-emerald-400 font-bold animate-in fade-in duration-200">
+                              <CheckCircle2 className="size-3.5" />
+                              <span>Updated</span>
+                            </span>
+                          )}
 
-                      {/* Actions Column (Delete User) */}
-                      <td className="px-5 py-3.5 text-right">
-                        {!self ? (
-                          <button
-                            type="button"
-                            onClick={() => setDeletingUser({ id: row.id, username: row.username })}
-                            disabled={deleteBusy && deletingUser?.id === row.id}
-                            title="Delete User Account"
-                            className="rounded-lg p-1.5 text-muted hover:bg-red-500/10 hover:text-red-500 transition cursor-pointer"
-                          >
-                            <Trash2 className="size-4" />
-                          </button>
-                        ) : (
-                          <span className="text-xs text-muted">—</span>
-                        )}
+                          {/* Role Selector Dropdown */}
+                          <div className="relative inline-block">
+                            <select
+                              value={user.role?.id ?? ''}
+                              disabled={isUserBusy || isCurrentLoggedUser}
+                              onChange={(e) => changeRole(user.id, Number(e.target.value))}
+                              className={`rounded-lg border px-2.5 py-1 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-brand-500/20 cursor-pointer ${
+                                isCurrentLoggedUser
+                                  ? 'bg-canvas text-muted border-theme cursor-not-allowed opacity-60'
+                                  : 'bg-surface text-primary border-theme hover:bg-elevated hover:border-active'
+                              }`}
+                              title={
+                                isCurrentLoggedUser
+                                  ? 'You cannot change your own role'
+                                  : 'Change user role'
+                              }
+                            >
+                              {availableRoles.map((role) => (
+                                <option key={role.id} value={role.id}>
+                                  {role.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Delete User Button */}
+                          {!isCurrentLoggedUser && (
+                            <button
+                              type="button"
+                              onClick={() => setDeletingUser({ id: user.id, username: user.username })}
+                              className="rounded-lg border border-theme bg-surface p-1.5 text-muted hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 transition cursor-pointer"
+                              title="Delete user account"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -343,11 +343,11 @@ const UserManagementStudio = () => {
         </div>
       )}
 
-      {/* SweetAlert Delete User Modal */}
+      {/* Delete User Confirmation Modal */}
       <ConfirmModal
         isOpen={Boolean(deletingUser)}
         title="Delete User Account?"
-        message={`Are you sure you want to permanently delete user "${deletingUser?.username}"? All associated student enrollments and course records for this user will be removed.`}
+        message={`Are you sure you want to permanently delete user account "${deletingUser?.username}"? All enrollments, progress, and submissions associated with this user will also be removed.`}
         confirmText="Yes, Delete User"
         cancelText="Cancel"
         loading={deleteBusy}
@@ -361,7 +361,7 @@ const UserManagementStudio = () => {
 export default function UserManagementPage() {
   return (
     <RequireAuth roles={['Admin']}>
-      <UserManagementStudio />
+      <UserManagement />
     </RequireAuth>
   );
 }

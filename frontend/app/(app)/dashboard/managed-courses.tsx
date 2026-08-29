@@ -170,7 +170,7 @@ export const ManagedCourses = () => {
             </div>
           </div>
           <p className="mt-2 text-3xl font-extrabold text-primary">{rows.length}</p>
-          <p className="mt-1 text-[11px] font-medium text-muted">Curriculums live in studio</p>
+          <p className="mt-1 text-[11px] font-medium text-muted">Published in course library</p>
         </div>
 
         <div className="rounded-xl border border-theme bg-surface p-5 shadow-sm">
@@ -406,7 +406,7 @@ export const ManagedCourses = () => {
       ) : (
         <Empty>
           <p className="text-base font-bold text-primary">
-            {hasActiveFilters ? 'No courses match your filter criteria' : 'No courses in your studio yet'}
+            {hasActiveFilters ? 'No courses match your filter criteria' : 'No courses created yet'}
           </p>
           <p className="text-xs text-muted mt-1">
             {hasActiveFilters

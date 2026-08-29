@@ -32,7 +32,7 @@ const DEFAULT_POST_COVERS = [
 
 type BlogSortOption = 'newest' | 'oldest' | 'title_asc' | 'title_desc';
 
-const BlogManagementStudio = () => {
+const BlogManagement = () => {
   const [query, setQuery] = useState('');
   const [activeTopic, setActiveTopic] = useState('All Topics');
   const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
@@ -243,7 +243,7 @@ const BlogManagementStudio = () => {
       {filtered.length === 0 ? (
         <Empty>
           <p className="text-base font-bold text-primary">
-            {hasActiveFilters ? 'No articles found matching your criteria' : 'No articles in your studio yet'}
+            {hasActiveFilters ? 'No articles found matching your criteria' : 'No articles created yet'}
           </p>
           <p className="text-xs text-muted mt-1">
             {hasActiveFilters
@@ -399,7 +399,7 @@ const BlogManagementStudio = () => {
 export default function BlogManagementPage() {
   return (
     <RequireAuth roles={['Admin', 'Content Manager']}>
-      <BlogManagementStudio />
+      <BlogManagement />
     </RequireAuth>
   );
 }
