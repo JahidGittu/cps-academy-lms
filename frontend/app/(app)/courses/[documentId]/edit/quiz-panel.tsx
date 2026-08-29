@@ -517,8 +517,8 @@ export const QuizPanel = ({
         </button>
       </div>
 
-      {/* Bottom Save Action */}
-      <div className="flex items-center justify-between border-t border-subtle pt-5">
+      {/* Bottom Save & Finish Action */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-subtle pt-5">
         <div className="flex items-center gap-3">
           <Button
             type="submit"
@@ -534,6 +534,16 @@ export const QuizPanel = ({
             </span>
           )}
         </div>
+
+        {course.documentId && (
+          <a
+            href={`/courses/${course.documentId}`}
+            className="flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 text-xs shadow-md shadow-emerald-600/20 hover:shadow-emerald-500/30 transition-all"
+          >
+            <span>Finish & View Live Course</span>
+            <CheckCircle2 className="size-4" />
+          </a>
+        )}
       </div>
 
       {/* Delete Quiz Confirmation Modal */}
