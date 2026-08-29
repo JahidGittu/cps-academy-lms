@@ -230,3 +230,121 @@ table tbody tr:hover {
 .animate-float {
   animation: floatSlow 6s ease-in-out infinite;
 }
+
+/* WYSIWYG In-Place Rich Document Styling (Google Docs Style) */
+.wysiwyg-content, .prose-custom {
+  outline: none;
+  min-height: 220px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+.wysiwyg-content h1, .prose-custom h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.25;
+}
+
+.wysiwyg-content h2, .prose-custom h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 1rem;
+  margin-bottom: 0.35rem;
+  line-height: 1.3;
+}
+
+.wysiwyg-content h3, .prose-custom h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.wysiwyg-content p, .prose-custom p {
+  margin-bottom: 0.65rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+.wysiwyg-content strong, .prose-custom strong {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.wysiwyg-content em, .prose-custom em {
+  font-style: italic;
+}
+
+.wysiwyg-content u, .prose-custom u {
+  text-decoration: underline;
+}
+
+.wysiwyg-content ul, .prose-custom ul {
+  list-style-type: disc;
+  margin-left: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.wysiwyg-content ol, .prose-custom ol {
+  list-style-type: decimal;
+  margin-left: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.wysiwyg-content li, .prose-custom li {
+  margin-bottom: 0.25rem;
+}
+
+.wysiwyg-content blockquote, .prose-custom blockquote {
+  border-left: 4px solid var(--border-active);
+  background: var(--brand-subtle);
+  padding: 0.5rem 1rem;
+  margin: 0.75rem 0;
+  border-radius: 0 0.5rem 0.5rem 0;
+  font-style: italic;
+  color: var(--text-primary);
+}
+
+.wysiwyg-content pre, .prose-custom pre {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.wysiwyg-content code, .prose-custom code {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-default);
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: #38bdf8;
+}
+
+.wysiwyg-content img, .prose-custom img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 0.75rem 0;
+  border: 1px solid var(--border-default);
+}
+
+.wysiwyg-content:empty:before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  pointer-events: none;
+  display: block;
+}

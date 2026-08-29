@@ -14,6 +14,30 @@ export const RichContent = ({
     return <p className="text-xs text-muted italic">No content provided.</p>;
   }
 
+  // Check if content is formatted HTML from our WYSIWYG editor
+  const isHtml =
+    content.includes('<') &&
+    (content.includes('</p>') ||
+      content.includes('</h1>') ||
+      content.includes('</h2>') ||
+      content.includes('</h3>') ||
+      content.includes('</ul>') ||
+      content.includes('</ol>') ||
+      content.includes('</li>') ||
+      content.includes('</blockquote>') ||
+      content.includes('</pre>') ||
+      content.includes('<img') ||
+      content.includes('<br'));
+
+  if (isHtml) {
+    return (
+      <div
+        className={`prose-custom max-w-none text-secondary ${className}`}
+        dangerouslySetInnerHTML={{ __html: content }}
+      />
+    );
+  }
+
   const renderInline = (text: string): React.ReactNode => {
     // Split by bold (**text**), italic (*text*), code (`code`), and link ([title](url))
     const tokens: React.ReactNode[] = [];
@@ -106,16 +130,17 @@ export const RichContent = ({
     }
   };
 
-  lines.forEach((line, index) => {
-    const trimmed = line.trim();
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
 
-    // Code Block Delimiter
-    if (trimmed.startsWith('```')) {
+    // Code block detection
+    if (line.trim().startsWith('```')) {
+      flushList();
       if (inCodeBlock) {
         elements.push(
           <pre
-            key={`code-${elements.length}`}
-            className="my-4 overflow-x-auto rounded-lg bg-canvas p-4 font-mono text-xs text-primary border border-theme leading-relaxed"
+            key={`code-${i}`}
+            className="my-3 overflow-x-auto rounded-lg border border-theme bg-canvas p-4 font-mono text-xs text-primary shadow-2xs leading-relaxed"
           >
             <code>{codeLines.join('\n')}</code>
           </pre>
@@ -123,123 +148,98 @@ export const RichContent = ({
         codeLines = [];
         inCodeBlock = false;
       } else {
-        flushList();
         inCodeBlock = true;
       }
-      return;
+      continue;
     }
 
     if (inCodeBlock) {
       codeLines.push(line);
-      return;
+      continue;
     }
 
-    // Headings
-    if (trimmed.startsWith('### ')) {
+    // Markdown Image tag: ![alt](url)
+    const imageMatch = line.trim().match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (imageMatch) {
       flushList();
+      const altText = imageMatch[1];
+      const imageUrl = imageMatch[2];
       elements.push(
-        <h3 key={`h3-${index}`} className="mt-6 mb-2 text-base sm:text-lg font-bold text-primary">
-          {renderInline(trimmed.replace(/^###\s+/, ''))}
-        </h3>
-      );
-      return;
-    }
-
-    if (trimmed.startsWith('## ')) {
-      flushList();
-      elements.push(
-        <h2 key={`h2-${index}`} className="mt-8 mb-3 text-lg sm:text-xl font-bold text-primary tracking-tight">
-          {renderInline(trimmed.replace(/^##\s+/, ''))}
-        </h2>
-      );
-      return;
-    }
-
-    if (trimmed.startsWith('# ')) {
-      flushList();
-      elements.push(
-        <h1 key={`h1-${index}`} className="mt-8 mb-4 text-xl sm:text-2xl font-extrabold text-primary tracking-tight">
-          {renderInline(trimmed.replace(/^#\s+/, ''))}
-        </h1>
-      );
-      return;
-    }
-
-    // Blockquote
-    if (trimmed.startsWith('> ')) {
-      flushList();
-      elements.push(
-        <blockquote
-          key={`quote-${index}`}
-          className="my-3 border-l-4 border-brand-border bg-brand-subtle/50 px-4 py-2 text-sm italic text-secondary rounded-r-md"
-        >
-          {renderInline(trimmed.replace(/^>\s+/, ''))}
-        </blockquote>
-      );
-      return;
-    }
-
-    // Unordered list
-    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-      if (isNumberedList) flushList();
-      isNumberedList = false;
-      listItems.push(trimmed.replace(/^[-*]\s+/, ''));
-      return;
-    }
-
-    // Numbered list
-    const numMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
-    if (numMatch) {
-      if (!isNumberedList) flushList();
-      isNumberedList = true;
-      listItems.push(numMatch[2]);
-      return;
-    }
-
-    // Embedded image: ![alt](url)
-    const imgMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
-    if (imgMatch) {
-      flushList();
-      const alt = imgMatch[1] || 'Embedded image';
-      const src = imgMatch[2];
-      elements.push(
-        <figure key={`img-${index}`} className="my-4 overflow-hidden rounded-xl border border-theme bg-canvas p-1 shadow-xs">
+        <figure key={`img-${i}`} className="my-4 overflow-hidden rounded-xl border border-theme shadow-xs bg-canvas/40">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={alt} className="w-full max-h-[500px] rounded-lg object-contain bg-black/20" />
-          {alt && alt !== 'Embedded image' && (
-            <figcaption className="p-2 text-center text-xs text-muted font-medium">{alt}</figcaption>
+          <img src={imageUrl} alt={altText || 'Lesson image'} className="w-full max-h-[500px] object-cover" />
+          {altText && (
+            <figcaption className="p-2 text-center text-xs text-muted border-t border-subtle bg-surface">
+              {altText}
+            </figcaption>
           )}
         </figure>
       );
-      return;
+      continue;
     }
 
-    // Regular paragraph or empty line
+    // Numbered list: 1. Item
+    const numListMatch = line.match(/^(\d+)\.\s+(.*)/);
+    if (numListMatch) {
+      if (!isNumberedList && listItems.length > 0) {
+        flushList();
+      }
+      isNumberedList = true;
+      listItems.push(numListMatch[2]);
+      continue;
+    }
+
+    // Bullet list: - Item or * Item
+    if (line.startsWith('- ') || line.startsWith('* ')) {
+      if (isNumberedList && listItems.length > 0) {
+        flushList();
+      }
+      isNumberedList = false;
+      listItems.push(line.slice(2));
+      continue;
+    }
+
+    // End of list
     flushList();
 
-    if (trimmed === '') {
-      return;
+    // Headers
+    if (line.startsWith('# ')) {
+      elements.push(
+        <h1 key={`h1-${i}`} className="mt-6 mb-3 text-2xl font-extrabold text-primary tracking-tight">
+          {renderInline(line.slice(2))}
+        </h1>
+      );
+    } else if (line.startsWith('## ')) {
+      elements.push(
+        <h2 key={`h2-${i}`} className="mt-5 mb-2.5 text-xl font-bold text-primary tracking-tight">
+          {renderInline(line.slice(3))}
+        </h2>
+      );
+    } else if (line.startsWith('### ')) {
+      elements.push(
+        <h3 key={`h3-${i}`} className="mt-4 mb-2 text-base font-bold text-primary">
+          {renderInline(line.slice(4))}
+        </h3>
+      );
+    } else if (line.startsWith('> ')) {
+      elements.push(
+        <blockquote
+          key={`quote-${i}`}
+          className="my-3 border-l-4 border-brand-border bg-brand-subtle/50 px-4 py-2 text-xs sm:text-sm italic text-secondary rounded-r-lg"
+        >
+          {renderInline(line.slice(2))}
+        </blockquote>
+      );
+    } else if (line.trim()) {
+      elements.push(
+        <p key={`p-${i}`} className="my-2 text-xs sm:text-sm text-secondary leading-relaxed">
+          {renderInline(line)}
+        </p>
+      );
     }
-
-    elements.push(
-      <p key={`p-${index}`} className="my-2.5 leading-relaxed text-secondary text-sm sm:text-base">
-        {renderInline(line)}
-      </p>
-    );
-  });
+  }
 
   flushList();
 
-  if (inCodeBlock && codeLines.length > 0) {
-    elements.push(
-      <pre
-        key={`code-end`}
-        className="my-4 overflow-x-auto rounded-lg bg-canvas p-4 font-mono text-xs text-primary border border-theme leading-relaxed"
-      >
-        <code>{codeLines.join('\n')}</code>
-      </pre>
-    );
-  }
-
-  return <div className={`rich-content space-y-1 ${className}`}>{elements}</div>;
+  return <div className={`space-y-1 ${className}`}>{elements}</div>;
 };
