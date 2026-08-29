@@ -17,6 +17,8 @@ import {
   RefreshCw,
   AlertCircle,
   FolderOpen,
+  CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react';
 import { resolveImageUrl } from '@/components/course-cover';
 
@@ -148,6 +150,8 @@ export const MediaLibraryModal = ({
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [deletingId, setDeletingId] = useState<string | number | null>(null);
+  const [assetToDelete, setAssetToDelete] = useState<MediaAsset | null>(null);
+  const [sweetAlertToast, setSweetAlertToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -171,12 +175,24 @@ export const MediaLibraryModal = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
-        onClose();
+        if (assetToDelete) {
+          setAssetToDelete(null);
+        } else {
+          onClose();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, assetToDelete, onClose]);
+
+  // Auto-dismiss Sweet Alert Toast after 3.5 seconds
+  useEffect(() => {
+    if (sweetAlertToast) {
+      const timer = setTimeout(() => setSweetAlertToast(null), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [sweetAlertToast]);
 
   // Fetch uploaded assets from Strapi / Railway Media Library
   const fetchUploadedAssets = async () => {
@@ -195,7 +211,7 @@ export const MediaLibraryModal = ({
       if (res.ok) {
         const data = await res.json();
         const files: Array<Record<string, unknown>> = Array.isArray(data) ? data : data?.data ?? [];
-        
+
         const mapped: MediaAsset[] = files
           .filter((f) => {
             const mime = typeof f.mime === 'string' ? f.mime : '';
@@ -261,6 +277,7 @@ export const MediaLibraryModal = ({
           const finalUrl = uploadedUrl.startsWith('http') ? uploadedUrl : `${strapiBase}${uploadedUrl}`;
           setSelectedUrl(finalUrl);
           setUploadSuccess(true);
+          setSweetAlertToast({ message: 'Image successfully uploaded to Railway Storage!', type: 'success' });
           await fetchUploadedAssets();
           setActiveTab('uploads');
           return;
@@ -280,6 +297,7 @@ export const MediaLibraryModal = ({
         if (data.url) {
           setSelectedUrl(data.url);
           setUploadSuccess(true);
+          setSweetAlertToast({ message: 'Image uploaded to local storage successfully!', type: 'success' });
           setActiveTab('uploads');
           return;
         }
@@ -291,34 +309,45 @@ export const MediaLibraryModal = ({
     }
   };
 
-  // Delete image permanently from Strapi / Railway Media Library
-  const handleDeleteAsset = async (assetId: string | number, e: React.MouseEvent) => {
-    e.stopPropagation();
+  // Perform permanent deletion from Railway Cloud Storage
+  const handleConfirmDelete = async () => {
+    if (!assetToDelete) return;
 
-    const confirmed = window.confirm('Are you sure you want to delete this image permanently from Railway Storage?');
-    if (!confirmed) return;
-
-    setDeletingId(assetId);
+    setDeletingId(assetToDelete.id);
     try {
       const rawHost = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
       const strapiBase = rawHost.replace(/\/api\/?$/, '').replace(/\/+$/, '');
       const token = typeof window !== 'undefined' ? localStorage.getItem('lms.jwt') || localStorage.getItem('token') : null;
 
-      const res = await fetch(`${strapiBase}/api/upload/files/${assetId}`, {
+      const res = await fetch(`${strapiBase}/api/upload/files/${assetToDelete.id}`, {
         method: 'DELETE',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       if (res.ok) {
-        setUploadedFiles((prev) => prev.filter((item) => item.id !== assetId));
-        if (uploadedFiles.find((f) => f.id === assetId)?.url === selectedUrl) {
+        setUploadedFiles((prev) => prev.filter((item) => item.id !== assetToDelete.id));
+        if (selectedUrl === assetToDelete.url) {
           setSelectedUrl('');
         }
+        setSweetAlertToast({
+          message: `"${assetToDelete.name}" was permanently deleted from Railway!`,
+          type: 'success',
+        });
+      } else {
+        setSweetAlertToast({
+          message: 'Could not delete file from server. Please try again.',
+          type: 'error',
+        });
       }
     } catch (err) {
       console.error('Failed to delete file from Railway', err);
+      setSweetAlertToast({
+        message: 'Network error deleting file. Please try again.',
+        type: 'error',
+      });
     } finally {
       setDeletingId(null);
+      setAssetToDelete(null);
     }
   };
 
@@ -368,6 +397,20 @@ export const MediaLibraryModal = ({
       {/* Modal Container */}
       <div className="relative flex flex-col w-full max-w-5xl h-[88vh] rounded-2xl border border-theme bg-surface shadow-2xl overflow-hidden text-primary animate-in zoom-in-95 duration-200">
         
+        {/* Floating Sweet Alert Toast Notification */}
+        {sweetAlertToast && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 rounded-xl border border-theme bg-surface/95 backdrop-blur-md px-4 py-2.5 shadow-xl text-xs font-bold animate-in slide-in-from-top-3 duration-200">
+            {sweetAlertToast.type === 'success' ? (
+              <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+            ) : (
+              <AlertCircle className="size-4 text-rose-400 shrink-0" />
+            )}
+            <span className={sweetAlertToast.type === 'success' ? 'text-emerald-400' : 'text-rose-400'}>
+              {sweetAlertToast.message}
+            </span>
+          </div>
+        )}
+
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-subtle bg-elevated/40 shrink-0">
           <div className="flex items-center gap-3">
@@ -499,7 +542,7 @@ export const MediaLibraryModal = ({
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-primary text-xs"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-primary text-xs cursor-pointer"
                 >
                   ✕
                 </button>
@@ -585,20 +628,19 @@ export const MediaLibraryModal = ({
                           </span>
                         )}
 
-                        {/* Delete Button (Only for uploaded cloud assets) */}
+                        {/* Sweet Alert Delete Trigger Button (Only for uploaded cloud assets) */}
                         {item.isCustom && (
                           <button
                             type="button"
-                            onClick={(e) => handleDeleteAsset(item.id, e)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAssetToDelete(item);
+                            }}
                             disabled={isDeleting}
                             className="absolute top-2 left-2 flex size-7 items-center justify-center rounded-lg bg-black/70 hover:bg-rose-600 text-white/80 hover:text-white transition-all opacity-0 group-hover:opacity-100 cursor-pointer shadow-md"
-                            title="Delete permanently from Railway"
+                            title="Delete image from Railway"
                           >
-                            {isDeleting ? (
-                              <RefreshCw className="size-3.5 animate-spin text-white" />
-                            ) : (
-                              <Trash2 className="size-3.5" />
-                            )}
+                            <Trash2 className="size-3.5" />
                           </button>
                         )}
                       </div>
@@ -771,6 +813,77 @@ export const MediaLibraryModal = ({
             </button>
           </div>
         </div>
+
+        {/* 🌟 In-Modal Sweet Alert Delete Confirmation Dialog 🌟 */}
+        {assetToDelete && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in duration-150">
+            <div className="relative w-full max-w-sm rounded-2xl border border-theme bg-surface p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 text-center">
+              
+              {/* Alert Icon */}
+              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/25 shadow-md">
+                <Trash2 className="size-7" />
+              </div>
+
+              {/* Title & Warning Text */}
+              <div className="space-y-1.5">
+                <h4 className="text-base font-bold text-primary">Delete Cloud Asset?</h4>
+                <p className="text-xs text-muted leading-relaxed">
+                  Are you sure you want to permanently delete this image from Railway Cloud Storage?
+                </p>
+              </div>
+
+              {/* Image Preview & Name */}
+              <div className="flex items-center gap-3 p-2.5 rounded-xl border border-theme bg-canvas text-left">
+                <div className="size-12 rounded-lg overflow-hidden border border-theme shrink-0 bg-black/40">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={resolveImageUrl(assetToDelete.url)}
+                    alt="To delete"
+                    className="size-full object-cover"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-primary truncate" title={assetToDelete.name}>
+                    {assetToDelete.name}
+                  </p>
+                  <p className="text-[10px] text-muted">{assetToDelete.size || 'Railway Asset'}</p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setAssetToDelete(null)}
+                  disabled={Boolean(deletingId)}
+                  className="flex-1 rounded-xl border border-theme bg-canvas hover:bg-elevated text-secondary hover:text-primary py-2.5 text-xs font-bold transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleConfirmDelete}
+                  disabled={Boolean(deletingId)}
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white py-2.5 text-xs font-bold shadow-md shadow-rose-600/25 transition cursor-pointer"
+                >
+                  {deletingId ? (
+                    <>
+                      <RefreshCw className="size-3.5 animate-spin" />
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="size-3.5" />
+                      <span>Yes, Delete</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
