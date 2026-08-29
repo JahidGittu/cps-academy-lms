@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   HelpCircle,
   Plus,
@@ -10,6 +11,10 @@ import {
   AlertCircle,
   FileQuestion,
   RefreshCw,
+  Sparkles,
+  Rocket,
+  ArrowRight,
+  Eye,
 } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
@@ -33,6 +38,7 @@ export const QuizPanel = ({
   course: Course;
   onSaved?: () => Promise<void>;
 }) => {
+  const router = useRouter();
   const quizDocId = course.quiz?.documentId;
   const quizData = useApi<Single<Quiz>>(
     quizDocId ? `/quizzes/${quizDocId}?populate=questions` : null
@@ -41,10 +47,12 @@ export const QuizPanel = ({
   const [title, setTitle] = useState('');
   const [questions, setQuestions] = useState<DraftQuestion[]>([blankQuestion()]);
   const [busy, setBusy] = useState(false);
+  const [publishBusy, setPublishBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [error, setError] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'unsaved' | 'saving' | 'saved'>('idle');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [publishedSuccess, setPublishedSuccess] = useState(false);
 
   const lastSavedRef = useRef<{ title: string; questions: DraftQuestion[] }>({
     title: '',
@@ -130,7 +138,7 @@ export const QuizPanel = ({
         if (course.quiz?.documentId) {
           await api.put(`/quizzes/${course.quiz.documentId}`, { data });
         } else {
-          const res = await api.post<Single<Quiz>>('/quizzes', { data });
+          await api.post<Single<Quiz>>('/quizzes', { data });
           if (onSaved) await onSaved();
         }
 
@@ -197,53 +205,54 @@ export const QuizPanel = ({
     );
   };
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-
+  // Save changes handler
+  const saveQuizData = async () => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
 
     if (!questions.length) {
-      setError('Quiz assessment must have at least one question.');
-      return;
+      throw new Error('Quiz assessment must have at least one question.');
     }
 
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (!q.text.trim()) {
-        setError(`Question ${i + 1} text is empty. Please enter question text.`);
-        return;
+        throw new Error(`Question ${i + 1} text is empty. Please enter question text.`);
       }
       const validOptions = q.options.filter((o) => o.trim().length > 0);
       if (validOptions.length < 2) {
-        setError(`Question ${i + 1} must have at least 2 non-empty options.`);
-        return;
+        throw new Error(`Question ${i + 1} must have at least 2 non-empty options.`);
       }
     }
 
+    const data = {
+      title: title.trim() || `${course.title} Assessment`,
+      questions,
+      course: course.documentId,
+    };
+
+    if (course.quiz?.documentId) {
+      await api.put(`/quizzes/${course.quiz.documentId}`, { data });
+    } else {
+      await api.post('/quizzes', { data });
+      if (onSaved) await onSaved();
+    }
+
+    lastSavedRef.current = {
+      title: title.trim(),
+      questions: JSON.parse(JSON.stringify(questions)),
+    };
+  };
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
     setBusy(true);
     setError('');
     setSaveStatus('saving');
 
     try {
-      const data = {
-        title: title.trim() || `${course.title} Assessment`,
-        questions,
-        course: course.documentId,
-      };
-
-      if (course.quiz?.documentId) {
-        await api.put(`/quizzes/${course.quiz.documentId}`, { data });
-      } else {
-        await api.post('/quizzes', { data });
-        if (onSaved) await onSaved();
-      }
-
-      lastSavedRef.current = {
-        title: title.trim(),
-        questions: JSON.parse(JSON.stringify(questions)),
-      };
+      await saveQuizData();
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2500);
     } catch (caught) {
@@ -251,6 +260,25 @@ export const QuizPanel = ({
       setSaveStatus('idle');
     } finally {
       setBusy(false);
+    }
+  };
+
+  // Final Publish Course & View Live Flow
+  const handlePublishCourse = async () => {
+    setPublishBusy(true);
+    setError('');
+
+    try {
+      if (isDirty) {
+        await saveQuizData();
+      }
+      setPublishedSuccess(true);
+      setTimeout(() => {
+        router.push(`/courses/${course.documentId}`);
+      }, 1200);
+    } catch (caught) {
+      setError(errorMessage(caught));
+      setPublishBusy(false);
     }
   };
 
@@ -278,6 +306,16 @@ export const QuizPanel = ({
 
   return (
     <form onSubmit={submit} className="space-y-6">
+      {/* Celebration Banner when Published */}
+      {publishedSuccess && (
+        <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/15 p-4 text-emerald-400 flex items-center gap-3 shadow-md animate-in fade-in zoom-in-95 duration-200">
+          <Sparkles className="size-6 text-emerald-400 shrink-0" />
+          <div className="text-xs sm:text-sm font-bold">
+            🎉 Course Successfully Published & Live in Catalogue! Redirecting to student view...
+          </div>
+        </div>
+      )}
+
       {/* Quiz Studio Header Strip with Live Auto-Save Status */}
       <div className="rounded-xl border border-theme bg-surface p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -347,13 +385,15 @@ export const QuizPanel = ({
             </button>
           )}
 
-          <Button
-            type="submit"
-            disabled={busy || (!isDirty && saveStatus !== 'saving')}
-            className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-2.5 shadow-md shadow-sky-600/25 hover:shadow-sky-500/35 transition-all"
+          <button
+            type="button"
+            onClick={handlePublishCourse}
+            disabled={publishBusy}
+            className="flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 text-xs shadow-md shadow-emerald-600/25 hover:shadow-emerald-500/35 transition-all cursor-pointer"
           >
-            {busy ? 'Saving...' : course.quiz ? 'Save changes' : 'Save & Publish Quiz'}
-          </Button>
+            <Rocket className="size-4" />
+            <span>{publishBusy ? 'Publishing...' : 'Publish Course'}</span>
+          </button>
         </div>
       </div>
 
@@ -517,7 +557,7 @@ export const QuizPanel = ({
         </button>
       </div>
 
-      {/* Bottom Save & Finish Action */}
+      {/* Bottom Save & Final Publish Action */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-subtle pt-5">
         <div className="flex items-center gap-3">
           <Button
@@ -525,7 +565,7 @@ export const QuizPanel = ({
             disabled={busy || (!isDirty && saveStatus !== 'saving')}
             className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/25 hover:shadow-sky-500/35"
           >
-            {busy ? 'Saving...' : course.quiz ? 'Save changes' : 'Save & Publish Quiz'}
+            {busy ? 'Saving...' : course.quiz ? 'Save changes' : 'Save Quiz Draft'}
           </Button>
 
           {!isDirty && (
@@ -535,15 +575,16 @@ export const QuizPanel = ({
           )}
         </div>
 
-        {course.documentId && (
-          <a
-            href={`/courses/${course.documentId}`}
-            className="flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 text-xs shadow-md shadow-emerald-600/20 hover:shadow-emerald-500/30 transition-all"
-          >
-            <span>Finish & View Live Course</span>
-            <CheckCircle2 className="size-4" />
-          </a>
-        )}
+        {/* Final Course Publish & Live View Button */}
+        <button
+          type="button"
+          onClick={handlePublishCourse}
+          disabled={publishBusy}
+          className="flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 text-xs sm:text-sm shadow-lg shadow-emerald-600/25 hover:shadow-emerald-500/35 transition-all cursor-pointer"
+        >
+          <Rocket className="size-4" />
+          <span>{publishBusy ? 'Publishing...' : '🚀 Save & Publish Course to Catalogue'}</span>
+        </button>
       </div>
 
       {/* Delete Quiz Confirmation Modal */}
