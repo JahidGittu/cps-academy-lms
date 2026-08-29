@@ -110,29 +110,30 @@ export const LessonManager = ({
     onChanged();
   };
 
-  // Truly instant optimistic reorder with zero-buffering background sync
+  // Truly instant optimistic reorder with zero-buffering background auto-save
   const move = async (index: number, delta: number) => {
-    const moving = rows[index];
-    const other = rows[index + delta];
+    if (index + delta < 0 || index + delta >= rows.length) return;
 
-    if (!moving || !other) return;
-
-    // 1. Instant local swap and order assignment
+    // 1. Instant local array splice and clean sequential order (1, 2, 3...)
     const reordered = [...rows];
-    const newOrderMoving = other.order;
-    const newOrderOther = moving.order;
+    const [movedLesson] = reordered.splice(index, 1);
+    reordered.splice(index + delta, 0, movedLesson);
 
-    reordered[index] = { ...other, order: newOrderOther };
-    reordered[index + delta] = { ...moving, order: newOrderMoving };
+    const indexedLessons = reordered.map((lesson, idx) => ({
+      ...lesson,
+      order: idx + 1,
+    }));
 
-    setLocalLessons(reordered);
+    setLocalLessons(indexedLessons);
 
-    // 2. Perform database order update quietly in background without full page reloads
+    // 2. Auto-save the updated orders directly to Strapi database in background
     try {
-      await Promise.all([
-        api.put(`/lessons/${moving.documentId}`, { data: { order: newOrderMoving } }),
-        api.put(`/lessons/${other.documentId}`, { data: { order: newOrderOther } }),
-      ]);
+      await Promise.all(
+        indexedLessons.map((l) =>
+          api.put(`/lessons/${l.documentId}`, { data: { order: l.order } })
+        )
+      );
+      onChanged();
     } catch (caught) {
       setActionError(errorMessage(caught));
       await lessons.reload();
