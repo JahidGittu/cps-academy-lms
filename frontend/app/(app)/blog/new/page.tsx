@@ -15,7 +15,6 @@ const Create = () => {
   return (
     <Card>
       <PostForm
-        label="Publish Article"
         save={async (values) => {
           // The byline is not in the body: the controller takes the author from the session
           await api.post<Single<BlogPost>>('/blog-posts', { data: values });

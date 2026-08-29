@@ -2,7 +2,18 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
-import { Newspaper, Globe, Lock, CheckCircle2, RefreshCw } from 'lucide-react';
+import Link from 'next/link';
+import {
+  Newspaper,
+  Globe,
+  Lock,
+  CheckCircle2,
+  RefreshCw,
+  Eye,
+  ExternalLink,
+  Save,
+  Send,
+} from 'lucide-react';
 
 import { errorMessage } from '@/lib/api';
 import type { BlogPost } from '@/lib/types';
@@ -20,12 +31,12 @@ export type PostValues = {
 export const PostForm = ({
   post,
   save,
-  label,
 }: {
   post?: BlogPost;
   save: (values: PostValues) => Promise<void>;
-  label: string;
 }) => {
+  const isEditing = Boolean(post);
+
   const [values, setValues] = useState<PostValues>({
     title: post?.title ?? '',
     body: post?.body ?? '',
@@ -34,6 +45,7 @@ export const PostForm = ({
   });
 
   const [busy, setBusy] = useState(false);
+  const [submittingAction, setSubmittingAction] = useState<'draft' | 'published' | 'save' | null>(null);
   const [error, setError] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'unsaved' | 'saving' | 'saved'>('idle');
 
@@ -58,7 +70,7 @@ export const PostForm = ({
       lastSavedRef.current = { ...nextValues };
       setSaveStatus('idle');
     }
-  }, [post?.documentId, post?.createdAt]);
+  }, [post?.documentId, post?.createdAt, post?.publishState]);
 
   const set =
     (field: keyof PostValues) =>
@@ -75,7 +87,7 @@ export const PostForm = ({
 
   // Debounced auto-save for existing articles (1500ms after user pauses typing)
   useEffect(() => {
-    if (!post || !isDirty || !values.title.trim()) {
+    if (!isEditing || !isDirty || !values.title.trim()) {
       if (!isDirty && saveStatus === 'unsaved') {
         setSaveStatus('idle');
       }
@@ -108,22 +120,33 @@ export const PostForm = ({
         clearTimeout(debounceTimer.current);
       }
     };
-  }, [post, values, isDirty, save]);
+  }, [isEditing, values, isDirty, save]);
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-
+  // Unified submit handler supporting distinct Draft and Publish triggers
+  const handleSaveAction = async (targetState?: 'draft' | 'published') => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
 
+    if (!values.title.trim()) {
+      setError('Article title is required.');
+      return;
+    }
+
+    const payload: PostValues = {
+      ...values,
+      publishState: targetState ?? values.publishState,
+    };
+
     setBusy(true);
+    setSubmittingAction(targetState ?? (isEditing ? 'save' : 'published'));
     setError('');
     setSaveStatus('saving');
 
     try {
-      await save(values);
-      lastSavedRef.current = { ...values };
+      await save(payload);
+      setValues(payload);
+      lastSavedRef.current = { ...payload };
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2500);
     } catch (caught) {
@@ -131,7 +154,13 @@ export const PostForm = ({
       setSaveStatus('idle');
     } finally {
       setBusy(false);
+      setSubmittingAction(null);
     }
+  };
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    void handleSaveAction();
   };
 
   return (
@@ -141,7 +170,7 @@ export const PostForm = ({
         <div>
           <h2 className="text-base sm:text-lg font-bold text-primary flex items-center gap-2">
             <Newspaper className="size-5 text-sky-400" />
-            <span>{post ? 'Edit Technical Article' : 'Write & Publish New Article'}</span>
+            <span>{isEditing ? 'Edit Technical Article' : 'Write New Article'}</span>
           </h2>
           <p className="text-xs text-muted mt-0.5">
             Craft in-depth technical blogs, release engineering notes, and tutorials with rich Google Docs formatting.
@@ -150,7 +179,7 @@ export const PostForm = ({
 
         <div className="flex items-center gap-3">
           {/* Live Auto-Save Status */}
-          {post && (
+          {isEditing && (
             <div className="text-xs font-semibold">
               {saveStatus === 'saving' && (
                 <span className="inline-flex items-center gap-1.5 text-sky-400 animate-pulse">
@@ -186,7 +215,7 @@ export const PostForm = ({
             }`}
           >
             {values.publishState === 'published' ? <Globe className="size-3.5" /> : <Lock className="size-3.5" />}
-            <span>{values.publishState === 'published' ? 'Public Article' : 'Draft Mode'}</span>
+            <span>{values.publishState === 'published' ? 'Published' : 'Draft'}</span>
           </span>
         </div>
       </div>
@@ -214,45 +243,61 @@ export const PostForm = ({
 
         {/* Right Column: Publication State & Cover Image (4 cols) */}
         <div className="space-y-5 lg:col-span-4">
-          {/* Publication State Selector */}
-          <div className="rounded-xl border border-theme bg-surface p-4 shadow-2xs space-y-3">
-            <label className="block text-xs font-bold text-primary">
-              Publication Visibility
-            </label>
+          {/* Publication State Box (Only when editing) */}
+          {isEditing && (
+            <div className="rounded-xl border border-theme bg-surface p-4 shadow-2xs space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-primary">
+                  Publication Status
+                </label>
+                {values.publishState === 'published' && post && (
+                  <Link
+                    href={`/blog/${post.documentId}`}
+                    target="_blank"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-400 hover:text-sky-300"
+                  >
+                    <span>View Live</span>
+                    <ExternalLink className="size-3" />
+                  </Link>
+                )}
+              </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setValues((prev) => ({ ...prev, publishState: 'draft' }))}
-                className={`flex flex-col items-center justify-center p-3 rounded-lg border text-xs font-bold transition cursor-pointer ${
-                  values.publishState === 'draft'
-                    ? 'border-amber-500/50 bg-amber-500/15 text-amber-400 shadow-2xs'
-                    : 'border-theme bg-canvas text-muted hover:bg-elevated hover:text-primary'
-                }`}
-              >
-                <Lock className="size-4 mb-1" />
-                <span>Draft</span>
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleSaveAction('draft')}
+                  disabled={busy}
+                  className={`flex flex-col items-center justify-center p-3 rounded-lg border text-xs font-bold transition cursor-pointer ${
+                    values.publishState === 'draft'
+                      ? 'border-amber-500/50 bg-amber-500/15 text-amber-400 shadow-2xs'
+                      : 'border-theme bg-canvas text-muted hover:bg-elevated hover:text-primary'
+                  }`}
+                >
+                  <Lock className="size-4 mb-1" />
+                  <span>Draft</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setValues((prev) => ({ ...prev, publishState: 'published' }))}
-                className={`flex flex-col items-center justify-center p-3 rounded-lg border text-xs font-bold transition cursor-pointer ${
-                  values.publishState === 'published'
-                    ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-400 shadow-2xs'
-                    : 'border-theme bg-canvas text-muted hover:bg-elevated hover:text-primary'
-                }`}
-              >
-                <Globe className="size-4 mb-1" />
-                <span>Published</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => handleSaveAction('published')}
+                  disabled={busy}
+                  className={`flex flex-col items-center justify-center p-3 rounded-lg border text-xs font-bold transition cursor-pointer ${
+                    values.publishState === 'published'
+                      ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-400 shadow-2xs'
+                      : 'border-theme bg-canvas text-muted hover:bg-elevated hover:text-primary'
+                  }`}
+                >
+                  <Globe className="size-4 mb-1" />
+                  <span>Published</span>
+                </button>
+              </div>
+              <p className="text-[11px] text-muted">
+                {values.publishState === 'published'
+                  ? 'Visible on the public blog showcase for all visitors.'
+                  : 'Visible only to instructors, content managers, and admins.'}
+              </p>
             </div>
-            <p className="text-[11px] text-muted">
-              {values.publishState === 'published'
-                ? 'Visible on the public blog showcase for all visitors.'
-                : 'Visible only to instructors, content managers, and admins.'}
-            </p>
-          </div>
+          )}
 
           {/* Dual Upload & URL Image Picker */}
           <ImagePicker
@@ -265,20 +310,78 @@ export const PostForm = ({
 
       <Alert>{error}</Alert>
 
-      <div className="flex items-center gap-3 border-t border-subtle pt-4">
-        <Button
-          type="submit"
-          disabled={busy || (post && !isDirty && saveStatus !== 'saving')}
-          className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/20 hover:shadow-sky-500/30"
-        >
-          {busy ? 'Saving Article...' : post ? 'Save changes' : label}
-        </Button>
+      {/* Bottom Actions Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-subtle pt-4">
+        {/* If creating a new post: Offer distinct 'Save as Draft' vs 'Publish Article' */}
+        {!isEditing ? (
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => handleSaveAction('draft')}
+              className="flex items-center justify-center gap-2 rounded-xl border border-theme bg-surface hover:bg-elevated text-secondary hover:text-primary px-5 py-2.5 text-xs sm:text-sm font-bold shadow-xs transition cursor-pointer"
+            >
+              <Save className="size-4 text-muted" />
+              <span>{submittingAction === 'draft' ? 'Saving Draft...' : 'Save as Draft'}</span>
+            </button>
 
-        {post && !isDirty && (
-          <span className="text-xs text-muted font-medium">
-            All changes synced
-          </span>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => handleSaveAction('published')}
+              className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/25 transition cursor-pointer"
+            >
+              <Send className="size-4" />
+              <span>{submittingAction === 'published' ? 'Publishing...' : 'Publish Article'}</span>
+            </button>
+          </div>
+        ) : (
+          /* If editing existing post: Provide direct Save & Publish/Unpublish toggle */
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              type="submit"
+              disabled={busy || (!isDirty && saveStatus !== 'saving')}
+              className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/20 hover:shadow-sky-500/30"
+            >
+              {busy ? 'Saving...' : 'Save changes'}
+            </Button>
+
+            {values.publishState === 'draft' ? (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => handleSaveAction('published')}
+                className="flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-bold shadow-sm shadow-emerald-600/20 transition cursor-pointer"
+              >
+                <Globe className="size-3.5" />
+                <span>Publish Now</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => handleSaveAction('draft')}
+                className="flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-4 py-2 text-xs font-bold transition cursor-pointer"
+              >
+                <Lock className="size-3.5" />
+                <span>Move to Draft</span>
+              </button>
+            )}
+
+            {!isDirty && (
+              <span className="text-xs text-muted font-medium">
+                All changes synced
+              </span>
+            )}
+          </div>
         )}
+
+        <Link
+          href="/admin/blog-management"
+          className="text-xs text-muted hover:text-primary font-semibold transition"
+        >
+          Back to Blog Management
+        </Link>
       </div>
     </form>
   );

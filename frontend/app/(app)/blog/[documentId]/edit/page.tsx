@@ -34,7 +34,6 @@ const Edit = ({ documentId }: { documentId: string }) => {
       <Card>
         <PostForm
           post={detail}
-          label="Save changes"
           save={async (values) => {
             await api.put(`/blog-posts/${documentId}`, { data: values });
             await post.reload();
