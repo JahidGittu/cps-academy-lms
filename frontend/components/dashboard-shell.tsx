@@ -260,9 +260,6 @@ export const DashboardShell = ({
 
               {/* Role-Specific Workspace Navigation */}
               <nav className="space-y-1">
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-muted px-3 mb-2">
-                  Workspace Menu
-                </span>
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const active =
