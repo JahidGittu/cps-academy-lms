@@ -28,13 +28,41 @@ export const ImagePicker = ({
     }
   }, [value]);
 
-  // Upload file to local static storage endpoint for clean short URL (<= 255 chars)
+  // Upload file to Strapi / Railway backend storage (or local storage fallback)
   const processFile = async (file: File) => {
     if (!file.type.startsWith('image/')) return;
 
     setLoading(true);
     setImageError(false);
 
+    // 1. Primary Upload: Strapi / Railway Backend API
+    try {
+      const strapiBase = (process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337').replace(/\/api\/?$/, '');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const formData = new FormData();
+      formData.append('files', file);
+
+      const res = await fetch(`${strapiBase}/api/upload`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const uploaded = Array.isArray(data) ? data[0]?.url : data?.url;
+        if (uploaded) {
+          const finalUrl = uploaded.startsWith('http') ? uploaded : `${strapiBase}${uploaded}`;
+          onChange(finalUrl);
+          setLoading(false);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Strapi upload fallback to local API', err);
+    }
+
+    // 2. Secondary Fallback: Local Next.js upload endpoint
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -53,10 +81,10 @@ export const ImagePicker = ({
         }
       }
     } catch (err) {
-      console.warn('API upload fallback', err);
+      console.warn('Local API upload fallback', err);
     }
 
-    // Fallback if upload fails
+    // 3. Fallback: Base64 data URL
     const reader = new FileReader();
     reader.onload = (event) => {
       if (typeof event.target?.result === 'string') {
