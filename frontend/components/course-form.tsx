@@ -170,7 +170,6 @@ export const CourseForm = ({
         label="Course Thumbnail / Cover Image"
         value={values.coverImageUrl}
         onChange={(url) => setValues((prev) => ({ ...prev, coverImageUrl: url }))}
-        presets={COURSE_PRESETS}
       />
 
       <Alert>{error}</Alert>

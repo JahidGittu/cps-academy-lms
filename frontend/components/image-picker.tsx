@@ -1,25 +1,21 @@
+'use client';
+
 import { useState, useRef, useEffect } from 'react';
 import type { ChangeEvent, DragEvent } from 'react';
-import { Upload, Link as LinkIcon, Image as ImageIcon, X, Sparkles } from 'lucide-react';
+import { Upload, Link as LinkIcon, Image as ImageIcon, X } from 'lucide-react';
 import { FALLBACK_IMAGE } from '@/components/course-cover';
-
-interface Preset {
-  label: string;
-  url: string;
-}
 
 export const ImagePicker = ({
   label = 'Cover Image / Thumbnail',
   value,
   onChange,
-  presets = [],
 }: {
   label?: string;
   value: string;
   onChange: (url: string) => void;
-  presets?: Preset[];
+  presets?: unknown;
 }) => {
-  const [tab, setTab] = useState<'upload' | 'url'>('url');
+  const [tab, setTab] = useState<'upload' | 'url'>('upload');
   const [dragOver, setDragOver] = useState(false);
   const [loading, setLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -27,7 +23,7 @@ export const ImagePicker = ({
 
   useEffect(() => {
     setImageError(false);
-    if (value && !value.startsWith('data:')) {
+    if (value && !value.startsWith('/uploads/') && !value.startsWith('data:')) {
       setTab('url');
     }
   }, [value]);
@@ -152,51 +148,25 @@ export const ImagePicker = ({
           </div>
 
           <p className="text-sm font-bold text-primary">
-            {loading ? 'Processing image...' : 'Click to browse or drag & drop image'}
+            {loading ? 'Processing & saving image...' : 'Click to browse or drag & drop image'}
           </p>
           <p className="text-xs text-muted mt-0.5">
             PNG, JPG, JPEG or WebP from your computer
           </p>
         </div>
       ) : (
-        /* Direct URL Input & Presets */
-        <div className="space-y-2.5">
+        /* Direct URL Input (type="text" to prevent HTML5 native blocking) */
+        <div>
           <input
-            type="url"
+            type="text"
             value={value.startsWith('data:') ? '' : value}
             onChange={(e) => {
               setImageError(false);
               onChange(e.target.value);
             }}
-            placeholder="https://images.unsplash.com/photo-..."
+            placeholder="https://images.unsplash.com/photo-... or /uploads/..."
             className="w-full rounded-md border border-theme bg-surface px-3.5 py-2 text-xs sm:text-sm text-primary outline-none transition-all placeholder:text-muted focus:border-active focus:ring-2 focus:ring-brand-500/20 shadow-2xs"
           />
-
-          {presets.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
-              <span className="flex items-center gap-1 font-bold text-primary">
-                <Sparkles className="size-3 text-brand" />
-                <span>Presets:</span>
-              </span>
-              {presets.map((preset) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => {
-                    setImageError(false);
-                    onChange(preset.url);
-                  }}
-                  className={`rounded px-2 py-0.5 text-[11px] transition border cursor-pointer ${
-                    value === preset.url
-                      ? 'bg-brand-subtle text-brand border-brand-border font-bold shadow-2xs'
-                      : 'bg-surface text-secondary border-theme hover:bg-elevated hover:text-primary'
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       )}
 
@@ -241,7 +211,7 @@ export const ImagePicker = ({
             <div className="flex flex-col items-center justify-center p-6 text-center text-muted">
               <ImageIcon className="size-8 mb-1.5 opacity-40 text-muted" />
               <p className="text-xs font-medium">No cover image selected</p>
-              <p className="text-[11px] text-muted mt-0.5">Upload a file, click a preset, or paste a URL above to set thumbnail.</p>
+              <p className="text-[11px] text-muted mt-0.5">Upload a file or paste a URL above to set thumbnail.</p>
             </div>
           )}
         </div>

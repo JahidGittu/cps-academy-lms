@@ -84,7 +84,6 @@ export const PostForm = ({
         label="Article Cover Image / Thumbnail"
         value={values.coverImageUrl}
         onChange={(url) => setValues((prev) => ({ ...prev, coverImageUrl: url }))}
-        presets={BLOG_PRESETS}
       />
 
       <div>
