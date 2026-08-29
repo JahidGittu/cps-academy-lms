@@ -369,11 +369,19 @@ const BlogManagement = () => {
                               >
                                 {post.title}
                               </Link>
-                              {post.topic && (
-                                <span className="rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 text-[10px] font-bold shrink-0">
-                                  {post.topic}
-                                </span>
-                              )}
+                              {post.topic &&
+                                post.topic
+                                  .split(',')
+                                  .map((t) => t.trim())
+                                  .filter(Boolean)
+                                  .map((t) => (
+                                    <span
+                                      key={t}
+                                      className="rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 text-[10px] font-bold shrink-0"
+                                    >
+                                      {t}
+                                    </span>
+                                  ))}
                             </div>
                             <p className="text-xs text-muted truncate mt-0.5">
                               {excerpt(post.body, 90)}

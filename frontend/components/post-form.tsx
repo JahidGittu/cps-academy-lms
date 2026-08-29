@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import type { ChangeEvent, FormEvent } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import type { ChangeEvent, FormEvent, KeyboardEvent } from 'react';
 import Link from 'next/link';
 import {
   Newspaper,
@@ -13,6 +13,8 @@ import {
   Save,
   Send,
   Tag,
+  Plus,
+  X,
 } from 'lucide-react';
 
 import { errorMessage } from '@/lib/api';
@@ -29,7 +31,7 @@ export type PostValues = {
   publishState: 'draft' | 'published';
 };
 
-const PRESET_TOPICS = ['Architecture', 'Security', 'Tutorial', 'Database', 'DevOps'];
+const PRESET_TOPICS = ['Architecture', 'Security', 'Tutorial', 'Database', 'DevOps', 'Frontend', 'Backend'];
 
 export const PostForm = ({
   post,
@@ -48,6 +50,7 @@ export const PostForm = ({
     publishState: post?.publishState ?? 'draft',
   });
 
+  const [customTagInput, setCustomTagInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [submittingAction, setSubmittingAction] = useState<'draft' | 'published' | 'save' | null>(null);
   const [error, setError] = useState('');
@@ -77,6 +80,55 @@ export const PostForm = ({
       setSaveStatus('idle');
     }
   }, [post?.documentId, post?.createdAt, post?.publishState, post?.topic]);
+
+  // Parse active tags array from comma-separated string
+  const activeTags = useMemo(() => {
+    if (!values.topic) return [];
+    return values.topic
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
+  }, [values.topic]);
+
+  const toggleTag = (tag: string) => {
+    const trimmed = tag.trim();
+    if (!trimmed) return;
+
+    let nextTags: string[];
+    const exists = activeTags.some((t) => t.toLowerCase() === trimmed.toLowerCase());
+
+    if (exists) {
+      nextTags = activeTags.filter((t) => t.toLowerCase() !== trimmed.toLowerCase());
+    } else {
+      nextTags = [...activeTags, trimmed];
+    }
+
+    setValues((prev) => ({ ...prev, topic: nextTags.join(', ') }));
+  };
+
+  const addCustomTag = () => {
+    const trimmed = customTagInput.trim();
+    if (!trimmed) return;
+
+    const exists = activeTags.some((t) => t.toLowerCase() === trimmed.toLowerCase());
+    if (!exists) {
+      const nextTags = [...activeTags, trimmed];
+      setValues((prev) => ({ ...prev, topic: nextTags.join(', ') }));
+    }
+    setCustomTagInput('');
+  };
+
+  const handleCustomTagKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addCustomTag();
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    const nextTags = activeTags.filter((t) => t !== tagToRemove);
+    setValues((prev) => ({ ...prev, topic: nextTags.join(', ') }));
+  };
 
   const set =
     (field: keyof PostValues) =>
@@ -248,7 +300,7 @@ export const PostForm = ({
           />
         </div>
 
-        {/* Right Column: Publication State, Topic Selector & Cover Image (4 cols) */}
+        {/* Right Column: Publication State, Multi-Tag Selector & Cover Image (4 cols) */}
         <div className="space-y-5 lg:col-span-4">
           {/* Publication State Box (Only when editing) */}
           {isEditing && (
@@ -306,49 +358,83 @@ export const PostForm = ({
             </div>
           )}
 
-          {/* Topic & Tag Selector Card */}
+          {/* Multi-Tag & Category Selector Card */}
           <div className="rounded-xl border border-theme bg-surface p-4 shadow-2xs space-y-3">
             <div className="flex items-center justify-between">
               <label className="block text-xs font-bold text-primary flex items-center gap-1.5">
                 <Tag className="size-3.5 text-sky-400" />
-                <span>Topic Tag / Category</span>
+                <span>Article Tags ({activeTags.length})</span>
               </label>
-              {values.topic && (
-                <span className="text-[10px] font-bold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full">
-                  {values.topic}
-                </span>
-              )}
+              <span className="text-[10px] text-muted font-medium">Click to toggle multiple</span>
             </div>
 
-            {/* Quick Topic Badges */}
-            <div className="flex flex-wrap gap-1.5">
-              {PRESET_TOPICS.map((topic) => {
-                const isSelected = values.topic?.toLowerCase() === topic.toLowerCase();
-                return (
-                  <button
-                    key={topic}
-                    type="button"
-                    onClick={() => setValues((prev) => ({ ...prev, topic }))}
-                    className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
-                      isSelected
-                        ? 'bg-sky-600 dark:bg-sky-500 text-white shadow-xs border border-sky-600 dark:border-sky-500'
-                        : 'bg-canvas text-secondary border border-theme hover:bg-elevated hover:text-primary'
-                    }`}
+            {/* Selected Active Tag Pills */}
+            {activeTags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 p-2 rounded-lg bg-canvas border border-theme">
+                {activeTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 rounded-md bg-sky-500/15 text-sky-400 border border-sky-500/30 px-2 py-0.5 text-xs font-bold"
                   >
-                    {topic}
-                  </button>
-                );
-              })}
+                    <span>{tag}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag)}
+                      className="hover:text-red-400 cursor-pointer p-0.5"
+                      title={`Remove ${tag}`}
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Quick Multi-Select Topic Preset Badges */}
+            <div className="space-y-1.5">
+              <span className="block text-[11px] font-semibold text-muted">Popular Topics:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {PRESET_TOPICS.map((topic) => {
+                  const isSelected = activeTags.some((t) => t.toLowerCase() === topic.toLowerCase());
+                  return (
+                    <button
+                      key={topic}
+                      type="button"
+                      onClick={() => toggleTag(topic)}
+                      className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                        isSelected
+                          ? 'bg-sky-600 dark:bg-sky-500 text-white shadow-xs border border-sky-600 dark:border-sky-500'
+                          : 'bg-canvas text-secondary border border-theme hover:bg-elevated hover:text-primary'
+                      }`}
+                    >
+                      <span>{topic}</span>
+                      {isSelected ? <CheckCircle2 className="size-3" /> : <Plus className="size-3 text-muted" />}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Or type custom topic */}
-            <input
-              type="text"
-              value={values.topic}
-              onChange={(e) => setValues((prev) => ({ ...prev, topic: e.target.value }))}
-              placeholder="Or type custom topic (e.g. Microservices)"
-              className="w-full rounded-lg border border-theme bg-canvas px-3 py-1.5 text-xs text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
-            />
+            {/* Add Custom Tag Input with Enter / + Button */}
+            <div className="flex items-center gap-1.5 pt-1">
+              <input
+                type="text"
+                value={customTagInput}
+                onChange={(e) => setCustomTagInput(e.target.value)}
+                onKeyDown={handleCustomTagKeyDown}
+                placeholder="Add custom tag (press Enter)..."
+                className="w-full rounded-lg border border-theme bg-canvas px-3 py-1.5 text-xs text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
+              />
+              <button
+                type="button"
+                onClick={addCustomTag}
+                disabled={!customTagInput.trim()}
+                className="rounded-lg bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white p-1.5 text-xs font-bold shadow-xs transition cursor-pointer shrink-0"
+                title="Add tag"
+              >
+                <Plus className="size-4" />
+              </button>
+            </div>
           </div>
 
           {/* Dual Upload & URL Image Picker */}
