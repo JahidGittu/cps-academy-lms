@@ -1,46 +1,31 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { accessToken, strapiHost } from '@/lib/api';
+import { resolveImageUrl } from '@/components/course-cover';
+import { uploadImage } from '@/lib/upload';
 import type { MediaAsset } from './media-presets';
 
-function strapiBase() {
-  const url = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
-  return url.replace(/\/api\/?$/, '').replace(/\/+$/, '');
-}
-
-function getToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('lms.jwt') || localStorage.getItem('token') || null;
-}
-
 function authHeaders(): Record<string, string> {
-  const t = getToken();
+  const t = accessToken();
   return t ? { Authorization: `Bearer ${t}` } : {};
 }
 
-function resolveUrl(raw: string, base: string): string {
-  if (!raw) return '';
-  raw = raw.trim();
-  if (raw.startsWith('http') || raw.startsWith('//') || raw.startsWith('data:')) return raw;
-  return `${base}${raw.startsWith('/') ? raw : `/${raw}`}`;
-}
-
 async function fetchPlatformAssets(): Promise<MediaAsset[]> {
-  const base = strapiBase();
   const map = new Map<string, MediaAsset>();
 
-  // Strapi upload files
   try {
-    const res = await fetch(`${base}/api/upload/files?sort=createdAt:desc&pagination[pageSize]=200`, {
-      headers: authHeaders(),
-    });
+    const res = await fetch(
+      `${strapiHost}/api/upload/files?sort=createdAt:desc&pagination[pageSize]=200`,
+      { headers: authHeaders() }
+    );
     if (res.ok) {
       const data = await res.json();
       const files: Record<string, unknown>[] = Array.isArray(data) ? data : data?.data ?? [];
       for (const f of files) {
         const raw = String(f.url ?? '');
         if (!raw) continue;
-        const url = resolveUrl(raw, base);
+        const url = resolveImageUrl(raw);
         map.set(url, {
           id: (f.id as string | number) || String(f.documentId ?? Math.random()),
           name: String(f.name ?? 'Uploaded Image'),
@@ -54,13 +39,12 @@ async function fetchPlatformAssets(): Promise<MediaAsset[]> {
       }
     }
   } catch {
-    // silently skip if upload list is unavailable
+    // silently skip if upload list unavailable
   }
 
-  // Course cover images
   try {
     const res = await fetch(
-      `${base}/api/courses?fields[0]=title&fields[1]=coverImageUrl&pagination[pageSize]=100`,
+      `${strapiHost}/api/courses?fields[0]=title&fields[1]=coverImageUrl&pagination[pageSize]=100`,
       { headers: authHeaders() }
     );
     if (res.ok) {
@@ -69,7 +53,7 @@ async function fetchPlatformAssets(): Promise<MediaAsset[]> {
       for (const c of courses) {
         const cover = typeof c.coverImageUrl === 'string' ? c.coverImageUrl.trim() : '';
         if (!cover) continue;
-        const url = resolveUrl(cover, base);
+        const url = resolveImageUrl(cover);
         map.set(url, {
           id: map.get(url)?.id ?? `course-${c.documentId || c.id}`,
           name: `${String(c.title || 'Course')} Cover`,
@@ -85,10 +69,9 @@ async function fetchPlatformAssets(): Promise<MediaAsset[]> {
     // skip
   }
 
-  // Blog post cover images
   try {
     const res = await fetch(
-      `${base}/api/blog-posts?fields[0]=title&fields[1]=coverImageUrl&fields[2]=topic&pagination[pageSize]=100`,
+      `${strapiHost}/api/blog-posts?fields[0]=title&fields[1]=coverImageUrl&fields[2]=topic&pagination[pageSize]=100`,
       { headers: authHeaders() }
     );
     if (res.ok) {
@@ -97,7 +80,7 @@ async function fetchPlatformAssets(): Promise<MediaAsset[]> {
       for (const p of posts) {
         const cover = typeof p.coverImageUrl === 'string' ? p.coverImageUrl.trim() : '';
         if (!cover) continue;
-        const url = resolveUrl(cover, base);
+        const url = resolveImageUrl(cover);
         if (!map.has(url)) {
           map.set(url, {
             id: `blog-${p.documentId || p.id}`,
@@ -158,45 +141,15 @@ export function useMediaLibrary(isOpen: boolean) {
     setUploadError('');
     setUploadSuccess(false);
 
-    const base = strapiBase();
-    const form = new FormData();
-
     try {
-      form.append('files', file);
-      const res = await fetch(`${base}/api/upload`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: form,
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const uploaded = Array.isArray(data) ? data[0] : data;
-        const raw = uploaded?.url;
-        if (raw) {
-          const url = resolveUrl(raw, base);
-          setUploadSuccess(true);
-          setToast({ message: 'Image uploaded successfully!', type: 'success' });
-          await loadAssets();
-          return url;
-        }
+      const url = await uploadImage(file);
+      if (url) {
+        setUploadSuccess(true);
+        setToast({ message: 'Image uploaded successfully!', type: 'success' });
+        await loadAssets();
+        return url;
       }
-    } catch {
-      // try local fallback
-    }
-
-    try {
-      const form2 = new FormData();
-      form2.append('file', file);
-      const res = await fetch('/api/upload', { method: 'POST', body: form2 });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.url) {
-          setUploadSuccess(true);
-          setToast({ message: 'Image uploaded!', type: 'success' });
-          await loadAssets();
-          return data.url as string;
-        }
-      }
+      setUploadError('Upload failed. Try using a direct image URL instead.');
     } catch {
       setUploadError('Upload failed. Try using a direct image URL instead.');
     } finally {
@@ -208,16 +161,13 @@ export function useMediaLibrary(isOpen: boolean) {
 
   async function deleteAsset(asset: MediaAsset) {
     setDeletingId(asset.id);
-    const base = strapiBase();
     try {
-      const res = await fetch(`${base}/api/upload/files/${asset.id}`, {
+      await fetch(`${strapiHost}/api/upload/files/${asset.id}`, {
         method: 'DELETE',
         headers: authHeaders(),
       });
-      if (res.ok || !res.ok) {
-        setFiles((prev) => prev.filter((f) => f.id !== asset.id));
-        setToast({ message: `"${asset.name}" deleted.`, type: 'success' });
-      }
+      setFiles((prev) => prev.filter((f) => f.id !== asset.id));
+      setToast({ message: `"${asset.name}" deleted.`, type: 'success' });
     } catch {
       setToast({ message: 'Could not delete file. Try again.', type: 'error' });
     } finally {

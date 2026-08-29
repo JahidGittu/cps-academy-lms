@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { FALLBACK_IMAGE, resolveImageUrl } from '@/components/course-cover';
 import { MediaLibraryModal } from '@/components/media-library-modal';
+import { uploadImage } from '@/lib/upload';
 
 export const ImagePicker = ({
   label = 'Cover Image / Thumbnail',
@@ -40,69 +41,22 @@ export const ImagePicker = ({
     }
   }, [value]);
 
-  // Upload file to Strapi / Railway backend storage (or local storage fallback)
   const processFile = async (file: File) => {
     if (!file.type.startsWith('image/')) return;
 
     setLoading(true);
     setImageError(false);
 
-    // 1. Primary Upload: Strapi / Railway Backend API
-    try {
-      const rawHost = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
-      const strapiBase = rawHost.replace(/\/api\/?$/, '').replace(/\/+$/, '');
-      const token = typeof window !== 'undefined' ? localStorage.getItem('lms.jwt') || localStorage.getItem('token') : null;
-      const formData = new FormData();
-      formData.append('files', file);
-
-      const res = await fetch(`${strapiBase}/api/upload`, {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: formData,
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const uploaded = Array.isArray(data) ? data[0]?.url : data?.url;
-        if (uploaded) {
-          const finalUrl = uploaded.startsWith('http') ? uploaded : `${strapiBase}${uploaded}`;
-          onChange(finalUrl);
-          setLoading(false);
-          return;
-        }
-      }
-    } catch (err) {
-      console.warn('Strapi upload fallback to local API', err);
+    const url = await uploadImage(file);
+    if (url) {
+      onChange(url);
+      setLoading(false);
+      return;
     }
 
-    // 2. Secondary Fallback: Local Next.js upload endpoint
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.url) {
-          onChange(data.url);
-          setLoading(false);
-          return;
-        }
-      }
-    } catch (err) {
-      console.warn('Local API upload fallback', err);
-    }
-
-    // 3. Fallback: Base64 data URL
     const reader = new FileReader();
     reader.onload = (event) => {
-      if (typeof event.target?.result === 'string') {
-        onChange(event.target.result);
-      }
+      if (typeof event.target?.result === 'string') onChange(event.target.result);
       setLoading(false);
     };
     reader.onerror = () => setLoading(false);
@@ -125,7 +79,6 @@ export const ImagePicker = ({
 
   return (
     <div className="space-y-3">
-      {/* Top Header Row with Label & Action Buttons */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <label className="block text-xs sm:text-sm font-bold text-primary flex items-center gap-1.5">
           <ImageIcon className="size-4 text-sky-400" />

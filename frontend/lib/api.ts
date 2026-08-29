@@ -3,7 +3,10 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 const rawHost = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:1337';
 const host = rawHost.replace(/\/api\/?$/, '').replace(/\/+$/, '');
 
+export const strapiHost = host;
+
 export const api = axios.create({ baseURL: `${host}/api` });
+
 
 const ACCESS_KEY = 'lms.jwt';
 const REFRESH_KEY = 'lms.refresh';

@@ -1,3 +1,5 @@
+import { strapiHost } from '@/lib/api';
+
 export const DEFAULT_COVERS: Record<string, string> = {
   'Web Development: HTML, CSS & JavaScript Masterclass': 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop&q=80',
   'SQL Foundations': 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&auto=format&fit=crop&q=80',
@@ -12,10 +14,9 @@ export const resolveImageUrl = (url?: string | null): string => {
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('/')) {
     return url;
   }
-  const rawHost = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
-  const strapiBase = rawHost.replace(/\/api\/?$/, '').replace(/\/+$/, '');
-  return `${strapiBase}/${url.replace(/^\/+/, '')}`;
+  return `${strapiHost}/${url.replace(/^\/+/, '')}`;
 };
+
 
 export const CourseCover = ({
   title,
