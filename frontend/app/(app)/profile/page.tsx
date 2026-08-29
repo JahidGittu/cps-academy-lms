@@ -66,17 +66,11 @@ const ProfileContent = () => {
       return;
     }
 
-    if (!email.trim() || !email.includes('@')) {
-      setProfileError('Please enter a valid email address.');
-      return;
-    }
-
     setProfileBusy(true);
 
     try {
       await api.put(`/users/${user.id}`, {
         username: username.trim(),
-        email: email.trim(),
       });
 
       await reloadUser();
@@ -132,7 +126,7 @@ const ProfileContent = () => {
 
   if (!user) return null;
 
-  const isProfileDirty = username !== user.username || email !== user.email;
+  const isProfileDirty = Boolean(username.trim()) && username.trim() !== user.username;
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -228,16 +222,12 @@ const ProfileContent = () => {
 
             <div className="space-y-1.5">
               <label className="block text-xs font-bold text-primary">
-                Email Address
+                Email Address (Read-only)
               </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email address..."
-                required
-                className="w-full rounded-lg border border-theme bg-canvas px-3 py-2 text-xs sm:text-sm text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
-              />
+              <div className="w-full rounded-lg border border-theme bg-elevated px-3 py-2 text-xs sm:text-sm font-medium text-secondary flex items-center justify-between">
+                <span>{user.email}</span>
+                <span className="text-[10px] text-muted font-bold uppercase">Primary ID</span>
+              </div>
             </div>
 
             <div className="space-y-1.5">
