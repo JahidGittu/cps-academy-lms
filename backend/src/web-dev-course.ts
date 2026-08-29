@@ -5,9 +5,9 @@ export const webDevCourse: DemoCourse = {
   description: 'HTML5, আধুনিক CSS3 এবং JavaScript এর পূর্ণাঙ্গ ৩-মাইলস্টোন হ্যান্ডস-অন কোর্স। বেসিক সিনট্যাক্স থেকে শুরু করে রিয়েল-ওয়ার্ল্ড ইন্টারঅ্যাক্টিভ ওয়েব প্রজেক্ট তৈরির সম্পূর্ণ গাইড।',
   ownerEmail: 'instructor@demo.test',
   lessons: [
-    // -------------------------------------------------------------
-    // MILESTONE 1: HTML5 Foundations (5 Modules)
-    // -------------------------------------------------------------
+
+
+
     {
       title: 'M1.1: HTML5 Introduction & Document Architecture',
       order: 1,
@@ -214,9 +214,9 @@ export const webDevCourse: DemoCourse = {
       ].join('\n'),
     },
 
-    // -------------------------------------------------------------
-    // MILESTONE 2: CSS Mastery & HTML Integration (5 Modules)
-    // -------------------------------------------------------------
+
+
+
     {
       title: 'M2.1: CSS3 Fundamentals, Selectors & The Cascade',
       order: 6,
@@ -439,9 +439,9 @@ export const webDevCourse: DemoCourse = {
       ].join('\n'),
     },
 
-    // -------------------------------------------------------------
-    // MILESTONE 3: JavaScript Programming & Full Integration (5 Modules)
-    // -------------------------------------------------------------
+
+
+
     {
       title: 'M3.1: JavaScript Foundations: Variables, Types & Operators',
       order: 11,

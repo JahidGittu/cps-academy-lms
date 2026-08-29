@@ -17,7 +17,6 @@ export const roles = [
   { name: 'Student', type: 'student', description: 'Enrolls in courses, reads lessons and takes quizzes.' },
 ];
 
-// RBAC Permission matrix mapping
 const matrix: Record<string, Record<string, string[]>> = {
   Public: {
     'api::course.course': READ,

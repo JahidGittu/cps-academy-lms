@@ -60,7 +60,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     if (!title) return ctx.badRequest('data.title is required');
 
-    // Force owner from current session
     const course = await strapi.documents(UID).create({
       data: { title, description, coverImageUrl, owner: caller(ctx).id },
     });
@@ -95,7 +94,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
       return ctx.forbidden();
     }
 
-    // Cascade delete enrollments
     const enrollments = await strapi.documents('api::enrollment.enrollment').findMany({
       filters: { course: { documentId: course.documentId } },
     });
@@ -103,7 +101,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
       await strapi.documents('api::enrollment.enrollment').delete({ documentId: e.documentId });
     }
 
-    // Cascade delete lessons and their progresses
     if (course.lessons?.length) {
       for (const lesson of course.lessons) {
         const progresses = await strapi.documents('api::lesson-progress.lesson-progress').findMany({
@@ -116,7 +113,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
       }
     }
 
-    // Cascade delete quiz and quiz results
     if (course.quiz) {
       const results = await strapi.documents('api::quiz-result.quiz-result').findMany({
         filters: { quiz: { documentId: course.quiz.documentId } },
@@ -127,7 +123,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
       await strapi.documents('api::quiz.quiz').delete({ documentId: course.quiz.documentId });
     }
 
-    // Delete course
     await strapi.documents(UID).delete({ documentId: ctx.params.id });
 
     return ctx.send({ data: { documentId: ctx.params.id, deleted: true } });
@@ -140,7 +135,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     await super.validateQuery(ctx);
     const query = await super.sanitizeQuery(ctx);
 
-    // Filter by owner if instructor requests own courses
     if (mine && !seesEveryRow(ctx)) narrow(query, { owner: { id: caller(ctx).id } });
 
     const { results, pagination } = await strapi.service(UID).find({ ...query, populate: INSIDE });
@@ -169,7 +163,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     return super.transformResponse({ ...row, ...extras(ctx, course as Raw) });
   },
 
-  // Calculate dynamic progress per student to prevent stale numbers
   async progress(ctx: Context) {
     const course = await strapi.documents(UID).findOne({
       documentId: ctx.params.id,
