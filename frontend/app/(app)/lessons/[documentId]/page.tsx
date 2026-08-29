@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -36,6 +36,7 @@ const embedUrl = (url: string) => {
 
 const Viewer = ({ documentId }: { documentId: string }) => {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const { user } = useAuth();
   const isStudent = hasRole(user, 'Student');
 
@@ -55,42 +56,23 @@ const Viewer = ({ documentId }: { documentId: string }) => {
 
   const completed = Boolean(progress.data?.data?.length) || justCompleted;
 
-  const markDone = async () => {
-    setBusy(true);
-    setActionError('');
-
-    try {
-      await api.post('/lesson-progresses', { data: { lesson: documentId } });
-      setJustCompleted(true);
-      await progress.reload();
-      await allProgresses.reload();
-    } catch (caught) {
-      setActionError(errorMessage(caught));
-    } finally {
-      setBusy(false);
-    }
-  };
-
+  // Instant zero-buffering completion & transition
   const completeAndNext = async (targetUrl: string) => {
     if (!completed) {
-      setBusy(true);
-      setActionError('');
-      try {
-        await api.post('/lesson-progresses', { data: { lesson: documentId } });
-        setJustCompleted(true);
-        await progress.reload();
-        await allProgresses.reload();
-        router.push(targetUrl);
-      } catch (caught) {
-        setActionError(errorMessage(caught));
-        setBusy(false);
-      }
-    } else {
-      router.push(targetUrl);
+      setJustCompleted(true);
+      // Persist to Strapi in background without holding up navigation
+      api.post('/lesson-progresses', { data: { lesson: documentId } }).catch((err) => {
+        console.warn('Background progress save', err);
+      });
     }
+
+    startTransition(() => {
+      router.push(targetUrl);
+    });
   };
 
-  if (lesson.loading || (isStudent && allProgresses.loading)) {
+  // Only show full loading spinner if we don't have lesson data yet
+  if (lesson.loading && !lesson.data) {
     return <LoadingState />;
   }
 
@@ -111,25 +93,25 @@ const Viewer = ({ documentId }: { documentId: string }) => {
   // Sequential 403 Forbidden Screen with helpful user guidance
   if (lesson.status === 403) {
     return (
-      <div className="mx-auto max-w-lg rounded-md border border-slate-200 bg-white p-8 text-center shadow-xs">
-        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-amber-50 text-amber-600 border border-amber-200">
+      <div className="mx-auto max-w-lg rounded-xl border border-theme bg-surface p-8 text-center shadow-md">
+        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
           <Lock className="size-6" />
         </div>
-        <h2 className="text-lg font-bold text-slate-900">Lesson Locked</h2>
-        <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-          Please complete the earlier lessons in this course first to unlock this lesson.
+        <h2 className="text-lg font-bold text-primary">Lesson Locked</h2>
+        <p className="mt-2 text-xs sm:text-sm text-muted leading-relaxed">
+          Please complete the earlier lessons in this course first in sequential order to unlock this lesson.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/dashboard"
-            className="brand-gradient inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-xs font-bold text-white shadow-xs hover:opacity-95"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 px-4 py-2 text-xs font-bold text-white shadow-md shadow-sky-600/25 transition"
           >
             <ArrowLeft className="size-3.5" />
             <span>Go to My Dashboard</span>
           </Link>
           <Link
             href="/courses"
-            className="inline-flex items-center gap-1.5 rounded-md bg-white border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-theme bg-surface px-4 py-2 text-xs font-semibold text-secondary hover:bg-elevated hover:text-primary transition"
           >
             <span>Browse Courses</span>
           </Link>
@@ -156,27 +138,27 @@ const Viewer = ({ documentId }: { documentId: string }) => {
       .map((row) => row.lesson?.id)
       .filter((id): id is number => id !== undefined)
   );
-  if (justCompleted && detail) {
+  if ((justCompleted || completed) && detail) {
     completedSet.add(detail.id);
   }
 
   return (
     <div className="space-y-6">
       {/* Top Breadcrumb & Status */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-theme">
         <div className="flex items-center gap-2 text-xs sm:text-sm">
           <Link
             href={course ? `/courses/${course.documentId}` : '/courses'}
-            className="inline-flex items-center gap-1.5 font-medium text-slate-500 hover:text-brand-600 transition-colors"
+            className="inline-flex items-center gap-1.5 font-medium text-muted hover:text-sky-400 transition-colors"
           >
             <ArrowLeft className="size-4" />
             <span>{course?.title ?? 'Courses'}</span>
           </Link>
-          <span className="text-slate-300">/</span>
-          <span className="font-bold text-slate-900 truncate max-w-md">{detail.title}</span>
+          <span className="text-muted">/</span>
+          <span className="font-bold text-primary truncate max-w-md">{detail.title}</span>
         </div>
 
-        <span className="rounded bg-brand-50 border border-brand-200 px-2.5 py-0.5 text-xs font-bold text-brand-700">
+        <span className="rounded-lg bg-surface border border-theme px-3 py-1 text-xs font-bold text-sky-400">
           Lesson {at + 1} of {siblings.length}
         </span>
       </div>
@@ -185,13 +167,13 @@ const Viewer = ({ documentId }: { documentId: string }) => {
       <div className="grid gap-8 lg:grid-cols-12 items-start">
         {/* Main Lesson Body (8 cols) */}
         <article className="lg:col-span-8 space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-primary tracking-tight leading-tight">
             {detail.title}
           </h1>
 
           {/* Embedded Video Player */}
           {embed ? (
-            <div className="overflow-hidden rounded-md border border-slate-800 bg-black shadow-md">
+            <div className="overflow-hidden rounded-xl border border-theme bg-black shadow-md">
               <iframe
                 src={embed}
                 title={detail.title}
@@ -201,13 +183,13 @@ const Viewer = ({ documentId }: { documentId: string }) => {
             </div>
           ) : (
             detail.videoUrl && (
-              <div className="rounded-md border border-slate-200 bg-slate-50 p-4 flex items-center gap-3">
-                <Play className="size-4 text-brand-600 shrink-0" />
+              <div className="rounded-xl border border-theme bg-surface p-4 flex items-center gap-3">
+                <Play className="size-4 text-sky-400 shrink-0" />
                 <a
                   href={detail.videoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs sm:text-sm font-semibold text-brand-600 hover:underline"
+                  className="text-xs sm:text-sm font-semibold text-sky-400 hover:underline"
                 >
                   Watch Video Lecture ↗
                 </a>
@@ -217,19 +199,20 @@ const Viewer = ({ documentId }: { documentId: string }) => {
 
           {/* Written Content */}
           {detail.content && (
-            <div className="rounded-lg bg-surface p-6 sm:p-8 border border-theme shadow-2xs leading-relaxed text-secondary">
+            <div className="rounded-xl bg-surface p-6 sm:p-8 border border-theme shadow-xs leading-relaxed text-secondary">
               <RichContent content={detail.content} />
             </div>
           )}
 
           <Alert>{actionError}</Alert>
 
-          {/* Sequential Navigation Bar: Only Clean Previous and Next Buttons */}
-          <nav className="flex flex-wrap items-center justify-between gap-4 border-t border-subtle pt-6 mt-8">
+          {/* Sequential Navigation Bar: Instant Zero-Lag Navigation */}
+          <nav className="flex flex-wrap items-center justify-between gap-4 border-t border-theme pt-6 mt-8">
             {previous ? (
               <Link
                 href={`/lessons/${previous.documentId}`}
-                className="inline-flex items-center gap-2 rounded-lg border border-theme bg-surface px-4 py-2.5 text-xs font-semibold text-secondary hover:bg-elevated hover:text-primary transition shadow-2xs"
+                prefetch={true}
+                className="inline-flex items-center gap-2 rounded-xl border border-theme bg-surface px-4 py-2.5 text-xs font-semibold text-secondary hover:bg-elevated hover:text-primary transition shadow-xs cursor-pointer"
               >
                 <ArrowLeft className="size-4 text-muted" />
                 <span>Previous</span>
@@ -238,44 +221,47 @@ const Viewer = ({ documentId }: { documentId: string }) => {
               <div />
             )}
 
-            {/* Next Button / Action: Automatically Marks Current Complete and Advances */}
+            {/* Next Button / Action: Seamless Fast Transition */}
             {next ? (
-              <Button
-                disabled={busy}
+              <button
+                type="button"
+                disabled={isPending || busy}
                 onClick={() => completeAndNext(`/lessons/${next.documentId}`)}
-                className="font-bold flex items-center gap-2 px-5 py-2.5 shadow-xs"
+                className="inline-flex items-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-500 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/25 transition cursor-pointer"
               >
-                <span>{busy ? 'Saving Progress...' : 'Next'}</span>
+                <span>{isPending ? 'Loading...' : 'Next Lesson'}</span>
                 <ArrowRight className="size-4" />
-              </Button>
+              </button>
             ) : isLastLesson && course?.quiz ? (
-              <Button
-                disabled={busy}
+              <button
+                type="button"
+                disabled={isPending || busy}
                 onClick={() => course.quiz && completeAndNext(`/quizzes/${course.quiz.documentId}`)}
-                className="bg-purple-600 hover:bg-purple-700 text-white font-bold flex items-center gap-2 px-5 py-2.5 shadow-xs"
+                className="inline-flex items-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold px-5 py-2.5 text-xs shadow-md shadow-purple-600/25 transition cursor-pointer"
               >
-                <span>{busy ? 'Saving...' : 'Take Quiz Assessment'}</span>
+                <span>{isPending ? 'Opening...' : 'Take Quiz Assessment'}</span>
                 <Award className="size-4" />
-              </Button>
+              </button>
             ) : (
-              <Button
-                disabled={busy}
+              <button
+                type="button"
+                disabled={isPending || busy}
                 onClick={() => completeAndNext(course ? `/courses/${course.documentId}` : '/dashboard')}
-                className="font-bold flex items-center gap-2 px-5 py-2.5 shadow-xs"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 text-xs shadow-md shadow-emerald-600/25 transition cursor-pointer"
               >
-                <span>{busy ? 'Saving...' : 'Finish Course'}</span>
+                <span>{isPending ? 'Completing...' : 'Finish Course'}</span>
                 <CheckCircle2 className="size-4" />
-              </Button>
+              </button>
             )}
           </nav>
         </article>
 
         {/* Right Sidebar: Syllabus Track Playlist (4 cols) */}
-        <aside className="lg:col-span-4 space-y-4">
-          <div className="rounded-xl border border-theme bg-surface p-5 shadow-2xs">
-            <h3 className="font-bold text-primary text-sm flex items-center justify-between gap-2 mb-3 pb-3 border-b border-subtle">
+        <aside className="lg:col-span-4 space-y-4 lg:sticky lg:top-24 self-start">
+          <div className="rounded-xl border border-theme bg-surface p-5 shadow-xs">
+            <h3 className="font-bold text-primary text-sm flex items-center justify-between gap-2 mb-3 pb-3 border-b border-theme">
               <span className="flex items-center gap-2">
-                <BookOpen className="size-4 text-brand" />
+                <BookOpen className="size-4 text-sky-400" />
                 <span>Course Track</span>
               </span>
               <span className="text-xs text-muted font-medium">{siblings.length} lessons</span>
@@ -318,9 +304,10 @@ const Viewer = ({ documentId }: { documentId: string }) => {
                   <Link
                     key={item.documentId}
                     href={`/lessons/${item.documentId}`}
+                    prefetch={true}
                     className={`flex items-center gap-2.5 rounded-lg p-2.5 text-xs transition-all ${
                       isCurrent
-                        ? 'bg-brand-subtle text-brand font-bold border border-brand-border shadow-2xs'
+                        ? 'bg-sky-600 text-white font-bold shadow-xs'
                         : isItemDone
                         ? 'text-secondary hover:bg-emerald-500/10 hover:text-emerald-400'
                         : 'text-secondary hover:bg-elevated hover:text-primary'
@@ -329,7 +316,7 @@ const Viewer = ({ documentId }: { documentId: string }) => {
                     <span
                       className={`flex size-5 shrink-0 items-center justify-center rounded font-bold text-[10px] ${
                         isCurrent
-                          ? 'bg-brand-primary text-white'
+                          ? 'bg-white/20 text-white'
                           : isItemDone
                           ? 'bg-emerald-500/20 text-emerald-400'
                           : 'bg-elevated text-muted'
