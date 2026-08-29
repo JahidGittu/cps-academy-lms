@@ -82,7 +82,7 @@ export const CourseForm = ({
         setError(errorMessage(caught));
         setSaveStatus('idle');
       }
-    }, 1500);
+    }, 1000);
 
     return () => {
       if (debounceTimer.current) {
@@ -195,19 +195,43 @@ export const CourseForm = ({
 
       <Alert>{error}</Alert>
 
-      <div className="flex items-center gap-3 border-t border-subtle pt-4">
-        <Button
-          type="submit"
-          disabled={busy || (Boolean(course) && !isDirty && saveStatus !== 'saving')}
-          className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/20 hover:shadow-sky-500/30 transition-all"
-        >
-          {busy ? 'Saving...' : label}
-        </Button>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-subtle pt-4">
+        <div className="flex items-center gap-3">
+          <Button
+            type="submit"
+            disabled={busy || (Boolean(course) && !isDirty && saveStatus !== 'saving')}
+            className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/20 hover:shadow-sky-500/30 transition-all"
+          >
+            {busy ? 'Saving...' : label}
+          </Button>
+        </div>
 
-        {Boolean(course) && !isDirty && (
-          <span className="text-xs text-muted font-medium">
-            All changes synced
-          </span>
+        {course && (
+          <div className="text-xs">
+            {saveStatus === 'saving' && (
+              <span className="inline-flex items-center gap-1.5 font-bold text-sky-400 animate-pulse">
+                <RefreshCw className="size-3.5 animate-spin text-sky-400" />
+                <span>Auto-saving changes to cloud...</span>
+              </span>
+            )}
+            {saveStatus === 'saved' && (
+              <span className="inline-flex items-center gap-1.5 font-bold text-emerald-400 animate-in fade-in">
+                <CheckCircle2 className="size-4 text-emerald-400" />
+                <span>All changes saved & synced</span>
+              </span>
+            )}
+            {saveStatus === 'unsaved' && isDirty && (
+              <span className="inline-flex items-center gap-1.5 font-medium text-amber-400">
+                <span className="size-2 rounded-full bg-amber-400 animate-pulse" />
+                <span>Unsaved changes (auto-saving...)</span>
+              </span>
+            )}
+            {saveStatus === 'idle' && !isDirty && (
+              <span className="inline-flex items-center gap-1 text-muted font-medium">
+                <span>✓ All changes synced</span>
+              </span>
+            )}
+          </div>
         )}
       </div>
     </form>
