@@ -45,7 +45,7 @@ export const Syllabus = ({
               {finished ? <Check className="size-3.5 stroke-[3]" /> : index + 1}
             </span>
 
-            {/* If Author/Admin -> Edit in Studio */}
+            {/* If Author/Admin -> Edit Lesson */}
             {isAuthor && courseDocId ? (
               <Link
                 href={`/courses/${courseDocId}/edit?tab=lessons`}
@@ -54,7 +54,7 @@ export const Syllabus = ({
                 <span className="truncate">{lesson.title}</span>
                 <span className="text-xs font-bold text-sky-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 flex items-center gap-1">
                   <Pencil className="size-3" />
-                  <span>Edit in Studio &rarr;</span>
+                  <span>Edit Lesson &rarr;</span>
                 </span>
               </Link>
             ) : reachable ? (

@@ -41,7 +41,7 @@ const AdminOverview = () => {
               </p>
             </div>
             <div className="mt-4 pt-3 border-t border-subtle flex items-center justify-between text-xs font-bold text-violet-400">
-              <span>Open Studio</span>
+              <span>Manage Courses</span>
               <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
@@ -63,7 +63,7 @@ const AdminOverview = () => {
               </p>
             </div>
             <div className="mt-4 pt-3 border-t border-subtle flex items-center justify-between text-xs font-bold text-rose-400">
-              <span>Open Studio</span>
+              <span>Manage Articles</span>
               <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>

@@ -111,7 +111,7 @@ const Detail = ({ documentId }: { documentId: string }) => {
               <span>Course Author & Management</span>
             </p>
             <p className="mt-1 text-muted text-[11px]">
-              You manage this course. Use the studio below to edit lessons, update quizzes, and monitor enrolled students.
+              You manage this course. Use the course builder below to edit lessons, update quizzes, and monitor enrolled students.
             </p>
           </div>
 
@@ -120,7 +120,7 @@ const Detail = ({ documentId }: { documentId: string }) => {
             className="flex items-center justify-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/25 transition-all w-full"
           >
             <Pencil className="size-3.5" />
-            <span>Edit Course in Studio</span>
+            <span>Edit Course Builder</span>
           </Link>
 
           <Link
@@ -263,7 +263,7 @@ const Detail = ({ documentId }: { documentId: string }) => {
                       className="inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold bg-sky-500/15 text-sky-400 hover:bg-sky-500/25 border border-sky-500/30 transition shadow-2xs"
                     >
                       <Pencil className="size-3" />
-                      <span>Edit Quiz in Studio &rarr;</span>
+                      <span>Edit Quiz &rarr;</span>
                     </Link>
                   ) : isEnrolledStudent ? (
                     <Link
