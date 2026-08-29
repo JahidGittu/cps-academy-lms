@@ -101,6 +101,7 @@ export const SiteHeader = () => {
   const isWorkspaceRoute =
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/admin') ||
+    pathname.startsWith('/profile') ||
     pathname.startsWith('/courses/new') ||
     pathname.startsWith('/blog/new') ||
     pathname.includes('/edit') ||

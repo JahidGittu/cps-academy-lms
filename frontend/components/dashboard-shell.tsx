@@ -127,6 +127,13 @@ const getRouteMetadata = (pathname: string, roleName: string) => {
       breadcrumb: 'Edit Article',
     };
   }
+  if (pathname.startsWith('/profile')) {
+    return {
+      title: 'Account Profile & Settings',
+      subtitle: 'Manage your personal profile, view role statistics, and update security credentials.',
+      breadcrumb: 'Profile & Settings',
+    };
+  }
   if (pathname.startsWith('/lessons/')) {
     return {
       title: 'Lesson Viewer',
