@@ -35,7 +35,7 @@ export const QuizPanel = ({
 }) => {
   const quizDocId = course.quiz?.documentId;
   const quizData = useApi<Single<Quiz>>(
-    quizDocId ? `/quizzes/${quizDocId}?populate=questions` : null
+    quizDocId ? `/quizzes/${quizDocId}/answers` : null
   );
 
   const [title, setTitle] = useState('');
@@ -50,11 +50,17 @@ export const QuizPanel = ({
     title: '',
     questions: [],
   });
+  const loadedQuizIdRef = useRef<string | null>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const latestQuestionsRef = useRef(questions);
+  latestQuestionsRef.current = questions;
+  const latestTitleRef = useRef(title);
+  latestTitleRef.current = title;
 
-  // Sync server quiz data when initially loaded
+  // Sync server quiz data when initially loaded or switched
   useEffect(() => {
-    if (quizData.data?.data) {
+    if (quizData.data?.data && loadedQuizIdRef.current !== quizDocId) {
+      loadedQuizIdRef.current = quizDocId || 'loaded';
       const q = quizData.data.data;
       const initialTitle = q.title || '';
       const initialQuestions =
@@ -62,7 +68,7 @@ export const QuizPanel = ({
           ? q.questions.map((item) => ({
               text: item.text,
               options: item.options && item.options.length >= 2 ? item.options : ['', ''],
-              correctIndex: item.correctIndex ?? 0,
+              correctIndex: typeof item.correctIndex === 'number' ? item.correctIndex : 0,
             }))
           : [blankQuestion()];
 
@@ -73,7 +79,8 @@ export const QuizPanel = ({
         questions: JSON.parse(JSON.stringify(initialQuestions)),
       };
       setSaveStatus('idle');
-    } else if (!course.quiz && !title) {
+    } else if (!course.quiz && !loadedQuizIdRef.current) {
+      loadedQuizIdRef.current = 'new';
       const defaultTitle = `${course.title} - Final Assessment`;
       const defaultQuestions = [blankQuestion()];
       setTitle(defaultTitle);
@@ -83,7 +90,7 @@ export const QuizPanel = ({
         questions: JSON.parse(JSON.stringify(defaultQuestions)),
       };
     }
-  }, [quizData.data?.data?.documentId, course.quiz?.documentId]);
+  }, [quizData.data?.data, quizDocId, course.quiz, course.title]);
 
   // Determine if form is dirty (unsaved user modifications)
   const isDirty =
@@ -91,7 +98,7 @@ export const QuizPanel = ({
     (title !== lastSavedRef.current.title ||
       JSON.stringify(questions) !== JSON.stringify(lastSavedRef.current.questions));
 
-  // Debounced background auto-save (1500ms after user pauses typing)
+  // Debounced background auto-save (1000ms after user pauses typing or selecting option)
   useEffect(() => {
     if (!isDirty || !title.trim() || !questions.length) {
       if (!isDirty && saveStatus === 'unsaved') {
@@ -121,9 +128,11 @@ export const QuizPanel = ({
       setError('');
 
       try {
+        const currentTitle = latestTitleRef.current.trim();
+        const currentQuestions = latestQuestionsRef.current;
         const data = {
-          title: title.trim(),
-          questions,
+          title: currentTitle,
+          questions: currentQuestions,
           course: course.documentId,
         };
 
@@ -135,8 +144,8 @@ export const QuizPanel = ({
         }
 
         lastSavedRef.current = {
-          title: title.trim(),
-          questions: JSON.parse(JSON.stringify(questions)),
+          title: currentTitle,
+          questions: JSON.parse(JSON.stringify(currentQuestions)),
         };
         setSaveStatus('saved');
         setTimeout(() => setSaveStatus('idle'), 2500);
@@ -144,7 +153,7 @@ export const QuizPanel = ({
         setError(errorMessage(caught));
         setSaveStatus('idle');
       }
-    }, 1500);
+    }, 1000);
 
     return () => {
       if (debounceTimer.current) {
@@ -440,10 +449,10 @@ export const QuizPanel = ({
                   return (
                     <div
                       key={optIndex}
-                      className={`flex items-center gap-2.5 rounded-lg border p-2 transition-all ${
+                      className={`flex items-center gap-2.5 rounded-lg border p-2.5 transition-all ${
                         isCorrect
-                          ? 'border-emerald-500/50 bg-emerald-500/10'
-                          : 'border-theme bg-canvas'
+                          ? 'border-emerald-500/60 bg-emerald-500/10 shadow-xs ring-1 ring-emerald-500/30'
+                          : 'border-theme bg-canvas hover:border-theme/80'
                       }`}
                     >
                       {/* Radio button for Correct Answer */}
@@ -456,9 +465,9 @@ export const QuizPanel = ({
                           className="size-4 accent-emerald-500 cursor-pointer"
                         />
                         <span
-                          className={`text-xs font-extrabold px-1.5 py-0.5 rounded ${
+                          className={`text-xs font-extrabold px-2 py-0.5 rounded ${
                             isCorrect
-                              ? 'bg-emerald-500 text-white'
+                              ? 'bg-emerald-600 text-white shadow-xs'
                               : 'bg-elevated text-muted border border-theme'
                           }`}
                         >
@@ -475,6 +484,14 @@ export const QuizPanel = ({
                         required
                         className="w-full bg-transparent text-xs sm:text-sm text-primary outline-none placeholder:text-muted"
                       />
+
+                      {/* Correct answer label tag */}
+                      {isCorrect && (
+                        <span className="shrink-0 text-[11px] font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full hidden sm:inline-flex items-center gap-1">
+                          <CheckCircle2 className="size-3" />
+                          <span>Correct Answer</span>
+                        </span>
+                      )}
 
                       {/* Delete Option (if > 2 options) */}
                       {question.options.length > 2 && (
@@ -519,19 +536,40 @@ export const QuizPanel = ({
       </div>
 
       {/* Bottom Save Action */}
-      <div className="flex items-center justify-between border-t border-subtle pt-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-subtle pt-5">
         <div className="flex items-center gap-3">
           <Button
             type="submit"
             disabled={busy || (!isDirty && saveStatus !== 'saving')}
-            className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/25 hover:shadow-sky-500/35"
+            className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/25 hover:shadow-sky-500/35 transition-all cursor-pointer"
           >
             {busy ? 'Saving...' : course.quiz ? 'Save changes' : 'Save Quiz'}
           </Button>
+        </div>
 
-          {!isDirty && (
-            <span className="text-xs text-muted font-medium">
-              All changes synced
+        {/* Live Auto-Save Status in Bottom Bar */}
+        <div className="text-xs">
+          {saveStatus === 'saving' && (
+            <span className="inline-flex items-center gap-1.5 font-bold text-sky-400 animate-pulse">
+              <RefreshCw className="size-3.5 animate-spin text-sky-400" />
+              <span>Auto-saving questions to cloud...</span>
+            </span>
+          )}
+          {saveStatus === 'saved' && (
+            <span className="inline-flex items-center gap-1.5 font-bold text-emerald-400 animate-in fade-in">
+              <CheckCircle2 className="size-4 text-emerald-400" />
+              <span>All quiz questions & answers synced</span>
+            </span>
+          )}
+          {saveStatus === 'unsaved' && isDirty && (
+            <span className="inline-flex items-center gap-1.5 font-medium text-amber-400">
+              <span className="size-2 rounded-full bg-amber-400 animate-pulse" />
+              <span>Unsaved changes (auto-saving in 1s...)</span>
+            </span>
+          )}
+          {saveStatus === 'idle' && !isDirty && (
+            <span className="inline-flex items-center gap-1 text-muted font-medium">
+              <span>✓ All questions & answers synced</span>
             </span>
           )}
         </div>
