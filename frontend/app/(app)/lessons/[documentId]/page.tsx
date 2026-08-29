@@ -13,6 +13,7 @@ import {
   Award,
   AlertCircle,
   Sparkles,
+  ClipboardList,
 } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
@@ -193,7 +194,9 @@ const Viewer = ({ documentId }: { documentId: string }) => {
   }
 
   const completedCount = siblings.filter((item) => completedSet.has(item.id)).length;
-  const percentComplete = siblings.length ? Math.round((completedCount / siblings.length) * 100) : 0;
+  const hasQuiz = Boolean(course?.quiz);
+  const totalMilestones = siblings.length + (hasQuiz ? 1 : 0);
+  const percentComplete = totalMilestones > 0 ? Math.round((completedCount / totalMilestones) * 100) : 0;
 
   const isTransitioning = isPending || (lesson.loading && lesson.data !== null);
 
@@ -324,14 +327,16 @@ const Viewer = ({ documentId }: { documentId: string }) => {
                 <BookOpen className="size-4 text-sky-400" />
                 <span>Course Track</span>
               </span>
-              <span className="text-xs text-muted font-medium">{siblings.length} lessons</span>
+              <span className="text-xs text-muted font-medium">
+                {siblings.length} {siblings.length === 1 ? 'lesson' : 'lessons'} {hasQuiz ? '+ Quiz' : ''}
+              </span>
             </h3>
 
             {/* Live Progress Bar & Percentage in Lesson Sidebar */}
             <div className="mb-4 p-3 rounded-lg bg-elevated/40 border border-theme/60 space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-medium text-secondary">
-                  <strong>{completedCount}</strong> of {siblings.length} completed
+                  <strong>{completedCount}</strong> of {siblings.length} lessons {hasQuiz ? '• Quiz Next' : 'completed'}
                 </span>
                 <span className="font-bold text-sky-400">{percentComplete}%</span>
               </div>
@@ -404,6 +409,39 @@ const Viewer = ({ documentId }: { documentId: string }) => {
                   </Link>
                 );
               })}
+
+              {/* Quiz Assessment Final Milestone Item in Sidebar */}
+              {course?.quiz && (
+                <div className="pt-2 mt-2 border-t border-theme/60">
+                  {completedCount >= siblings.length ? (
+                    <Link
+                      href={`/quizzes/${course.quiz.documentId}`}
+                      className="flex items-center gap-2.5 rounded-lg p-2.5 text-xs bg-purple-500/15 text-purple-400 hover:bg-purple-500/25 border border-purple-500/30 font-bold transition shadow-xs"
+                    >
+                      <span className="flex size-5 shrink-0 items-center justify-center rounded bg-purple-500/30 text-purple-300 font-bold text-[10px]">
+                        <Award className="size-3" />
+                      </span>
+                      <span className="truncate flex-1">{course.quiz.title || 'Final Quiz Assessment'}</span>
+                      <span className="text-[9px] uppercase tracking-wider font-bold bg-purple-500/30 text-purple-200 px-1.5 py-0.5 rounded">
+                        Ready
+                      </span>
+                    </Link>
+                  ) : (
+                    <div
+                      title="Complete all lessons to unlock the Final Quiz Assessment"
+                      className="flex items-center gap-2.5 rounded-lg p-2.5 text-xs bg-canvas text-muted border border-theme/60 cursor-not-allowed select-none opacity-70"
+                    >
+                      <span className="flex size-5 shrink-0 items-center justify-center rounded bg-elevated text-muted font-bold text-[10px]">
+                        <Lock className="size-3" />
+                      </span>
+                      <span className="truncate flex-1 font-medium">{course.quiz.title || 'Final Quiz Assessment'}</span>
+                      <span className="text-[9px] uppercase tracking-wider font-bold bg-elevated text-muted px-1.5 py-0.5 rounded">
+                        Quiz
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </aside>

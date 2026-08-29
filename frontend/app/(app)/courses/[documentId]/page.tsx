@@ -100,7 +100,10 @@ const Detail = ({ documentId }: { documentId: string }) => {
   };
 
   const lessons = detail?.lessons ?? [];
-  const percent = lessons.length ? Math.round((completed.size / lessons.length) * 100) : 0;
+  const hasQuiz = Boolean(detail?.quiz);
+  const totalMilestones = lessons.length + (hasQuiz ? 1 : 0);
+  const completedMilestones = completed.size + (lastQuizResult ? 1 : 0);
+  const percent = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
 
   const isAuthor = Boolean(detail?.owned) || isAdmin || isContentManager;
   const isEnrolledStudent = isStudent && Boolean(enrollment);
@@ -175,7 +178,9 @@ const Detail = ({ documentId }: { documentId: string }) => {
           <div className="flex items-baseline justify-between text-sm">
             <span className="font-bold text-primary flex items-center gap-1.5">
               <CheckCircle2 className="size-4 text-emerald-400" />
-              <span>{completed.size} of {lessons.length} done</span>
+              <span>
+                {completed.size} of {lessons.length} lessons {hasQuiz ? `• Quiz ${lastQuizResult ? 'Graded' : 'Pending'}` : 'done'}
+              </span>
             </span>
             <span className="font-bold text-brand">{percent}%</span>
           </div>

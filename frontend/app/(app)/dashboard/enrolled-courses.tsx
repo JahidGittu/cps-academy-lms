@@ -22,27 +22,37 @@ const Row = ({ course, completedLessonIds, quizResult }: RowProps) => {
   }, [course.lessons]);
 
   const totalLessons = lessons.length;
-  const completedCount = lessons.filter((l) => completedLessonIds.has(l.id)).length;
-  const percentComplete = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
-  const isDone = totalLessons > 0 && completedCount === totalLessons;
+  const completedLessonCount = lessons.filter((l) => completedLessonIds.has(l.id)).length;
+  const isLessonsDone = totalLessons > 0 && completedLessonCount === totalLessons;
+
+  // Track milestones includes lessons + quiz if course has one
+  const hasQuiz = Boolean(course.quiz);
+  const totalMilestones = totalLessons + (hasQuiz ? 1 : 0);
+  const completedMilestones = completedLessonCount + (quizResult ? 1 : 0);
+
+  const percentComplete =
+    totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
+
+  const isFullyCompleted =
+    isLessonsDone && (!hasQuiz || Boolean(quizResult));
 
   const nextLesson = lessons.find((l) => !completedLessonIds.has(l.id));
 
   // Determine intelligent target navigation link
   const targetLink = nextLesson
     ? `/lessons/${nextLesson.documentId}`
-    : isDone && course.quiz
+    : isLessonsDone && course.quiz && !quizResult
     ? `/quizzes/${course.quiz.documentId}`
     : `/courses/${course.documentId}`;
 
   const buttonLabel =
-    completedCount === 0
+    completedLessonCount === 0
       ? 'Start Learning'
-      : isDone
-      ? course.quiz && !quizResult
-        ? 'Take Quiz Assessment'
-        : 'Review Track'
-      : `Continue (Lesson ${completedCount + 1})`;
+      : !isLessonsDone
+      ? `Continue (Lesson ${completedLessonCount + 1})`
+      : hasQuiz && !quizResult
+      ? 'Take Quiz Assessment'
+      : 'Review Track';
 
   return (
     <div className="group flex flex-col justify-between overflow-hidden rounded-xl border border-theme bg-surface hover:border-active transition-all duration-200 shadow-sm hover:shadow-md">
@@ -62,7 +72,7 @@ const Row = ({ course, completedLessonIds, quizResult }: RowProps) => {
             </span>
           </div>
 
-          {/* Quiz Score Badge */}
+          {/* Quiz Score Badge or Completion Badge */}
           {quizResult && quizResult.score !== undefined && quizResult.total ? (
             <div className="absolute top-3 right-3">
               <span className="rounded-md bg-purple-600/90 backdrop-blur-md px-2.5 py-1 text-[11px] font-bold text-white border border-purple-400/30 shadow-xs flex items-center gap-1">
@@ -70,11 +80,18 @@ const Row = ({ course, completedLessonIds, quizResult }: RowProps) => {
                 <span>Quiz: {quizResult.score}/{quizResult.total}</span>
               </span>
             </div>
-          ) : isDone ? (
+          ) : isFullyCompleted ? (
             <div className="absolute top-3 right-3">
               <span className="rounded-md bg-emerald-600/90 backdrop-blur-md px-2.5 py-1 text-[11px] font-bold text-white border border-emerald-400/30 shadow-xs flex items-center gap-1">
                 <CheckCircle2 className="size-3" />
                 <span>100% Done</span>
+              </span>
+            </div>
+          ) : isLessonsDone && hasQuiz ? (
+            <div className="absolute top-3 right-3">
+              <span className="rounded-md bg-amber-500/90 backdrop-blur-md px-2.5 py-1 text-[11px] font-bold text-white border border-amber-300/30 shadow-xs flex items-center gap-1">
+                <ClipboardList className="size-3" />
+                <span>Quiz Ready</span>
               </span>
             </div>
           ) : null}
@@ -101,7 +118,7 @@ const Row = ({ course, completedLessonIds, quizResult }: RowProps) => {
               <span className="flex items-center gap-1.5 font-medium text-secondary">
                 <BookOpen className="size-3.5 text-sky-400" />
                 <span>
-                  <strong>{completedCount}</strong> of {totalLessons} lessons completed
+                  <strong>{completedLessonCount}</strong> of {totalLessons} lessons {hasQuiz ? `• Quiz ${quizResult ? 'Done' : 'Pending'}` : 'completed'}
                 </span>
               </span>
               <span className="font-bold text-primary">{percentComplete}%</span>
@@ -115,10 +132,15 @@ const Row = ({ course, completedLessonIds, quizResult }: RowProps) => {
       {/* Card Action Footer */}
       <div className="p-4 sm:p-5 pt-0 flex items-center justify-between gap-3">
         <div className="text-xs">
-          {isDone ? (
+          {isFullyCompleted ? (
             <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-400">
               <CheckCircle2 className="size-3.5" />
-              <span>Completed</span>
+              <span>Track Completed</span>
+            </span>
+          ) : isLessonsDone && hasQuiz && !quizResult ? (
+            <span className="inline-flex items-center gap-1.5 font-medium text-purple-400">
+              <span className="size-2 rounded-full bg-purple-400 animate-pulse" />
+              <span>Quiz Assessment Ready</span>
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 font-medium text-muted">
@@ -131,9 +153,9 @@ const Row = ({ course, completedLessonIds, quizResult }: RowProps) => {
         <Link
           href={targetLink}
           className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold transition shadow-xs ${
-            isDone && quizResult
+            isFullyCompleted
               ? 'border border-theme bg-surface hover:bg-elevated text-secondary hover:text-primary'
-              : isDone && course.quiz
+              : isLessonsDone && hasQuiz && !quizResult
               ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-600/20'
               : 'bg-sky-600 hover:bg-sky-500 text-white shadow-sky-600/20'
           }`}
