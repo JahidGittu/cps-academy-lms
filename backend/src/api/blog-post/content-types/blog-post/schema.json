@@ -20,7 +20,7 @@
       "required": true
     },
     "coverImageUrl": {
-      "type": "string"
+      "type": "text"
     },
     "author": {
       "type": "relation",
