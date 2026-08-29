@@ -19,7 +19,7 @@ import { api, errorMessage } from '@/lib/api';
 import { hasRole, useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { Collection, Lesson, LessonProgress, Single } from '@/lib/types';
-import { Alert, Button, Empty, LoadingState } from '@/components/ui';
+import { Alert, Button, Empty, LoadingState, ProgressBar } from '@/components/ui';
 import { RequireAuth } from '@/components/require-auth';
 import { RichContent } from '@/components/rich-content';
 
@@ -142,6 +142,9 @@ const Viewer = ({ documentId }: { documentId: string }) => {
     completedSet.add(detail.id);
   }
 
+  const completedCount = siblings.filter((item) => completedSet.has(item.id)).length;
+  const percentComplete = siblings.length ? Math.round((completedCount / siblings.length) * 100) : 0;
+
   return (
     <div className="space-y-6">
       {/* Top Breadcrumb & Status */}
@@ -256,7 +259,7 @@ const Viewer = ({ documentId }: { documentId: string }) => {
           </nav>
         </article>
 
-        {/* Right Sidebar: Syllabus Track Playlist (4 cols) */}
+        {/* Right Sidebar: Syllabus Track Playlist with Live Progress Bar (4 cols) */}
         <aside className="lg:col-span-4 space-y-4 lg:sticky lg:top-24 self-start">
           <div className="rounded-xl border border-theme bg-surface p-5 shadow-xs">
             <h3 className="font-bold text-primary text-sm flex items-center justify-between gap-2 mb-3 pb-3 border-b border-theme">
@@ -266,6 +269,17 @@ const Viewer = ({ documentId }: { documentId: string }) => {
               </span>
               <span className="text-xs text-muted font-medium">{siblings.length} lessons</span>
             </h3>
+
+            {/* Live Progress Bar & Percentage in Lesson Sidebar */}
+            <div className="mb-4 p-3 rounded-lg bg-elevated/40 border border-theme/60 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium text-secondary">
+                  <strong>{completedCount}</strong> of {siblings.length} completed
+                </span>
+                <span className="font-bold text-sky-400">{percentComplete}%</span>
+              </div>
+              <ProgressBar percent={percentComplete} />
+            </div>
 
             <div className="space-y-1.5">
               {siblings.map((item, index) => {
