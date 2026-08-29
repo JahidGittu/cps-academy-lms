@@ -331,7 +331,7 @@ const BlogManagement = () => {
         <div className="overflow-hidden rounded-xl border border-theme bg-surface shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="border-b border-theme bg-white dark:bg-slate-800/90 text-[11px] font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-100">
+              <thead className="border-b border-theme bg-surface text-primary text-[11px] font-extrabold uppercase tracking-wider">
                 <tr>
                   <th className="px-5 py-3.5">Article Title</th>
                   <th className="px-5 py-3.5">Author</th>
