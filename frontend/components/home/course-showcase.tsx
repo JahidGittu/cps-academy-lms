@@ -17,10 +17,10 @@ export const CourseShowcase = () => {
   const total = courses.data?.meta?.pagination?.total ?? rows.length;
 
   const body = () => {
-    if (courses.loading) return <p className="text-sm text-slate-500">Loading courses...</p>;
+    if (courses.loading) return <p className="text-sm text-muted">Loading courses...</p>;
 
     if (courses.error) {
-      return <p className="text-sm text-slate-500">The catalogue is not answering right now.</p>;
+      return <p className="text-sm text-muted">The catalogue is not answering right now.</p>;
     }
 
     if (!rows.length) return <Empty>No courses on the platform yet.</Empty>;
@@ -35,24 +35,21 @@ export const CourseShowcase = () => {
   };
 
   return (
-    <section className="border-b border-slate-200/80 bg-white">
-      <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-8">
+    <section className="border-b border-theme bg-subtle py-16 transition-colors duration-200">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-8">
         <div className="flex flex-wrap items-end justify-between gap-4 mb-10">
           <div>
-            <span className="inline-block rounded-md bg-brand-50 border border-brand-200 px-3 py-1 text-xs font-semibold text-brand-700 mb-2">
-              Featured Tracks
-            </span>
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+            <h2 className="text-3xl font-extrabold tracking-tight text-primary sm:text-4xl">
               Explore Our Courses
             </h2>
-            <p className="mt-2 text-base text-slate-600">
+            <p className="mt-2 text-base text-secondary">
               Structured engineering courses with sequential lessons and auto-graded assessments.
             </p>
           </div>
 
           <Link
             href="/courses"
-            className="group inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-brand-600 transition"
+            className="group inline-flex items-center gap-2 rounded-lg border border-theme bg-surface px-5 py-2.5 text-sm font-semibold text-primary shadow-2xs hover:bg-elevated hover:text-brand transition"
           >
             <span>View All ({total})</span>
             <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />

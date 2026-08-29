@@ -4,7 +4,6 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard,
   Shield,
   BookOpen,
   Compass,
@@ -18,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { hasRole, useAuth } from '@/lib/auth';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export type BreadcrumbItem = {
   label: string;
@@ -240,10 +240,10 @@ export const DashboardShell = ({
     <BreadcrumbContext.Provider
       value={{ breadcrumbs: customBreadcrumbs, setBreadcrumbs: setCustomBreadcrumbs }}
     >
-      <div className="min-h-screen flex bg-slate-50 text-slate-900 w-full font-sans">
-        {/* 1. Left Edge Full-Height Pinned Sidebar (Rendered on standard workspace routes, hidden in Studio Focus Mode) */}
+      <div className="min-h-screen flex bg-canvas text-secondary w-full font-sans">
+        {/* 1. Left Edge Full-Height Pinned Sidebar */}
         {!isStudioRoute && (
-          <aside className="w-64 min-h-screen h-screen sticky top-0 left-0 bg-white border-r border-slate-200 flex flex-col justify-between p-5 shrink-0 z-30 shadow-2xs hidden md:flex">
+          <aside className="w-64 min-h-screen h-screen sticky top-0 left-0 bg-surface border-r border-theme flex flex-col justify-between p-5 shrink-0 z-30 shadow-2xs hidden md:flex">
             <div className="space-y-6">
               {/* Brand Logo & Role Badge */}
               <Link href="/" className="flex items-center gap-2.5 group">
@@ -251,8 +251,8 @@ export const DashboardShell = ({
                   <GraduationCap className="size-5" />
                 </span>
                 <div className="leading-tight min-w-0">
-                  <span className="block font-bold text-slate-900 tracking-tight text-base">CPS Academy</span>
-                  <span className="block text-[11px] font-semibold text-brand-600 capitalize">
+                  <span className="block font-bold text-primary tracking-tight text-base">CPS Academy</span>
+                  <span className="block text-[11px] font-semibold text-brand capitalize">
                     {isAdmin ? 'Admin Console' : isInstructor ? 'Instructor Studio' : isContentManager ? 'Content Studio' : 'Student Hub'}
                   </span>
                 </div>
@@ -260,7 +260,7 @@ export const DashboardShell = ({
 
               {/* Role-Specific Workspace Navigation */}
               <nav className="space-y-1">
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 px-3 mb-2">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-muted px-3 mb-2">
                   Workspace Menu
                 </span>
                 {navItems.map((item) => {
@@ -275,16 +275,16 @@ export const DashboardShell = ({
                       href={item.href}
                       className={`flex items-center justify-between gap-2.5 rounded-md px-3 py-2 text-xs font-semibold transition-all ${
                         active
-                          ? 'bg-brand-50 text-brand-700 shadow-2xs font-bold border border-brand-200/80'
-                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                          ? 'bg-brand-subtle text-brand shadow-2xs font-bold border border-brand-border'
+                          : 'text-secondary hover:bg-elevated hover:text-primary'
                       }`}
                     >
                       <span className="flex items-center gap-2.5 min-w-0">
-                        <Icon className={`size-4 shrink-0 ${active ? 'text-brand-600' : 'text-slate-400'}`} />
+                        <Icon className={`size-4 shrink-0 ${active ? 'text-brand' : 'text-muted'}`} />
                         <span className="truncate">{item.label}</span>
                       </span>
                       {item.badge && (
-                        <span className="rounded bg-purple-50 px-1.5 py-0.5 text-[10px] font-bold text-purple-700 border border-purple-200">
+                        <span className="rounded bg-purple-subtle px-1.5 py-0.5 text-[10px] font-bold text-purple-700 dark:text-[#bc8cff] border border-purple-200 dark:border-[#a371f7]/30">
                           {item.badge}
                         </span>
                       )}
@@ -295,14 +295,14 @@ export const DashboardShell = ({
             </div>
 
             {/* Bottom Profile Info & Sign Out */}
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
+            <div className="pt-4 border-t border-subtle flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded bg-brand-100 text-xs font-bold text-brand-700 uppercase shadow-2xs">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-brand-subtle text-xs font-bold text-brand uppercase shadow-2xs">
                   {user.username.slice(0, 2)}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <span className="block text-xs font-bold text-slate-800 truncate">{user.username}</span>
-                  <span className="block text-[10px] font-medium text-slate-400 capitalize truncate">{roleName}</span>
+                  <span className="block text-xs font-bold text-primary truncate">{user.username}</span>
+                  <span className="block text-[10px] font-medium text-muted capitalize truncate">{roleName}</span>
                 </div>
               </div>
 
@@ -310,7 +310,7 @@ export const DashboardShell = ({
                 type="button"
                 onClick={() => void logout()}
                 title="Sign out"
-                className="rounded p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 shrink-0 cursor-pointer"
+                className="rounded p-2 text-muted transition hover:bg-elevated hover:text-red-500 shrink-0 cursor-pointer"
               >
                 <LogOut className="size-4" />
               </button>
@@ -321,38 +321,38 @@ export const DashboardShell = ({
         {/* 2. Main Dashboard & Studio Area */}
         <div className="flex-1 min-h-screen flex flex-col min-w-0">
           {/* Top Header Bar */}
-          <header className="h-16 border-b border-slate-200/80 bg-white/95 backdrop-blur-md px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20">
+          <header className="h-16 border-b border-theme bg-surface/90 backdrop-blur-md px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20">
             {/* Header Content: Studio Mode vs Dashboard Mode */}
             {isStudioRoute ? (
               <div className="flex items-center gap-3 min-w-0">
                 <Link
                   href={exitUrl}
-                  className="inline-flex items-center gap-1.5 rounded border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition shadow-2xs"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-theme bg-surface px-3 py-1.5 text-xs font-bold text-primary hover:bg-elevated hover:text-brand transition shadow-2xs"
                 >
-                  <ChevronRight className="size-3.5 rotate-180 text-slate-400" />
+                  <ChevronRight className="size-3.5 rotate-180 text-muted" />
                   <span>Exit Studio</span>
                 </Link>
 
-                <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+                <div className="h-4 w-px bg-theme hidden sm:block" />
 
                 {/* Hierarchical Studio Breadcrumb */}
                 {customBreadcrumbs && customBreadcrumbs.length > 0 && (
-                  <nav className="hidden sm:flex items-center gap-2 text-xs text-slate-500 font-medium truncate" aria-label="Breadcrumb">
+                  <nav className="hidden sm:flex items-center gap-2 text-xs text-muted font-medium truncate" aria-label="Breadcrumb">
                     {customBreadcrumbs.map((crumb, idx) => {
                       const isLast = idx === customBreadcrumbs.length - 1;
 
                       return (
                         <span key={idx} className="inline-flex items-center gap-2">
-                          {idx > 0 && <ChevronRight className="size-3 text-slate-400 shrink-0" />}
+                          {idx > 0 && <ChevronRight className="size-3 text-muted shrink-0" />}
                           {crumb.href && !isLast ? (
                             <Link
                               href={crumb.href}
-                              className="hover:text-brand-600 transition-colors max-w-[200px] truncate"
+                              className="hover:text-brand transition-colors max-w-[200px] truncate"
                             >
                               {crumb.label}
                             </Link>
                           ) : (
-                            <span className="font-bold text-slate-900 truncate max-w-[280px]">
+                            <span className="font-bold text-primary truncate max-w-[280px]">
                               {crumb.label}
                             </span>
                           )}
@@ -366,45 +366,47 @@ export const DashboardShell = ({
               <nav className="flex items-center gap-1 sm:gap-2">
                 <Link
                   href="/"
-                  className={`inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs sm:text-sm font-semibold transition ${
+                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs sm:text-sm font-semibold transition ${
                     pathname === '/'
-                      ? 'bg-brand-50 text-brand-700 font-bold shadow-2xs'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'bg-brand-subtle text-brand font-bold shadow-2xs border border-brand-border'
+                      : 'text-secondary hover:bg-elevated hover:text-primary'
                   }`}
                 >
-                  <Home className={`size-3.5 sm:size-4 ${pathname === '/' ? 'text-brand-600' : 'text-slate-400'}`} />
+                  <Home className={`size-3.5 sm:size-4 ${pathname === '/' ? 'text-brand' : 'text-muted'}`} />
                   <span>Home</span>
                 </Link>
 
                 <Link
                   href="/courses"
-                  className={`inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs sm:text-sm font-semibold transition ${
+                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs sm:text-sm font-semibold transition ${
                     pathname.startsWith('/courses')
-                      ? 'bg-brand-50 text-brand-700 font-bold shadow-2xs'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'bg-brand-subtle text-brand font-bold shadow-2xs border border-brand-border'
+                      : 'text-secondary hover:bg-elevated hover:text-primary'
                   }`}
                 >
-                  <Compass className={`size-3.5 sm:size-4 ${pathname.startsWith('/courses') ? 'text-brand-600' : 'text-slate-400'}`} />
+                  <Compass className={`size-3.5 sm:size-4 ${pathname.startsWith('/courses') ? 'text-brand' : 'text-muted'}`} />
                   <span>Courses</span>
                 </Link>
 
                 <Link
                   href="/blog"
-                  className={`inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs sm:text-sm font-semibold transition ${
+                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs sm:text-sm font-semibold transition ${
                     pathname.startsWith('/blog')
-                      ? 'bg-brand-50 text-brand-700 font-bold shadow-2xs'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'bg-brand-subtle text-brand font-bold shadow-2xs border border-brand-border'
+                      : 'text-secondary hover:bg-elevated hover:text-primary'
                   }`}
                 >
-                  <Newspaper className={`size-3.5 sm:size-4 ${pathname.startsWith('/blog') ? 'text-brand-600' : 'text-slate-400'}`} />
+                  <Newspaper className={`size-3.5 sm:size-4 ${pathname.startsWith('/blog') ? 'text-brand' : 'text-muted'}`} />
                   <span>Blog</span>
                 </Link>
               </nav>
             )}
 
-            {/* Right Header Status & Role */}
-            <div className="flex items-center gap-3 shrink-0">
-              <span className="inline-flex items-center gap-1.5 rounded bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 border border-slate-200/80">
+            {/* Right Header Status & Theme Switcher */}
+            <div className="flex items-center gap-2.5 shrink-0">
+              <ThemeToggle size="sm" />
+
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-elevated px-2.5 py-1 text-xs font-bold text-primary border border-theme">
                 <span className="size-1.5 rounded-full bg-emerald-500" />
                 <span>{roleName}</span>
               </span>
@@ -414,7 +416,7 @@ export const DashboardShell = ({
                   type="button"
                   onClick={() => void logout()}
                   title="Sign out"
-                  className="rounded p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
+                  className="rounded p-1.5 text-muted transition hover:bg-elevated hover:text-red-500 cursor-pointer"
                 >
                   <LogOut className="size-4" />
                 </button>
@@ -426,22 +428,22 @@ export const DashboardShell = ({
           <main className={`flex-1 p-6 sm:p-8 w-full mx-auto space-y-6 ${isStudioRoute ? 'max-w-[1600px]' : 'max-w-7xl'}`}>
             {/* Hierarchical Breadcrumb Navigation on standard nested pages */}
             {!isStudioRoute && customBreadcrumbs && customBreadcrumbs.length > 0 && (
-              <nav className="flex items-center gap-2 text-xs text-slate-500 font-medium flex-wrap" aria-label="Breadcrumb">
+              <nav className="flex items-center gap-2 text-xs text-muted font-medium flex-wrap" aria-label="Breadcrumb">
                 {customBreadcrumbs.map((crumb, idx) => {
                   const isLast = idx === customBreadcrumbs.length - 1;
 
                   return (
                     <span key={idx} className="inline-flex items-center gap-2">
-                      {idx > 0 && <ChevronRight className="size-3.5 text-slate-400 shrink-0" />}
+                      {idx > 0 && <ChevronRight className="size-3.5 text-muted shrink-0" />}
                       {crumb.href && !isLast ? (
                         <Link
                           href={crumb.href}
-                          className="hover:text-brand-600 transition-colors max-w-[240px] truncate"
+                          className="hover:text-brand transition-colors max-w-[240px] truncate"
                         >
                           {crumb.label}
                         </Link>
                       ) : (
-                        <span className="font-bold text-slate-900 truncate max-w-[340px]">
+                        <span className="font-bold text-primary truncate max-w-[340px]">
                           {crumb.label}
                         </span>
                       )}

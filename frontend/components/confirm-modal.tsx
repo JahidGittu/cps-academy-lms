@@ -32,41 +32,41 @@ export const ConfirmModal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop with Blur */}
       <div
-        className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
+        className="fixed inset-0 bg-black/70 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
         onClick={!loading ? onClose : undefined}
       />
 
-      {/* SweetAlert Popup Box */}
-      <div className="relative w-full max-w-md transform overflow-hidden rounded-lg bg-white p-6 sm:p-7 text-center shadow-2xl transition-all animate-in zoom-in-95 duration-200 border border-slate-200/80 z-10">
+      {/* Modal Popup Box */}
+      <div className="relative w-full max-w-md transform overflow-hidden rounded-xl bg-surface p-6 sm:p-7 text-center shadow-2xl transition-all animate-in zoom-in-95 duration-200 border border-theme z-10">
         {/* Close Top-Right Icon */}
         <button
           type="button"
           disabled={loading}
           onClick={onClose}
-          className="absolute right-4 top-4 rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition cursor-pointer"
+          className="absolute right-4 top-4 rounded-md p-1.5 text-muted hover:bg-elevated hover:text-primary transition cursor-pointer"
         >
           <X className="size-4" />
         </button>
 
-        {/* Animated SweetAlert Warning Icon */}
-        <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-md bg-red-50 text-red-600 border border-red-100 shadow-inner">
+        {/* Warning Icon */}
+        <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 shadow-inner">
           <Trash2 className="size-7 stroke-[1.75]" />
         </div>
 
         {/* Title & Description */}
-        <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+        <h3 className="text-lg sm:text-xl font-extrabold text-primary tracking-tight">
           {title}
         </h3>
 
-        <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
+        <p className="mt-2 text-xs sm:text-sm text-secondary leading-relaxed">
           {message}
         </p>
 
-        {/* Warning Badge with Dev Humor */}
-        <div className="mt-3.5 rounded-lg bg-amber-50 border border-amber-200/80 px-3 py-2 text-[11px] font-semibold text-amber-900 flex items-center justify-center gap-1.5 shadow-2xs">
-          <AlertTriangle className="size-3.5 shrink-0 text-amber-600" />
+        {/* Warning Badge */}
+        <div className="mt-3.5 rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2 text-[11px] font-semibold text-amber-600 dark:text-[#e3b341] flex items-center justify-center gap-1.5 shadow-2xs">
+          <AlertTriangle className="size-3.5 shrink-0 text-amber-500" />
           <span>
-            Warning: Even <code className="font-mono font-bold bg-amber-100/90 text-amber-900 px-1.5 py-0.5 rounded text-[10px] border border-amber-300/80">Ctrl + Z</code> won&apos;t bring this back!
+            Warning: Even <code className="font-mono font-bold bg-amber-500/20 px-1.5 py-0.5 rounded text-[10px] border border-amber-500/30">Ctrl + Z</code> won&apos;t bring this back!
           </span>
         </div>
 
@@ -77,7 +77,7 @@ export const ConfirmModal = ({
             variant="plain"
             disabled={loading}
             onClick={onClose}
-            className="w-full sm:w-auto px-5 py-2.5 font-bold text-slate-700"
+            className="w-full sm:w-auto px-5 py-2.5 font-bold"
           >
             {cancelText}
           </Button>

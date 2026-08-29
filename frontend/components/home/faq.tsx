@@ -24,28 +24,34 @@ const questions = [
 ];
 
 export const Faq = () => (
-  <section className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6">
-    <div className="text-center mb-8">
-      <span className="inline-block rounded bg-brand-50 border border-brand-200 px-2.5 py-0.5 text-xs font-semibold text-brand-700 mb-3">
-        FAQ
-      </span>
-      <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">Frequently Asked Questions</h2>
-    </div>
+  <section className="border-b border-theme bg-canvas py-20 transition-colors duration-200">
+    <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
+      <div className="text-center mb-10">
+        <h2 className="text-3xl font-extrabold tracking-tight text-primary sm:text-4xl">
+          Frequently Asked Questions
+        </h2>
+        <p className="mt-2 text-sm text-secondary">
+          Everything you need to know about the CPS Academy LMS platform.
+        </p>
+      </div>
 
-    <div className="space-y-2.5">
-      {questions.map(({ q, a }) => (
-        <details
-          key={q}
-          className="group rounded-md border border-slate-200 bg-white px-5 py-3.5 shadow-2xs open:border-brand-300 transition-colors"
-        >
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-slate-800 text-sm">
-            {q}
-            <ChevronDown className="size-4 shrink-0 text-slate-400 transition group-open:rotate-180" />
-          </summary>
+      <div className="space-y-3">
+        {questions.map(({ q, a }) => (
+          <details
+            key={q}
+            className="group rounded-xl border border-theme bg-surface px-5 py-4 shadow-sm open:border-active open:shadow-md hover:border-active/60 transition-all cursor-pointer"
+          >
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-bold text-primary text-sm sm:text-base">
+              {q}
+              <ChevronDown className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180 group-open:text-brand" />
+            </summary>
 
-          <p className="mt-2.5 text-sm text-slate-600 leading-relaxed">{a}</p>
-        </details>
-      ))}
+            <p className="mt-3 text-sm text-secondary leading-relaxed border-t border-subtle pt-3">
+              {a}
+            </p>
+          </details>
+        ))}
+      </div>
     </div>
   </section>
 );

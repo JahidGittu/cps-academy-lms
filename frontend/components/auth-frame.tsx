@@ -16,15 +16,15 @@ export const AuthFrame = ({
   footer: React.ReactNode;
   children: React.ReactNode;
 }) => (
-  <div className="mx-auto grid max-w-4xl overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-xs lg:grid-cols-2">
+  <div className="mx-auto grid max-w-4xl overflow-hidden rounded-xl border border-theme bg-surface shadow-xs lg:grid-cols-2">
     <div className="p-8 sm:p-10">
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900">{title}</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-primary">{title}</h1>
 
-      <p className="mt-1.5 text-sm text-slate-600">{lead}</p>
+      <p className="mt-1.5 text-sm text-secondary">{lead}</p>
 
       <div className="mt-6">{children}</div>
 
-      <p className="mt-6 text-sm text-slate-500">{footer}</p>
+      <p className="mt-6 text-sm text-muted">{footer}</p>
     </div>
 
     <div className="brand-gradient relative hidden overflow-hidden p-10 text-white lg:block">

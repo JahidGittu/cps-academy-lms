@@ -37,12 +37,12 @@ export const RequireAuth = ({
 
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-        <div className="flex size-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 mb-4 shadow-2xs">
+        <div className="flex size-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20 mb-4 shadow-2xs">
           <ShieldAlert className="size-7" />
         </div>
-        <h2 className="text-xl font-bold text-slate-900">Access Restricted</h2>
-        <p className="mt-1.5 max-w-md text-xs sm:text-sm text-slate-500 leading-relaxed">
-          Your account role (<strong className="text-slate-800">{user.role?.name ?? 'Authenticated'}</strong>) does not have sufficient administrative privileges to access this area.
+        <h2 className="text-xl font-bold text-primary">Access Restricted</h2>
+        <p className="mt-1.5 max-w-md text-xs sm:text-sm text-muted leading-relaxed">
+          Your account role (<strong className="text-primary">{user.role?.name ?? 'Authenticated'}</strong>) does not have sufficient administrative privileges to access this area.
         </p>
         <div className="mt-6">
           <Link href={fallbackPath}>
