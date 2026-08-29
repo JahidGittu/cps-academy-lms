@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 
 import { useApi } from '@/lib/use-api';
 import type { Course, Single } from '@/lib/types';
@@ -14,10 +14,28 @@ import { LessonManager } from './lesson-manager';
 import { QuizPanel } from './quiz-panel';
 
 const Builder = ({ documentId }: { documentId: string }) => {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const validTab: Section = tabParam === 'lessons' || tabParam === 'quiz' ? tabParam : 'details';
+
   const course = useApi<Single<Course>>(`/courses/${documentId}`);
 
-  // Default to 1st tab (Course Info) when opening course studio
-  const [section, setSection] = useState<Section>('details');
+  // Maintain active tab from URL query param (?tab=details / ?tab=lessons / ?tab=quiz)
+  const [section, setSectionState] = useState<Section>(validTab);
+
+  // Sync state if URL search param updates
+  useEffect(() => {
+    if (tabParam === 'lessons' || tabParam === 'quiz' || tabParam === 'details') {
+      setSectionState(tabParam);
+    }
+  }, [tabParam]);
+
+  const setSection = (next: Section) => {
+    setSectionState(next);
+    // Persist active tab in browser URL without full-page reloads
+    const url = `/courses/${documentId}/edit?tab=${next}`;
+    window.history.replaceState(null, '', url);
+  };
 
   const detail = course.data?.data;
 
@@ -27,14 +45,14 @@ const Builder = ({ documentId }: { documentId: string }) => {
           { label: 'Courses', href: '/admin/course-management' },
           { label: detail.title },
         ]
-      : [{ label: 'Courses', href: '/admin/course-management' }, { label: 'Course Studio' }]
+      : [{ label: 'Courses', href: '/admin/course-management' }, { label: 'Course Builder' }]
   );
 
   if (course.loading && !course.data) {
     return (
       <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start animate-in fade-in duration-200">
         <BuilderNav
-          section="details"
+          section={validTab}
           lessons={0}
           hasQuiz={false}
           courseId={documentId}
@@ -81,7 +99,9 @@ export default function EditCoursePage() {
 
   return (
     <RequireAuth roles={['Instructor', 'Content Manager', 'Admin']}>
-      <Builder documentId={params.documentId} />
+      <Suspense fallback={null}>
+        <Builder documentId={params.documentId} />
+      </Suspense>
     </RequireAuth>
   );
 }
