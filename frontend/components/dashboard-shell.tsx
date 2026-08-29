@@ -414,14 +414,23 @@ export const DashboardShell = ({
               </nav>
             )}
 
-            {/* Right Header Status & Theme Switcher */}
+            {/* Right Header Status, Profile Avatar & Theme Switcher */}
             <div className="flex items-center gap-2.5 shrink-0">
               <ThemeToggle size="sm" />
 
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-elevated px-2.5 py-1 text-xs font-bold text-primary border border-theme">
+              <Link
+                href="/profile"
+                title="View Profile & Settings"
+                className="flex items-center gap-2 rounded-lg border border-theme bg-surface py-1 pl-1.5 pr-2.5 shadow-2xs hover:bg-elevated hover:border-active transition group cursor-pointer"
+              >
+                <span className="flex size-6.5 items-center justify-center rounded-full bg-brand-subtle text-[11px] font-black text-brand uppercase shadow-2xs group-hover:scale-105 transition-transform">
+                  {user.username.slice(0, 2)}
+                </span>
+                <span className="text-xs font-bold text-primary hidden sm:inline group-hover:text-brand transition-colors">
+                  {user.username}
+                </span>
                 <span className="size-1.5 rounded-full bg-emerald-500" />
-                <span>{roleName}</span>
-              </span>
+              </Link>
 
               {isStudioRoute && (
                 <button
