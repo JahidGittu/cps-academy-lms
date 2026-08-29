@@ -83,53 +83,56 @@ export const LessonList = ({
                 </span>
               </div>
 
-              {/* Action Controls */}
+              {/* Action Controls with Soft Tag Badge Styling */}
               <div
-                className={`flex shrink-0 items-center gap-0.5 ${
-                  active ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'
+                className={`flex shrink-0 items-center gap-1 ${
+                  active ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'
                 }`}
                 onClick={(e) => e.stopPropagation()}
               >
+                {/* Up Arrow Tag */}
                 <button
                   type="button"
-                  title="Move Up"
+                  title="Move Up in Syllabus"
                   disabled={busy || index === 0}
                   onClick={() => onMove(index, -1)}
-                  className={`rounded p-1 transition disabled:opacity-20 cursor-pointer ${
+                  className={`flex size-6 items-center justify-center rounded-md border text-xs transition-all disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer ${
                     active
-                      ? 'hover:bg-white/20 text-white'
-                      : 'text-muted hover:bg-elevated hover:text-primary'
+                      ? 'bg-white/20 hover:bg-white/30 text-white border-white/25 shadow-2xs'
+                      : 'bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border-sky-500/20 dark:border-sky-400/20'
                   }`}
                 >
-                  <ArrowUp className="size-3.5" />
+                  <ArrowUp className="size-3" />
                 </button>
 
+                {/* Down Arrow Tag */}
                 <button
                   type="button"
-                  title="Move Down"
+                  title="Move Down in Syllabus"
                   disabled={busy || index === rows.length - 1}
                   onClick={() => onMove(index, 1)}
-                  className={`rounded p-1 transition disabled:opacity-20 cursor-pointer ${
+                  className={`flex size-6 items-center justify-center rounded-md border text-xs transition-all disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer ${
                     active
-                      ? 'hover:bg-white/20 text-white'
-                      : 'text-muted hover:bg-elevated hover:text-primary'
+                      ? 'bg-white/20 hover:bg-white/30 text-white border-white/25 shadow-2xs'
+                      : 'bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border-sky-500/20 dark:border-sky-400/20'
                   }`}
                 >
-                  <ArrowDown className="size-3.5" />
+                  <ArrowDown className="size-3" />
                 </button>
 
+                {/* Delete Tag */}
                 <button
                   type="button"
                   title="Delete Lesson"
                   disabled={busy}
                   onClick={() => onRemove(lesson)}
-                  className={`rounded p-1 transition cursor-pointer ${
+                  className={`flex size-6 items-center justify-center rounded-md border text-xs transition-all cursor-pointer ${
                     active
-                      ? 'hover:bg-red-500/80 text-white'
-                      : 'text-muted hover:bg-red-500/15 hover:text-red-400'
+                      ? 'bg-rose-500/30 hover:bg-rose-500 text-white border-rose-300/40 shadow-2xs'
+                      : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/20 dark:border-rose-400/20'
                   }`}
                 >
-                  <Trash2 className="size-3.5" />
+                  <Trash2 className="size-3" />
                 </button>
               </div>
             </li>
