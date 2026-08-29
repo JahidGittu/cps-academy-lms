@@ -225,13 +225,13 @@ const Viewer = ({ documentId }: { documentId: string }) => {
           <Alert>{actionError}</Alert>
 
           {/* Sequential Navigation Bar: Only Clean Previous and Next Buttons */}
-          <nav className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-6 mt-8">
+          <nav className="flex flex-wrap items-center justify-between gap-4 border-t border-subtle pt-6 mt-8">
             {previous ? (
               <Link
                 href={`/lessons/${previous.documentId}`}
-                className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
+                className="inline-flex items-center gap-2 rounded-lg border border-theme bg-surface px-4 py-2.5 text-xs font-semibold text-secondary hover:bg-elevated hover:text-primary transition shadow-2xs"
               >
-                <ArrowLeft className="size-4 text-slate-500" />
+                <ArrowLeft className="size-4 text-muted" />
                 <span>Previous</span>
               </Link>
             ) : (
@@ -272,13 +272,13 @@ const Viewer = ({ documentId }: { documentId: string }) => {
 
         {/* Right Sidebar: Syllabus Track Playlist (4 cols) */}
         <aside className="lg:col-span-4 space-y-4">
-          <div className="rounded-md border border-slate-200/90 bg-white p-5 shadow-2xs">
-            <h3 className="font-bold text-slate-900 text-sm flex items-center justify-between gap-2 mb-3 pb-3 border-b border-slate-100">
+          <div className="rounded-xl border border-theme bg-surface p-5 shadow-2xs">
+            <h3 className="font-bold text-primary text-sm flex items-center justify-between gap-2 mb-3 pb-3 border-b border-subtle">
               <span className="flex items-center gap-2">
-                <BookOpen className="size-4 text-brand-600" />
+                <BookOpen className="size-4 text-brand" />
                 <span>Course Track</span>
               </span>
-              <span className="text-xs text-slate-400 font-medium">{siblings.length} lessons</span>
+              <span className="text-xs text-muted font-medium">{siblings.length} lessons</span>
             </h3>
 
             <div className="space-y-1.5">
@@ -301,13 +301,13 @@ const Viewer = ({ documentId }: { documentId: string }) => {
                     <div
                       key={item.documentId}
                       title="Locked: Complete earlier lessons in order to unlock this lesson"
-                      className="flex items-center gap-2.5 rounded-md p-2.5 text-xs bg-slate-50 text-slate-400 border border-slate-200/60 cursor-not-allowed select-none transition-all"
+                      className="flex items-center gap-2.5 rounded-lg p-2.5 text-xs bg-canvas text-muted border border-theme/60 cursor-not-allowed select-none transition-all opacity-70"
                     >
-                      <span className="flex size-5 shrink-0 items-center justify-center rounded bg-slate-200/70 text-slate-400 font-bold text-[10px]">
+                      <span className="flex size-5 shrink-0 items-center justify-center rounded bg-elevated text-muted font-bold text-[10px]">
                         <Lock className="size-3" />
                       </span>
                       <span className="truncate flex-1 font-medium">{item.title}</span>
-                      <span className="text-[9px] uppercase tracking-wider font-bold bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded">
+                      <span className="text-[9px] uppercase tracking-wider font-bold bg-elevated text-muted px-1.5 py-0.5 rounded">
                         Locked
                       </span>
                     </div>
@@ -318,30 +318,30 @@ const Viewer = ({ documentId }: { documentId: string }) => {
                   <Link
                     key={item.documentId}
                     href={`/lessons/${item.documentId}`}
-                    className={`flex items-center gap-2.5 rounded-md p-2.5 text-xs transition-all ${
+                    className={`flex items-center gap-2.5 rounded-lg p-2.5 text-xs transition-all ${
                       isCurrent
-                        ? 'bg-brand-50 text-brand-900 font-bold border border-brand-200 shadow-2xs'
+                        ? 'bg-brand-subtle text-brand font-bold border border-brand-border shadow-2xs'
                         : isItemDone
-                        ? 'text-slate-700 hover:bg-emerald-50/50 hover:text-emerald-900'
-                        : 'text-slate-700 hover:bg-slate-50'
+                        ? 'text-secondary hover:bg-emerald-500/10 hover:text-emerald-400'
+                        : 'text-secondary hover:bg-elevated hover:text-primary'
                     }`}
                   >
                     <span
                       className={`flex size-5 shrink-0 items-center justify-center rounded font-bold text-[10px] ${
                         isCurrent
-                          ? 'bg-brand-600 text-white'
+                          ? 'bg-brand-primary text-white'
                           : isItemDone
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : 'bg-slate-100 text-slate-500'
+                          ? 'bg-emerald-500/20 text-emerald-400'
+                          : 'bg-elevated text-muted'
                       }`}
                     >
-                      {isItemDone ? <CheckCircle2 className="size-3 text-emerald-600" /> : index + 1}
+                      {isItemDone ? <CheckCircle2 className="size-3 text-emerald-400" /> : index + 1}
                     </span>
 
                     <span className="truncate flex-1">{item.title}</span>
 
                     {isItemDone && !isCurrent && (
-                      <span className="text-[10px] font-semibold text-emerald-600">Done</span>
+                      <span className="text-[10px] font-semibold text-emerald-400">Done</span>
                     )}
                   </Link>
                 );
