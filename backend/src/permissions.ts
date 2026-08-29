@@ -1,4 +1,11 @@
-import type { Core } from '@strapi/strapi';
+// Self-contained Strapi core interface fallback for clean IDE type resolution
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type StrapiCore = any;
+
+type PermissionRecord = {
+  id: number;
+  action: string;
+};
 
 const READ = ['find', 'findOne'];
 const MANAGE = ['find', 'findOne', 'create', 'update', 'delete'];
@@ -77,7 +84,7 @@ const isMine = (action: string) =>
   action.startsWith('plugin::users-permissions.role.') ||
   action.startsWith('plugin::upload.');
 
-const ensureRoles = async (strapi: Core.Strapi) => {
+const ensureRoles = async (strapi: StrapiCore) => {
   for (const role of roles) {
     const existing = await strapi.db
       .query('plugin::users-permissions.role')
@@ -90,7 +97,7 @@ const ensureRoles = async (strapi: Core.Strapi) => {
   }
 };
 
-const applyMatrix = async (strapi: Core.Strapi) => {
+const applyMatrix = async (strapi: StrapiCore) => {
   for (const [roleName, endpoints] of Object.entries(matrix)) {
     const role = await strapi.db
       .query('plugin::users-permissions.role')
@@ -105,7 +112,7 @@ const applyMatrix = async (strapi: Core.Strapi) => {
       Object.entries(endpoints).flatMap(([uid, actions]) => actions.map((action) => `${uid}.${action}`))
     );
 
-    const current = await strapi.db
+    const current: PermissionRecord[] = await strapi.db
       .query('plugin::users-permissions.permission')
       .findMany({ where: { role: { id: role.id } } });
 
@@ -117,7 +124,7 @@ const applyMatrix = async (strapi: Core.Strapi) => {
       }
     }
 
-    const already = new Set(current.map((permission) => permission.action));
+    const already = new Set(current.map((permission: PermissionRecord) => permission.action));
 
     for (const action of wanted) {
       if (!already.has(action)) {
@@ -131,7 +138,7 @@ const applyMatrix = async (strapi: Core.Strapi) => {
 
 type AdvancedSettings = { default_role: string };
 
-const setSignupRole = async (strapi: Core.Strapi, type: string) => {
+const setSignupRole = async (strapi: StrapiCore, type: string) => {
   const store = strapi.store({ type: 'plugin', name: 'users-permissions' });
   const role = await strapi.db
     .query('plugin::users-permissions.role')
@@ -146,13 +153,12 @@ const setSignupRole = async (strapi: Core.Strapi, type: string) => {
   }
 };
 
-export const applyPermissions = async (strapi: Core.Strapi) => {
+export const applyPermissions = async (strapi: StrapiCore) => {
   await ensureRoles(strapi);
   await applyMatrix(strapi);
   await setSignupRole(strapi, 'student');
 };
 
-export default async ({ strapi }: { strapi: Core.Strapi }) => {
+export default async ({ strapi }: { strapi: StrapiCore }) => {
   await applyPermissions(strapi);
 };
-
