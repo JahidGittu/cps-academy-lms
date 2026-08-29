@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
-import { CheckCircle2, RefreshCw } from 'lucide-react';
+import { CheckCircle2, Play, RefreshCw, Video } from 'lucide-react';
 
 import { errorMessage } from '@/lib/api';
 import type { Lesson } from '@/lib/types';
@@ -10,6 +10,30 @@ import { Alert, Button, Field } from '@/components/ui';
 import { RichTextEditor } from '@/components/rich-text-editor';
 
 export type LessonValues = { title: string; videoUrl: string; content: string };
+
+const getEmbedVideoUrl = (url: string) => {
+  if (!url || !url.trim()) return null;
+  const trimmed = url.trim();
+
+  // YouTube watch / share / embed / shorts
+  const ytMatch = trimmed.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/)([\w-]{11})/);
+  if (ytMatch) {
+    return `https://www.youtube.com/embed/${ytMatch[1]}`;
+  }
+
+  // Vimeo
+  const vimeoMatch = trimmed.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vimeoMatch) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  }
+
+  // Direct MP4 / WebM / OGG video file
+  if (trimmed.match(/\.(mp4|webm|ogg)$/i) || trimmed.startsWith('blob:') || trimmed.startsWith('data:video')) {
+    return trimmed;
+  }
+
+  return null;
+};
 
 export const LessonEditor = ({
   lesson,
@@ -115,6 +139,8 @@ export const LessonEditor = ({
     }
   };
 
+  const videoEmbed = getEmbedVideoUrl(values.videoUrl);
+
   return (
     <form
       onSubmit={submit}
@@ -158,12 +184,46 @@ export const LessonEditor = ({
 
       <Field label="Lesson Title" value={values.title} onChange={set('title')} placeholder="e.g. Introduction to CSS Flexbox" required />
 
-      <Field
-        label="Video URL (Optional)"
-        value={values.videoUrl}
-        onChange={set('videoUrl')}
-        placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/..."
-      />
+      {/* Video URL Input & Live Video Player Preview */}
+      <div className="space-y-2.5">
+        <Field
+          label="Video URL (Optional)"
+          value={values.videoUrl}
+          onChange={set('videoUrl')}
+          placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/..."
+        />
+
+        {videoEmbed ? (
+          <div className="overflow-hidden rounded-xl border border-theme bg-canvas p-3 shadow-2xs space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-xs font-bold text-primary">
+                <Play className="size-3.5 text-brand fill-brand/20" />
+                <span>Live Video Player Preview</span>
+              </span>
+              <span className="text-[11px] font-medium text-emerald-500">✓ Stream Ready</span>
+            </div>
+
+            <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black/80 border border-theme">
+              {videoEmbed.includes('youtube.com') || videoEmbed.includes('vimeo.com') ? (
+                <iframe
+                  src={videoEmbed}
+                  title="Lesson video preview"
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <video src={videoEmbed} controls className="h-full w-full object-contain" />
+              )}
+            </div>
+          </div>
+        ) : values.videoUrl.trim() ? (
+          <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-400">
+            <Video className="size-4 shrink-0" />
+            <span>Enter a standard YouTube (watch/shorts/embed) or Vimeo link for live streaming.</span>
+          </div>
+        ) : null}
+      </div>
 
       <RichTextEditor
         label="Lesson Content & Materials"
