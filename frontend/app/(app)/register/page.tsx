@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Eye, EyeOff, UserPlus } from 'lucide-react';
 
 import { errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -21,6 +22,7 @@ export default function RegisterPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -59,7 +61,7 @@ export default function RegisterPage() {
       footer={
         <>
           Already have an account?{' '}
-          <Link href="/login" className="font-medium text-brand-700 underline">
+          <Link href="/login" className="font-semibold text-brand-600 hover:underline">
             Sign in
           </Link>
         </>
@@ -71,6 +73,7 @@ export default function RegisterPage() {
           value={username}
           onChange={(event) => setUsername(event.target.value)}
           autoComplete="username"
+          placeholder="your_username"
           required
         />
 
@@ -80,29 +83,47 @@ export default function RegisterPage() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           autoComplete="email"
+          placeholder="your@email.com"
           required
         />
 
-        <Field
-          label="Password"
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          autoComplete="new-password"
-          minLength={6}
-          required
-        />
+        <div className="space-y-1.5">
+          <label className="block text-xs font-semibold text-secondary">
+            Password (min 6 characters)
+          </label>
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="new-password"
+              minLength={6}
+              placeholder="••••••••"
+              required
+              className="w-full rounded-md border border-theme bg-canvas pl-3 pr-10 py-2 text-xs sm:text-sm text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition p-0.5 cursor-pointer"
+              title={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          </div>
+        </div>
 
         <Alert>{error}</Alert>
 
         {/* There is no role picker on purpose. A visitor who could choose their own role could
             choose Admin, and every rule in the permission matrix would be theirs to change. */}
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-muted">
           New accounts are Students. Instructor and staff accounts are created by an admin.
         </p>
 
-        <Button type="submit" disabled={busy} className="w-full">
-          {busy ? 'Creating account' : 'Create account'}
+        <Button type="submit" disabled={busy} className="w-full gap-2">
+          <UserPlus className="size-4" />
+          <span>{busy ? 'Creating account...' : 'Create account'}</span>
         </Button>
       </form>
     </AuthFrame>

@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { KeyRound } from 'lucide-react';
+import { KeyRound, Eye, EyeOff } from 'lucide-react';
 
 import { errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -24,6 +24,7 @@ function LoginForm() {
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -83,15 +84,28 @@ function LoginForm() {
         required
       />
 
-      <Field
-        label="Password"
-        type="password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        autoComplete="current-password"
-        placeholder="••••••••"
-        required
-      />
+      <div className="space-y-1.5">
+        <label className="block text-xs font-semibold text-secondary">Password</label>
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete="current-password"
+            placeholder="••••••••"
+            required
+            className="w-full rounded-md border border-theme bg-canvas pl-3 pr-10 py-2 text-xs sm:text-sm text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition p-0.5 cursor-pointer"
+            title={showPassword ? 'Hide password' : 'Show password'}
+          >
+            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </div>
+      </div>
 
       <Alert>{error}</Alert>
 

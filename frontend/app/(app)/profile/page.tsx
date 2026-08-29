@@ -41,7 +41,9 @@ const ProfileContent = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPasswords, setShowPasswords] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordBusy, setPasswordBusy] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState(false);
@@ -281,7 +283,7 @@ const ProfileContent = () => {
               </label>
               <div className="relative">
                 <input
-                  type={showPasswords ? 'text' : 'password'}
+                  type={showCurrentPassword ? 'text' : 'password'}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Enter current password..."
@@ -290,11 +292,11 @@ const ProfileContent = () => {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPasswords(!showPasswords)}
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition p-0.5 cursor-pointer"
-                  title={showPasswords ? 'Hide password' : 'Show password'}
+                  title={showCurrentPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPasswords ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  {showCurrentPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
               </div>
             </div>
@@ -303,30 +305,50 @@ const ProfileContent = () => {
               <label className="block text-xs font-bold text-primary">
                 New Password (min 6 chars)
               </label>
-              <input
-                type={showPasswords ? 'text' : 'password'}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password..."
-                minLength={6}
-                required
-                className="w-full rounded-lg border border-theme bg-canvas px-3 py-2 text-xs sm:text-sm text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
-              />
+              <div className="relative">
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password..."
+                  minLength={6}
+                  required
+                  className="w-full rounded-lg border border-theme bg-canvas pl-3 pr-10 py-2 text-xs sm:text-sm text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition p-0.5 cursor-pointer"
+                  title={showNewPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
             </div>
 
             <div className="space-y-1.5">
               <label className="block text-xs font-bold text-primary">
                 Confirm New Password
               </label>
-              <input
-                type={showPasswords ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password..."
-                minLength={6}
-                required
-                className="w-full rounded-lg border border-theme bg-canvas px-3 py-2 text-xs sm:text-sm text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password..."
+                  minLength={6}
+                  required
+                  className="w-full rounded-lg border border-theme bg-canvas pl-3 pr-10 py-2 text-xs sm:text-sm text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition p-0.5 cursor-pointer"
+                  title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
             </div>
 
             <div className="pt-2">
