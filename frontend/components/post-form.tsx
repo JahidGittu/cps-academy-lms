@@ -455,10 +455,11 @@ export const PostForm = ({
             </div>
           </div>
 
-          {/* Dual Upload & URL Image Picker */}
+          {/* Dual Upload & URL Image Picker with Universal Media Library */}
           <ImagePicker
             label="Article Cover Image / Banner"
             value={values.coverImageUrl}
+            category="blog"
             onChange={(url) => setValues((prev) => ({ ...prev, coverImageUrl: url }))}
           />
         </div>

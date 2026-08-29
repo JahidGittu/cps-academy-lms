@@ -188,6 +188,7 @@ export const CourseForm = ({
           <ImagePicker
             label="Course Thumbnail / Cover Image"
             value={values.coverImageUrl}
+            category="course"
             onChange={(url) => setValues((prev) => ({ ...prev, coverImageUrl: url }))}
           />
         </div>

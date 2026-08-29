@@ -2,23 +2,35 @@
 
 import { useState, useRef, useEffect } from 'react';
 import type { ChangeEvent, DragEvent } from 'react';
-import { Upload, Link as LinkIcon, Image as ImageIcon, X } from 'lucide-react';
-import { FALLBACK_IMAGE } from '@/components/course-cover';
+import {
+  Upload,
+  Link as LinkIcon,
+  Image as ImageIcon,
+  X,
+  Sparkles,
+  Layers,
+  FolderOpen,
+} from 'lucide-react';
+import { FALLBACK_IMAGE, resolveImageUrl } from '@/components/course-cover';
+import { MediaLibraryModal } from '@/components/media-library-modal';
 
 export const ImagePicker = ({
   label = 'Cover Image / Thumbnail',
   value,
   onChange,
+  category = 'general',
 }: {
   label?: string;
   value: string;
   onChange: (url: string) => void;
+  category?: 'course' | 'blog' | 'general';
   presets?: unknown;
 }) => {
   const [tab, setTab] = useState<'upload' | 'url'>('upload');
   const [dragOver, setDragOver] = useState(false);
   const [loading, setLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -109,42 +121,57 @@ export const ImagePicker = ({
     if (file) processFile(file);
   };
 
-  const displayUrl = value;
+  const displayUrl = value ? resolveImageUrl(value) : '';
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-primary">
-          {label}
+      {/* Top Header Row with Label & Action Buttons */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <label className="block text-xs sm:text-sm font-bold text-primary flex items-center gap-1.5">
+          <ImageIcon className="size-4 text-sky-400" />
+          <span>{label}</span>
         </label>
 
-        {/* Tab Switcher */}
-        <div className="flex items-center rounded-lg bg-canvas p-0.5 border border-theme text-xs">
+        <div className="flex items-center gap-2">
+          {/* Media Library Modal Trigger Button */}
           <button
             type="button"
-            onClick={() => setTab('upload')}
-            className={`flex items-center gap-1 rounded-md px-2.5 py-1 transition cursor-pointer ${
-              tab === 'upload'
-                ? 'bg-surface text-brand shadow-2xs font-bold'
-                : 'text-secondary hover:text-primary'
-            }`}
+            onClick={() => setIsModalOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg brand-gradient text-white px-3 py-1 text-xs font-bold shadow-xs hover:opacity-95 transition cursor-pointer"
+            title="Browse Railway uploads & curated tech presets"
           >
-            <Upload className="size-3.5" />
-            <span>Upload File</span>
+            <Sparkles className="size-3.5" />
+            <span>Media Library</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setTab('url')}
-            className={`flex items-center gap-1 rounded-md px-2.5 py-1 transition cursor-pointer ${
-              tab === 'url'
-                ? 'bg-surface text-brand shadow-2xs font-bold'
-                : 'text-secondary hover:text-primary'
-            }`}
-          >
-            <LinkIcon className="size-3.5" />
-            <span>Image URL</span>
-          </button>
+          {/* Inline Tab Switcher */}
+          <div className="flex items-center rounded-lg bg-canvas p-0.5 border border-theme text-xs">
+            <button
+              type="button"
+              onClick={() => setTab('upload')}
+              className={`flex items-center gap-1 rounded-md px-2 py-0.5 transition cursor-pointer text-[11px] font-bold ${
+                tab === 'upload'
+                  ? 'bg-surface text-brand shadow-2xs'
+                  : 'text-secondary hover:text-primary'
+              }`}
+            >
+              <Upload className="size-3" />
+              <span>Upload</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTab('url')}
+              className={`flex items-center gap-1 rounded-md px-2 py-0.5 transition cursor-pointer text-[11px] font-bold ${
+                tab === 'url'
+                  ? 'bg-surface text-brand shadow-2xs'
+                  : 'text-secondary hover:text-primary'
+              }`}
+            >
+              <LinkIcon className="size-3" />
+              <span>URL</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -158,10 +185,10 @@ export const ImagePicker = ({
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center cursor-pointer transition-all ${
+          className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-5 text-center cursor-pointer transition-all ${
             dragOver
               ? 'border-active bg-brand-subtle'
-              : 'border-theme bg-canvas hover:border-active hover:bg-elevated'
+              : 'border-theme bg-canvas hover:border-active hover:bg-elevated/40'
           }`}
         >
           <input
@@ -172,25 +199,23 @@ export const ImagePicker = ({
             className="hidden"
           />
 
-          <div className="flex size-10 items-center justify-center rounded-md bg-brand-subtle text-brand mb-2 border border-brand-border shadow-2xs">
-            <Upload className="size-5" />
+          <div className="flex size-9 items-center justify-center rounded-lg bg-brand-subtle text-brand mb-1.5 border border-brand-border shadow-2xs">
+            <Upload className="size-4" />
           </div>
 
-          <p className="text-sm font-bold text-primary">
+          <p className="text-xs font-bold text-primary">
             {loading
-              ? 'Processing & saving image...'
+              ? 'Uploading to Railway Cloud...'
               : displayUrl
                 ? 'Click or drag & drop to replace image'
-                : 'Click to browse or drag & drop image'}
+                : 'Click to upload from device'}
           </p>
-          <p className="text-xs text-muted mt-0.5">
-            {displayUrl
-              ? 'Upload a new file to change current cover photo'
-              : 'PNG, JPG, JPEG or WebP from your computer'}
+          <p className="text-[11px] text-muted mt-0.5">
+            PNG, JPG, WebP up to 10MB (Stores in Railway backend)
           </p>
         </div>
       ) : (
-        /* Direct URL Input (type="text" to prevent HTML5 native blocking) */
+        /* Direct URL Input */
         <div>
           <input
             type="text"
@@ -199,36 +224,47 @@ export const ImagePicker = ({
               setImageError(false);
               onChange(e.target.value);
             }}
-            placeholder="https://images.unsplash.com/photo-... or /uploads/..."
-            className="w-full rounded-md border border-theme bg-surface px-3.5 py-2 text-xs sm:text-sm text-primary outline-none transition-all placeholder:text-muted focus:border-active focus:ring-2 focus:ring-brand-500/20 shadow-2xs"
+            placeholder="https://images.unsplash.com/... or https://..."
+            className="w-full rounded-xl border border-theme bg-surface px-3.5 py-2 text-xs text-primary outline-none transition-all placeholder:text-muted focus:border-active focus:ring-2 focus:ring-brand-500/20 shadow-2xs"
           />
         </div>
       )}
 
       {/* Live Thumbnail Preview & Clear Action */}
-      <div className="overflow-hidden rounded-lg border border-theme bg-canvas p-3 shadow-2xs">
+      <div className="overflow-hidden rounded-xl border border-theme bg-canvas p-3 shadow-2xs">
         <div className="flex items-center justify-between mb-2">
           <p className="flex items-center gap-1.5 text-xs font-bold text-primary">
             <ImageIcon className="size-3.5 text-brand" />
-            <span>Live Thumbnail Preview</span>
+            <span>Thumbnail Preview</span>
           </p>
 
-          {displayUrl && (
+          <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => {
-                setImageError(false);
-                onChange('');
-              }}
-              className="inline-flex items-center gap-1 text-xs text-red-500 hover:text-red-400 font-semibold cursor-pointer"
+              onClick={() => setIsModalOpen(true)}
+              className="inline-flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300 font-bold cursor-pointer"
             >
-              <X className="size-3.5" />
-              <span>Clear Image</span>
+              <FolderOpen className="size-3" />
+              <span>Browse Library</span>
             </button>
-          )}
+
+            {displayUrl && (
+              <button
+                type="button"
+                onClick={() => {
+                  setImageError(false);
+                  onChange('');
+                }}
+                className="inline-flex items-center gap-1 text-[11px] text-red-500 hover:text-red-400 font-bold cursor-pointer"
+              >
+                <X className="size-3" />
+                <span>Remove</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="relative h-48 w-full overflow-hidden rounded-md bg-black/40 shadow-2xs flex items-center justify-center border border-theme">
+        <div className="relative h-44 w-full overflow-hidden rounded-lg bg-black/40 shadow-2xs flex items-center justify-center border border-theme">
           {displayUrl ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
@@ -245,12 +281,30 @@ export const ImagePicker = ({
           ) : (
             <div className="flex flex-col items-center justify-center p-6 text-center text-muted">
               <ImageIcon className="size-8 mb-1.5 opacity-40 text-muted" />
-              <p className="text-xs font-medium">No cover image selected</p>
-              <p className="text-[11px] text-muted mt-0.5">Upload a file or paste a URL above to set thumbnail.</p>
+              <p className="text-xs font-medium">No image selected</p>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(true)}
+                className="mt-2 text-[11px] font-bold text-brand hover:underline cursor-pointer"
+              >
+                Open Media Library to select
+              </button>
             </div>
           )}
         </div>
       </div>
+
+      {/* Interactive Media Library Modal */}
+      <MediaLibraryModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSelect={(newUrl) => {
+          setImageError(false);
+          onChange(newUrl);
+        }}
+        currentUrl={value}
+        initialCategory={category}
+      />
     </div>
   );
 };
