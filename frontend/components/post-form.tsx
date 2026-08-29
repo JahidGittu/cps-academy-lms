@@ -65,13 +65,10 @@ export const PostForm = ({
   });
 
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
-  // Track which documentId we've already initialized, so reload() after auto-save
-  // does NOT reset the form and lose the user's in-progress tag selections.
   const initializedDocIdRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (post && post.documentId !== initializedDocIdRef.current) {
-      // Only run when switching to a NEW post (different documentId)
       initializedDocIdRef.current = post.documentId;
       const nextValues: PostValues = {
         title: post.title ?? '',
@@ -87,7 +84,6 @@ export const PostForm = ({
     }
   }, [post?.documentId]);
 
-  // Parse active tags array from comma-separated string
   const activeTags = useMemo(() => {
     if (!values.topic) return [];
     return values.topic
@@ -159,9 +155,8 @@ export const PostForm = ({
       latestValues.current = { ...latestValues.current, [field]: nextVal };
     };
 
-  // latestValues holds the most recent form state for use in debounced/async callbacks.
-  // IMPORTANT: do NOT do `latestValues.current = values` here — that would overwrite
-  // the synchronous updates done in toggleTag/set/addCustomTag on every render.
+  // Keep latest form state accessible in async callbacks without stale closure issues.
+  // Never assign latestValues.current = values on render — it breaks manual syncs.
   const latestValues = useRef<PostValues>(values);
 
   const saveRef = useRef(save);
@@ -169,7 +164,6 @@ export const PostForm = ({
 
   const isSavingRef = useRef(false);
 
-  // Check if form has unsaved modifications
   const isDirty =
     Boolean(values.title.trim()) &&
     (values.title !== lastSavedRef.current.title ||
@@ -178,7 +172,6 @@ export const PostForm = ({
       values.topic !== lastSavedRef.current.topic ||
       values.publishState !== lastSavedRef.current.publishState);
 
-  // Debounced auto-save for existing articles (1500ms after user pauses typing)
   useEffect(() => {
     if (!isEditing || !isDirty || !values.title.trim() || isSavingRef.current) {
       if (!isDirty && saveStatus === 'unsaved') {
@@ -220,7 +213,6 @@ export const PostForm = ({
     };
   }, [isEditing, isDirty, values.title, values.body, values.coverImageUrl, values.topic, values.publishState]);
 
-  // Unified submit handler supporting distinct Draft and Publish triggers
   const handleSaveAction = async (targetState?: 'draft' | 'published') => {
     if (isSavingRef.current || busy) return;
 
@@ -274,15 +266,14 @@ export const PostForm = ({
         <div>
           <h2 className="text-base sm:text-lg font-bold text-primary flex items-center gap-2">
             <Newspaper className="size-5 text-sky-400" />
-            <span>{isEditing ? 'Edit Technical Article' : 'Write New Article'}</span>
+            <span>{isEditing ? 'Edit Article' : 'New Article'}</span>
           </h2>
           <p className="text-xs text-muted mt-0.5">
-            Craft in-depth technical blogs, release engineering notes, and tutorials with rich Google Docs formatting.
+            Write blog posts, tutorials, and engineering notes for the platform.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Live Auto-Save Status */}
           {isEditing && (
             <div className="text-xs font-semibold">
               {saveStatus === 'saving' && (
@@ -324,30 +315,26 @@ export const PostForm = ({
         </div>
       </div>
 
-      {/* 2-Column Responsive Layout */}
       <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
-        {/* Left Column: Title & In-Place Google Docs WYSIWYG Article Body (8 cols) */}
         <div className="space-y-5 lg:col-span-8">
           <Field
             label="Article Title"
             value={values.title}
             onChange={set('title')}
             required
-            placeholder="e.g. Scaling Microservices with Kubernetes and RabbitMQ"
+            placeholder="e.g. Building a scalable REST API with Node.js"
           />
 
           <RichTextEditor
-            label="Article Content (Google Docs WYSIWYG Editor)"
+            label="Article Content"
             value={values.body}
             onChange={set('body')}
             required
-            placeholder="Write your article paragraphs, format headings with H1/H2, add code blocks, and insert diagrams..."
+            placeholder="Write your article here..."
           />
         </div>
 
-        {/* Right Column: Publication State, Multi-Tag Selector & Cover Image (4 cols) */}
         <div className="space-y-5 lg:col-span-4">
-          {/* Publication State Box (Only when editing) */}
           {isEditing && (
             <div className="rounded-xl border border-theme bg-surface p-4 shadow-2xs space-y-3">
               <div className="flex items-center justify-between">
@@ -403,17 +390,15 @@ export const PostForm = ({
             </div>
           )}
 
-          {/* Multi-Tag & Category Selector Card */}
           <div className="rounded-xl border border-theme bg-surface p-4 shadow-2xs space-y-3">
             <div className="flex items-center justify-between">
               <label className="block text-xs font-bold text-primary flex items-center gap-1.5">
                 <Tag className="size-3.5 text-sky-400" />
-                <span>Article Tags ({activeTags.length})</span>
+                <span>Tags ({activeTags.length})</span>
               </label>
-              <span className="text-[10px] text-muted font-medium">Click to toggle multiple</span>
+              <span className="text-[10px] text-muted font-medium">Click to toggle</span>
             </div>
 
-            {/* Selected Active Tag Pills */}
             {activeTags.length > 0 ? (
               <div className="flex flex-wrap gap-1.5 p-2 rounded-lg bg-canvas border border-theme">
                 {activeTags.map((tag) => (
@@ -439,9 +424,8 @@ export const PostForm = ({
               </div>
             )}
 
-            {/* Quick Multi-Select Topic Preset Badges */}
             <div className="space-y-1.5">
-              <span className="block text-[11px] font-semibold text-muted">Popular Topics:</span>
+              <span className="block text-[11px] font-semibold text-muted">Topics:</span>
               <div className="flex flex-wrap gap-1.5">
                 {PRESET_TOPICS.map((topic) => {
                   const isSelected = activeTags.some((t) => t.toLowerCase() === topic.toLowerCase());
@@ -464,7 +448,6 @@ export const PostForm = ({
               </div>
             </div>
 
-            {/* Add Custom Tag Input with Enter / + Button */}
             <div className="flex items-center gap-1.5 pt-1">
               <input
                 type="text"
@@ -486,9 +469,8 @@ export const PostForm = ({
             </div>
           </div>
 
-          {/* Dual Upload & URL Image Picker with Universal Media Library */}
           <ImagePicker
-            label="Article Cover Image / Banner"
+            label="Cover Image"
             value={values.coverImageUrl}
             category="blog"
             onChange={(url) => setValues((prev) => ({ ...prev, coverImageUrl: url }))}
@@ -498,9 +480,7 @@ export const PostForm = ({
 
       <Alert>{error}</Alert>
 
-      {/* Bottom Actions Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-subtle pt-4">
-        {/* If creating a new post: Offer distinct 'Save as Draft' vs 'Publish Article' */}
         {!isEditing ? (
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
             <button
@@ -524,7 +504,6 @@ export const PostForm = ({
             </button>
           </div>
         ) : (
-          /* If editing existing post: Provide direct Save & Publish/Unpublish toggle */
           <div className="flex flex-wrap items-center gap-3">
             <Button
               type="submit"

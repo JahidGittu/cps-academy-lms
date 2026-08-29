@@ -137,14 +137,11 @@ const BlogManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top Header & New Post Button */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">
-            Blogs
-          </h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">Blogs</h2>
           <p className="mt-1 text-xs sm:text-sm text-muted">
-            Author, edit, publish, and manage drafts and live technical articles across the platform.
+            Manage drafts and published posts across the platform.
           </p>
         </div>
 
@@ -159,7 +156,6 @@ const BlogManagement = () => {
 
       <Alert>{actionError}</Alert>
 
-      {/* KPI Metric Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
         <div className="rounded-xl border border-theme bg-surface p-4 shadow-sm">
           <p className="text-xs font-semibold text-muted">Total Articles</p>
@@ -181,11 +177,8 @@ const BlogManagement = () => {
         </div>
       </div>
 
-      {/* Search, Filter & Tag Bar */}
       <div className="bg-surface p-4 rounded-xl border border-theme shadow-xs space-y-3.5">
-        {/* Row 1: Search and Sort / Status Pills */}
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-          {/* Search Input */}
           <div className="relative flex-1 min-w-[240px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted" />
             <input
@@ -205,7 +198,6 @@ const BlogManagement = () => {
             )}
           </div>
 
-          {/* Status Filter Buttons */}
           <div className="flex items-center gap-1.5 bg-canvas p-1 rounded-lg border border-theme">
             <button
               type="button"
@@ -244,7 +236,6 @@ const BlogManagement = () => {
             </button>
           </div>
 
-          {/* Sort By Dropdown & Reset */}
           <div className="flex items-center gap-2">
             <select
               value={sortBy}
@@ -271,7 +262,6 @@ const BlogManagement = () => {
           </div>
         </div>
 
-        {/* Row 2: Interactive Topic Tag Pills (Matching Public Blog Page) */}
         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-subtle">
           <span className="text-xs font-semibold text-muted mr-1 flex items-center gap-1">
             <Tag className="size-3.5" /> Filter by Topic:
@@ -297,14 +287,10 @@ const BlogManagement = () => {
         </div>
       </div>
 
-      {/* Results Header Count */}
       <div className="flex items-center justify-between text-xs text-muted font-medium px-1">
-        <span>
-          Showing <strong>{filtered.length}</strong> of {rows.length} articles
-        </span>
+        <span>Showing <strong>{filtered.length}</strong> of {rows.length} articles</span>
       </div>
 
-      {/* Blog Management Data Table */}
       {filtered.length === 0 ? (
         <Empty>
           <p className="text-base font-bold text-primary">
@@ -351,7 +337,6 @@ const BlogManagement = () => {
 
                   return (
                     <tr key={post.documentId} className="hover:bg-elevated/50 transition-colors">
-                      {/* Cover & Clean Excerpt */}
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3.5">
                           <div className="size-12 rounded-lg overflow-hidden bg-canvas shrink-0 border border-theme shadow-2xs flex items-center justify-center">
@@ -397,7 +382,6 @@ const BlogManagement = () => {
                         </div>
                       </td>
 
-                      {/* Author */}
                       <td className="px-5 py-3.5 font-medium text-secondary text-xs">
                         <span className="inline-flex items-center gap-1.5">
                           <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-canvas text-[10px] font-bold text-primary uppercase border border-theme">
@@ -407,7 +391,6 @@ const BlogManagement = () => {
                         </span>
                       </td>
 
-                      {/* Interactive In-Table Status Dropdown */}
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-2">
                           <select
@@ -438,7 +421,6 @@ const BlogManagement = () => {
                         </div>
                       </td>
 
-                      {/* Date */}
                       <td className="px-5 py-3.5 text-xs text-muted font-medium">
                         {new Date(post.createdAt).toLocaleDateString(undefined, {
                           month: 'short',
@@ -447,7 +429,6 @@ const BlogManagement = () => {
                         })}
                       </td>
 
-                      {/* Actions */}
                       <td className="px-5 py-3.5 text-right">
                         <div className="inline-flex items-center gap-1.5">
                           <Link
@@ -484,7 +465,6 @@ const BlogManagement = () => {
         </div>
       )}
 
-      {/* Delete Post Modal */}
       <ConfirmModal
         isOpen={Boolean(deletingPost)}
         title="Delete This Article?"
