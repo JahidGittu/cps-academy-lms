@@ -11,6 +11,7 @@ type AuthValue = {
   loading: boolean;
   login: (identifier: string, password: string) => Promise<User | null>;
   register: (username: string, email: string, password: string) => Promise<User | null>;
+  reloadUser: () => Promise<User | null>;
   logout: () => Promise<void>;
 };
 
@@ -64,6 +65,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return loadUser();
   };
 
+  const reloadUser = async () => {
+    return loadUser();
+  };
+
   const logout = async () => {
     try {
       await api.post('/auth/logout');
@@ -75,7 +80,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, reloadUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

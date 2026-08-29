@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   User as UserIcon,
@@ -14,9 +14,10 @@ import {
   GraduationCap,
   Layers,
   FileText,
-  Users,
+  Save,
   Eye,
   EyeOff,
+  UserCheck,
 } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
@@ -24,7 +25,7 @@ import { useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { Collection, Course, Enrollment, LessonProgress, QuizResult } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
-import { Alert, Button, Field, Card } from '@/components/ui';
+import { Alert, Button, Card } from '@/components/ui';
 import { useSetBreadcrumbs } from '@/components/dashboard-shell';
 
 const roleBadgeColor: Record<string, string> = {
@@ -35,15 +36,30 @@ const roleBadgeColor: Record<string, string> = {
 };
 
 const ProfileContent = () => {
-  const { user } = useAuth();
+  const { user, reloadUser } = useAuth();
 
+  // Profile Edit State
+  const [username, setUsername] = useState(user?.username ?? '');
+  const [email, setEmail] = useState(user?.email ?? '');
+  const [profileBusy, setProfileBusy] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [profileSuccess, setProfileSuccess] = useState(false);
+
+  // Password Reset State
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPasswords, setShowPasswords] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const [passwordBusy, setPasswordBusy] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setUsername(user.username);
+      setEmail(user.email);
+    }
+  }, [user]);
 
   // Fetch student progress or instructor courses for personalized summary
   const roleName = user?.role?.name ?? 'Student';
@@ -63,27 +79,61 @@ const ProfileContent = () => {
     isInstructor ? '/courses?populate=*' : null
   );
 
+  const handleProfileSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setProfileError('');
+    setProfileSuccess(false);
+
+    if (!username.trim()) {
+      setProfileError('Username cannot be empty.');
+      return;
+    }
+
+    if (!email.trim() || !email.includes('@')) {
+      setProfileError('Please enter a valid email address.');
+      return;
+    }
+
+    setProfileBusy(true);
+
+    try {
+      await api.put(`/users/${user.id}`, {
+        username: username.trim(),
+        email: email.trim(),
+      });
+
+      await reloadUser();
+      setProfileSuccess(true);
+      setTimeout(() => setProfileSuccess(false), 4000);
+    } catch (caught) {
+      setProfileError(errorMessage(caught, 'Could not update profile information.'));
+    } finally {
+      setProfileBusy(false);
+    }
+  };
+
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess(false);
+    setPasswordError('');
+    setPasswordSuccess(false);
 
     if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters long.');
+      setPasswordError('New password must be at least 6 characters long.');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('New password and confirmation password do not match.');
+      setPasswordError('New password and confirmation password do not match.');
       return;
     }
 
     if (currentPassword === newPassword) {
-      setError('New password must be different from your old password.');
+      setPasswordError('New password must be different from your old password.');
       return;
     }
 
-    setBusy(true);
+    setPasswordBusy(true);
 
     try {
       await api.post('/auth/change-password', {
@@ -92,19 +142,21 @@ const ProfileContent = () => {
         passwordConfirmation: confirmPassword,
       });
 
-      setSuccess(true);
+      setPasswordSuccess(true);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      setTimeout(() => setSuccess(false), 5000);
+      setTimeout(() => setPasswordSuccess(false), 5000);
     } catch (caught) {
-      setError(errorMessage(caught, 'Could not change password. Please check your current password.'));
+      setPasswordError(errorMessage(caught, 'Could not change password. Please verify your current password.'));
     } finally {
-      setBusy(false);
+      setPasswordBusy(false);
     }
   };
 
   if (!user) return null;
+
+  const isProfileDirty = username !== user.username || email !== user.email;
 
   return (
     <div className="space-y-8 max-w-5xl">
@@ -286,94 +338,170 @@ const ProfileContent = () => {
         )}
       </section>
 
-      {/* 3. Security & Password Reset Card */}
-      <Card className="space-y-5">
-        <div className="border-b border-subtle pb-4">
-          <h2 className="text-base sm:text-lg font-bold text-primary flex items-center gap-2">
-            <KeyRound className="size-5 text-sky-400" />
-            <span>Account Security & Password Reset</span>
-          </h2>
-          <p className="text-xs text-muted mt-0.5">
-            Update your account password by confirming your old password and entering a new secure password.
-          </p>
-        </div>
-
-        {success && (
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs font-bold text-emerald-400 flex items-center gap-2">
-            <CheckCircle2 className="size-4" />
-            <span>Your password has been successfully updated!</span>
+      {/* 3. Two-Column Layout: Edit Personal Profile vs Security & Password Reset */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Left Column: Edit Personal Information */}
+        <Card className="space-y-5">
+          <div className="border-b border-subtle pb-4">
+            <h2 className="text-base sm:text-lg font-bold text-primary flex items-center gap-2">
+              <UserIcon className="size-5 text-sky-400" />
+              <span>Personal Information</span>
+            </h2>
+            <p className="text-xs text-muted mt-0.5">
+              Update your account username and email address.
+            </p>
           </div>
-        )}
 
-        <Alert>{error}</Alert>
+          {profileSuccess && (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs font-bold text-emerald-400 flex items-center gap-2 animate-in fade-in">
+              <CheckCircle2 className="size-4" />
+              <span>Profile information updated successfully!</span>
+            </div>
+          )}
 
-        <form onSubmit={handlePasswordChange} className="space-y-4 max-w-lg">
-          <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-primary">
-              Current / Old Password
-            </label>
-            <div className="relative">
+          <Alert>{profileError}</Alert>
+
+          <form onSubmit={handleProfileSave} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-primary">
+                Username
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username..."
+                required
+                className="w-full rounded-lg border border-theme bg-canvas px-3 py-2 text-xs sm:text-sm text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-primary">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email address..."
+                required
+                className="w-full rounded-lg border border-theme bg-canvas px-3 py-2 text-xs sm:text-sm text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-primary">
+                Assigned Role (Read-only)
+              </label>
+              <div className="w-full rounded-lg border border-theme bg-elevated px-3 py-2 text-xs sm:text-sm font-semibold text-secondary flex items-center justify-between">
+                <span>{roleName}</span>
+                <span className="text-[10px] text-muted font-bold uppercase">Managed by Admin</span>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <Button
+                type="submit"
+                disabled={profileBusy || !isProfileDirty}
+                className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-2 text-xs shadow-md shadow-sky-600/20 transition cursor-pointer"
+              >
+                <Save className="size-3.5 mr-1.5" />
+                <span>{profileBusy ? 'Saving Changes...' : 'Save Profile Changes'}</span>
+              </Button>
+            </div>
+          </form>
+        </Card>
+
+        {/* Right Column: Security & Password Reset */}
+        <Card className="space-y-5">
+          <div className="border-b border-subtle pb-4">
+            <h2 className="text-base sm:text-lg font-bold text-primary flex items-center gap-2">
+              <KeyRound className="size-5 text-sky-400" />
+              <span>Change Password</span>
+            </h2>
+            <p className="text-xs text-muted mt-0.5">
+              Reset your password by verifying your old password.
+            </p>
+          </div>
+
+          {passwordSuccess && (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs font-bold text-emerald-400 flex items-center gap-2 animate-in fade-in">
+              <CheckCircle2 className="size-4" />
+              <span>Password updated successfully!</span>
+            </div>
+          )}
+
+          <Alert>{passwordError}</Alert>
+
+          <form onSubmit={handlePasswordChange} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-primary">
+                Current / Old Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPasswords ? 'text' : 'password'}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password..."
+                  required
+                  className="w-full rounded-lg border border-theme bg-canvas pl-3 pr-10 py-2 text-xs sm:text-sm text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswords(!showPasswords)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition p-0.5 cursor-pointer"
+                  title={showPasswords ? 'Hide password' : 'Show password'}
+                >
+                  {showPasswords ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-primary">
+                New Password (min 6 chars)
+              </label>
               <input
                 type={showPasswords ? 'text' : 'password'}
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Enter your current password..."
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password..."
+                minLength={6}
                 required
-                className="w-full rounded-lg border border-theme bg-canvas pl-3 pr-10 py-2 text-xs sm:text-sm text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
+                className="w-full rounded-lg border border-theme bg-canvas px-3 py-2 text-xs sm:text-sm text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
               />
-              <button
-                type="button"
-                onClick={() => setShowPasswords(!showPasswords)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition p-0.5"
-                title={showPasswords ? 'Hide password' : 'Show password'}
-              >
-                {showPasswords ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
             </div>
-          </div>
 
-          <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-primary">
-              New Password (minimum 6 characters)
-            </label>
-            <input
-              type={showPasswords ? 'text' : 'password'}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Enter your new secure password..."
-              minLength={6}
-              required
-              className="w-full rounded-lg border border-theme bg-canvas px-3 py-2 text-xs sm:text-sm text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
-            />
-          </div>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-primary">
+                Confirm New Password
+              </label>
+              <input
+                type={showPasswords ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password..."
+                minLength={6}
+                required
+                className="w-full rounded-lg border border-theme bg-canvas px-3 py-2 text-xs sm:text-sm text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
+              />
+            </div>
 
-          <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-primary">
-              Confirm New Password
-            </label>
-            <input
-              type={showPasswords ? 'text' : 'password'}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm your new password..."
-              minLength={6}
-              required
-              className="w-full rounded-lg border border-theme bg-canvas px-3 py-2 text-xs sm:text-sm text-primary placeholder:text-muted outline-none focus:border-active focus:ring-2 focus:ring-brand-500/20"
-            />
-          </div>
-
-          <div className="pt-2">
-            <Button
-              type="submit"
-              disabled={busy || !currentPassword || !newPassword || !confirmPassword}
-              className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/20 transition cursor-pointer"
-            >
-              <Lock className="size-4 mr-2" />
-              <span>{busy ? 'Updating Password...' : 'Reset & Update Password'}</span>
-            </Button>
-          </div>
-        </form>
-      </Card>
+            <div className="pt-2">
+              <Button
+                type="submit"
+                disabled={passwordBusy || !currentPassword || !newPassword || !confirmPassword}
+                className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-2 text-xs shadow-md shadow-sky-600/20 transition cursor-pointer"
+              >
+                <Lock className="size-3.5 mr-1.5" />
+                <span>{passwordBusy ? 'Updating Password...' : 'Update Password'}</span>
+              </Button>
+            </div>
+          </form>
+        </Card>
+      </div>
     </div>
   );
 };

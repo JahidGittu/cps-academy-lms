@@ -32,7 +32,7 @@ const matrix: Record<string, Record<string, string[]>> = {
     'api::enrollment.enrollment': ['find', 'findOne', 'create', 'delete'],
     'api::lesson-progress.lesson-progress': ['find', 'findOne', 'create', 'delete'],
     'api::quiz-result.quiz-result': ['find', 'findOne', 'create'],
-    'plugin::users-permissions.user': ['me'],
+    'plugin::users-permissions.user': ['me', 'update'],
     'plugin::users-permissions.auth': ['logout', 'changePassword'],
   },
 
@@ -45,7 +45,7 @@ const matrix: Record<string, Record<string, string[]>> = {
     'api::lesson-progress.lesson-progress': READ,
     'api::quiz-result.quiz-result': READ,
     'plugin::upload.content-api': ['upload', 'destroy', 'find', 'findOne'],
-    'plugin::users-permissions.user': ['me'],
+    'plugin::users-permissions.user': ['me', 'update'],
     'plugin::users-permissions.auth': ['logout', 'changePassword'],
   },
 
@@ -58,7 +58,7 @@ const matrix: Record<string, Record<string, string[]>> = {
     'api::lesson-progress.lesson-progress': READ,
     'api::quiz-result.quiz-result': READ,
     'plugin::upload.content-api': ['upload', 'destroy', 'find', 'findOne'],
-    'plugin::users-permissions.user': ['me'],
+    'plugin::users-permissions.user': ['me', 'update'],
     'plugin::users-permissions.auth': ['logout', 'changePassword'],
   },
 
