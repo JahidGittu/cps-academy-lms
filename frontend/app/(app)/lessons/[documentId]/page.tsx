@@ -19,7 +19,7 @@ import { api, errorMessage } from '@/lib/api';
 import { hasRole, useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { Collection, Lesson, LessonProgress, Single } from '@/lib/types';
-import { Alert, Button, Empty, LoadingState, ProgressBar } from '@/components/ui';
+import { Alert, Button, Empty, Skeleton, ProgressBar } from '@/components/ui';
 import { RequireAuth } from '@/components/require-auth';
 import { RichContent } from '@/components/rich-content';
 
@@ -33,6 +33,72 @@ const embedUrl = (url: string) => {
   const id = url.match(/(?:youtu\.be\/|[?&]v=|\/embed\/)([\w-]{11})/);
   return id ? `https://www.youtube.com/embed/${id[1]}` : null;
 };
+
+// Smooth in-place lesson content skeleton loader
+const LessonContentSkeleton = () => (
+  <article className="lg:col-span-8 space-y-6 animate-pulse">
+    <div className="space-y-2">
+      <Skeleton className="h-8 w-3/4 rounded-lg" />
+    </div>
+
+    <div className="aspect-video w-full rounded-xl bg-elevated/70 border border-theme/60 flex items-center justify-center shadow-xs">
+      <Skeleton className="size-12 rounded-full" />
+    </div>
+
+    <div className="rounded-xl bg-surface p-6 sm:p-8 border border-theme space-y-3.5 shadow-xs">
+      <Skeleton className="h-4 w-full rounded" />
+      <Skeleton className="h-4 w-5/6 rounded" />
+      <Skeleton className="h-4 w-4/5 rounded" />
+      <div className="pt-2 space-y-2">
+        <Skeleton className="h-4 w-11/12 rounded" />
+        <Skeleton className="h-4 w-3/4 rounded" />
+      </div>
+    </div>
+
+    <div className="flex items-center justify-between pt-6 border-t border-theme">
+      <Skeleton className="h-10 w-28 rounded-xl" />
+      <Skeleton className="h-10 w-32 rounded-xl" />
+    </div>
+  </article>
+);
+
+// Full-page structured skeleton that matches exact lesson layout without fullscreen spinners
+const LessonPageSkeleton = () => (
+  <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="flex items-center justify-between pb-4 border-b border-theme">
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-4 w-24 rounded" />
+        <span className="text-muted">/</span>
+        <Skeleton className="h-4 w-48 rounded" />
+      </div>
+    </div>
+
+    <div className="grid gap-8 lg:grid-cols-12 items-start">
+      <LessonContentSkeleton />
+
+      <aside className="lg:col-span-4 space-y-4">
+        <div className="rounded-xl border border-theme bg-surface p-5 space-y-3 shadow-xs">
+          <div className="flex items-center justify-between pb-3 border-b border-theme">
+            <Skeleton className="h-4 w-28 rounded" />
+            <Skeleton className="h-4 w-16 rounded" />
+          </div>
+          <div className="p-3 rounded-lg bg-elevated/40 border border-theme/60 space-y-2">
+            <div className="flex justify-between">
+              <Skeleton className="h-3.5 w-32 rounded" />
+              <Skeleton className="h-3.5 w-10 rounded" />
+            </div>
+            <Skeleton className="h-2 w-full rounded-full" />
+          </div>
+          <div className="space-y-2 pt-1">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full rounded-lg" />
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+);
 
 const Viewer = ({ documentId }: { documentId: string }) => {
   const router = useRouter();
@@ -71,9 +137,9 @@ const Viewer = ({ documentId }: { documentId: string }) => {
     });
   };
 
-  // Only show full loading spinner if we don't have lesson data yet
+  // Render seamless structured skeleton on initial load instead of harsh fullscreen spinner
   if (lesson.loading && !lesson.data) {
-    return <LoadingState />;
+    return <LessonPageSkeleton />;
   }
 
   if (lesson.status === 404) {
@@ -164,96 +230,100 @@ const Viewer = ({ documentId }: { documentId: string }) => {
 
       {/* Main Grid: Content & Syllabus Playlist */}
       <div className="grid gap-8 lg:grid-cols-12 items-start">
-        {/* Main Lesson Body (8 cols) */}
-        <article className="lg:col-span-8 space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-primary tracking-tight leading-tight">
-            {detail.title}
-          </h1>
+        {/* Main Lesson Body (8 cols) or Transition Skeleton */}
+        {isPending ? (
+          <LessonContentSkeleton />
+        ) : (
+          <article className="lg:col-span-8 space-y-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-primary tracking-tight leading-tight">
+              {detail.title}
+            </h1>
 
-          {/* Embedded Video Player */}
-          {embed ? (
-            <div className="overflow-hidden rounded-xl border border-theme bg-black shadow-md">
-              <iframe
-                src={embed}
-                title={detail.title}
-                allowFullScreen
-                className="aspect-video w-full"
-              />
-            </div>
-          ) : (
-            detail.videoUrl && (
-              <div className="rounded-xl border border-theme bg-surface p-4 flex items-center gap-3">
-                <Play className="size-4 text-sky-400 shrink-0" />
-                <a
-                  href={detail.videoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs sm:text-sm font-semibold text-sky-400 hover:underline"
-                >
-                  Watch Video Lecture ↗
-                </a>
+            {/* Embedded Video Player */}
+            {embed ? (
+              <div className="overflow-hidden rounded-xl border border-theme bg-black shadow-md">
+                <iframe
+                  src={embed}
+                  title={detail.title}
+                  allowFullScreen
+                  className="aspect-video w-full"
+                />
               </div>
-            )
-          )}
-
-          {/* Written Content */}
-          {detail.content && (
-            <div className="rounded-xl bg-surface p-6 sm:p-8 border border-theme shadow-xs leading-relaxed text-secondary">
-              <RichContent content={detail.content} />
-            </div>
-          )}
-
-          <Alert>{actionError}</Alert>
-
-          {/* Sequential Navigation Bar: Instant Zero-Lag Navigation */}
-          <nav className="flex flex-wrap items-center justify-between gap-4 border-t border-theme pt-6 mt-8">
-            {previous ? (
-              <Link
-                href={`/lessons/${previous.documentId}`}
-                prefetch={true}
-                className="inline-flex items-center gap-2 rounded-xl border border-theme bg-surface px-4 py-2.5 text-xs font-semibold text-secondary hover:bg-elevated hover:text-primary transition shadow-xs cursor-pointer"
-              >
-                <ArrowLeft className="size-4 text-muted" />
-                <span>Previous</span>
-              </Link>
             ) : (
-              <div />
+              detail.videoUrl && (
+                <div className="rounded-xl border border-theme bg-surface p-4 flex items-center gap-3">
+                  <Play className="size-4 text-sky-400 shrink-0" />
+                  <a
+                    href={detail.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs sm:text-sm font-semibold text-sky-400 hover:underline"
+                  >
+                    Watch Video Lecture ↗
+                  </a>
+                </div>
+              )
             )}
 
-            {/* Next Button / Action: Seamless Fast Transition */}
-            {next ? (
-              <button
-                type="button"
-                disabled={isPending || busy}
-                onClick={() => completeAndNext(`/lessons/${next.documentId}`)}
-                className="inline-flex items-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-500 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/25 transition cursor-pointer"
-              >
-                <span>{isPending ? 'Loading...' : 'Next Lesson'}</span>
-                <ArrowRight className="size-4" />
-              </button>
-            ) : isLastLesson && course?.quiz ? (
-              <button
-                type="button"
-                disabled={isPending || busy}
-                onClick={() => course.quiz && completeAndNext(`/quizzes/${course.quiz.documentId}`)}
-                className="inline-flex items-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold px-5 py-2.5 text-xs shadow-md shadow-purple-600/25 transition cursor-pointer"
-              >
-                <span>{isPending ? 'Opening...' : 'Take Quiz Assessment'}</span>
-                <Award className="size-4" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                disabled={isPending || busy}
-                onClick={() => completeAndNext(course ? `/courses/${course.documentId}` : '/dashboard')}
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 text-xs shadow-md shadow-emerald-600/25 transition cursor-pointer"
-              >
-                <span>{isPending ? 'Completing...' : 'Finish Course'}</span>
-                <CheckCircle2 className="size-4" />
-              </button>
+            {/* Written Content */}
+            {detail.content && (
+              <div className="rounded-xl bg-surface p-6 sm:p-8 border border-theme shadow-xs leading-relaxed text-secondary">
+                <RichContent content={detail.content} />
+              </div>
             )}
-          </nav>
-        </article>
+
+            <Alert>{actionError}</Alert>
+
+            {/* Sequential Navigation Bar: Instant Zero-Lag Navigation */}
+            <nav className="flex flex-wrap items-center justify-between gap-4 border-t border-theme pt-6 mt-8">
+              {previous ? (
+                <Link
+                  href={`/lessons/${previous.documentId}`}
+                  prefetch={true}
+                  className="inline-flex items-center gap-2 rounded-xl border border-theme bg-surface px-4 py-2.5 text-xs font-semibold text-secondary hover:bg-elevated hover:text-primary transition shadow-xs cursor-pointer"
+                >
+                  <ArrowLeft className="size-4 text-muted" />
+                  <span>Previous</span>
+                </Link>
+              ) : (
+                <div />
+              )}
+
+              {/* Next Button / Action: Seamless Fast Transition */}
+              {next ? (
+                <button
+                  type="button"
+                  disabled={isPending || busy}
+                  onClick={() => completeAndNext(`/lessons/${next.documentId}`)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-500 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/25 transition cursor-pointer"
+                >
+                  <span>{isPending ? 'Loading...' : 'Next Lesson'}</span>
+                  <ArrowRight className="size-4" />
+                </button>
+              ) : isLastLesson && course?.quiz ? (
+                <button
+                  type="button"
+                  disabled={isPending || busy}
+                  onClick={() => course.quiz && completeAndNext(`/quizzes/${course.quiz.documentId}`)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold px-5 py-2.5 text-xs shadow-md shadow-purple-600/25 transition cursor-pointer"
+                >
+                  <span>{isPending ? 'Opening...' : 'Take Quiz Assessment'}</span>
+                  <Award className="size-4" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={isPending || busy}
+                  onClick={() => completeAndNext(course ? `/courses/${course.documentId}` : '/dashboard')}
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 text-xs shadow-md shadow-emerald-600/25 transition cursor-pointer"
+                >
+                  <span>{isPending ? 'Completing...' : 'Finish Course'}</span>
+                  <CheckCircle2 className="size-4" />
+                </button>
+              )}
+            </nav>
+          </article>
+        )}
 
         {/* Right Sidebar: Syllabus Track Playlist with Live Progress Bar (4 cols) */}
         <aside className="lg:col-span-4 space-y-4 lg:sticky lg:top-24 self-start">
