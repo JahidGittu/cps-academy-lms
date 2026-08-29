@@ -27,6 +27,7 @@ import { DetailHeader } from '@/components/course/detail-header';
 import { CourseCover } from '@/components/course-cover';
 import { JoinForm } from '@/components/course/join-form';
 import { Syllabus } from '@/components/course/syllabus';
+import { toast } from '@/components/toast';
 
 const Detail = ({ documentId }: { documentId: string }) => {
   const router = useRouter();
@@ -79,6 +80,7 @@ const Detail = ({ documentId }: { documentId: string }) => {
   const enrol = async () => {
     await act(async () => {
       await api.post('/enrollments', { data: { course: documentId } });
+      toast.success('Successfully enrolled in course track! Opening Lesson 1...', 'Enrollment Confirmed!');
       setCountdown(3);
     });
   };
@@ -170,24 +172,6 @@ const Detail = ({ documentId }: { documentId: string }) => {
     if (enrollment) {
       return (
         <div className="space-y-3.5">
-          {/* Live 3-Second Auto-redirect Banner */}
-          {countdown !== null && countdown >= 0 && next && (
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/15 p-3.5 text-xs text-emerald-400 shadow-sm animate-pulse">
-              <div className="flex items-center justify-between">
-                <p className="font-bold flex items-center gap-1.5">
-                  <Sparkles className="size-4 text-emerald-400" />
-                  <span>Enrollment Successful!</span>
-                </p>
-                <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 font-mono text-xs font-bold text-emerald-300 border border-emerald-500/40">
-                  {countdown}s
-                </span>
-              </div>
-              <p className="mt-1 text-[11px] text-emerald-300/90 leading-relaxed">
-                Redirecting you to <strong>Lesson 1</strong> in {countdown} {countdown === 1 ? 'second' : 'seconds'}...
-              </p>
-            </div>
-          )}
-
           <div className="flex items-baseline justify-between text-sm">
             <span className="font-bold text-primary flex items-center gap-1.5">
               <CheckCircle2 className="size-4 text-emerald-400" />
@@ -218,8 +202,8 @@ const Detail = ({ documentId }: { documentId: string }) => {
               className="flex items-center justify-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-3 text-xs font-bold text-white shadow-md shadow-sky-600/25 transition-all w-full"
             >
               <span>
-                {countdown !== null && countdown >= 0
-                  ? `Entering Lesson 1 (${countdown}s)...`
+                {countdown !== null && countdown > 0
+                  ? `Opening Lesson 1 in ${countdown}s...`
                   : completed.size
                   ? 'Continue Next Lesson'
                   : 'Start the First Lesson'}
@@ -244,7 +228,7 @@ const Detail = ({ documentId }: { documentId: string }) => {
         <div className="space-y-3">
           <Button
             disabled={busy}
-            className="w-full bg-sky-600 hover:bg-sky-500 font-bold py-3 text-sm shadow-md shadow-sky-600/25"
+            className="w-full bg-sky-600 hover:bg-sky-500 font-bold py-3 text-sm shadow-md shadow-sky-600/25 cursor-pointer"
             onClick={enrol}
           >
             {busy ? (

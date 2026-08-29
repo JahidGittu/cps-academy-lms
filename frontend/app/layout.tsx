@@ -6,6 +6,7 @@ import { AuthProvider } from '@/lib/auth';
 import { ThemeProvider } from '@/lib/theme';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
+import { ToastContainer } from '@/components/toast';
 
 const sansFont = Plus_Jakarta_Sans({
   variable: '--font-sans',
@@ -63,6 +64,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
             <SiteHeader />
             <main className="flex-1">{children}</main>
             <SiteFooter />
+            <ToastContainer />
           </AuthProvider>
         </ThemeProvider>
       </body>
