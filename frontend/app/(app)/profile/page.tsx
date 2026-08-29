@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import {
   User as UserIcon,
   Shield,
@@ -10,20 +9,13 @@ import {
   Calendar,
   CheckCircle2,
   Lock,
-  BookOpen,
-  GraduationCap,
-  Layers,
-  FileText,
   Save,
   Eye,
   EyeOff,
-  UserCheck,
 } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { useApi } from '@/lib/use-api';
-import type { Collection, Course, Enrollment, LessonProgress, QuizResult } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
 import { Alert, Button, Card } from '@/components/ui';
 import { useSetBreadcrumbs } from '@/components/dashboard-shell';
@@ -61,23 +53,7 @@ const ProfileContent = () => {
     }
   }, [user]);
 
-  // Fetch student progress or instructor courses for personalized summary
   const roleName = user?.role?.name ?? 'Student';
-  const isStudent = roleName === 'Student';
-  const isInstructor = roleName === 'Instructor';
-
-  const enrollments = useApi<Collection<Enrollment>>(
-    isStudent ? '/enrollments?populate=course' : null
-  );
-  const progresses = useApi<Collection<LessonProgress>>(
-    isStudent ? '/lesson-progresses' : null
-  );
-  const quizResults = useApi<Collection<QuizResult>>(
-    isStudent ? '/quiz-results' : null
-  );
-  const instructorCourses = useApi<Collection<Course>>(
-    isInstructor ? '/courses?populate=*' : null
-  );
 
   const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,7 +135,7 @@ const ProfileContent = () => {
   const isProfileDirty = username !== user.username || email !== user.email;
 
   return (
-    <div className="space-y-8 max-w-5xl">
+    <div className="space-y-6 max-w-5xl">
       {/* 1. User Identity Profile Banner */}
       <div className="rounded-xl border border-theme bg-surface p-6 sm:p-8 shadow-sm relative overflow-hidden">
         <div className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-sky-500/10 blur-3xl" />
@@ -212,133 +188,7 @@ const ProfileContent = () => {
         </div>
       </div>
 
-      {/* 2. Role-Specific Activity & Statistics Summary */}
-      <section className="space-y-4">
-        <h2 className="text-base sm:text-lg font-bold text-primary flex items-center gap-2">
-          <GraduationCap className="size-5 text-sky-400" />
-          <span>Platform Activity & Role Summary</span>
-        </h2>
-
-        {isStudent && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="rounded-xl border border-theme bg-surface p-5 shadow-2xs">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold text-muted uppercase">Enrolled Courses</p>
-                <BookOpen className="size-4 text-sky-400" />
-              </div>
-              <p className="mt-2 text-3xl font-black text-primary">
-                {enrollments.data?.data?.length ?? 0}
-              </p>
-              <Link href="/dashboard" className="text-xs font-bold text-sky-400 hover:underline mt-1 inline-block">
-                View My Courses &rarr;
-              </Link>
-            </div>
-
-            <div className="rounded-xl border border-theme bg-surface p-5 shadow-2xs">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold text-muted uppercase">Completed Lessons</p>
-                <CheckCircle2 className="size-4 text-emerald-400" />
-              </div>
-              <p className="mt-2 text-3xl font-black text-emerald-400">
-                {progresses.data?.data?.length ?? 0}
-              </p>
-              <p className="text-[11px] text-muted mt-1">Verified sequential progression</p>
-            </div>
-
-            <div className="rounded-xl border border-theme bg-surface p-5 shadow-2xs">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold text-muted uppercase">Quizzes Attempted</p>
-                <Layers className="size-4 text-purple-400" />
-              </div>
-              <p className="mt-2 text-3xl font-black text-purple-400">
-                {quizResults.data?.data?.length ?? 0}
-              </p>
-              <p className="text-[11px] text-muted mt-1">Auto-graded assessment scores</p>
-            </div>
-          </div>
-        )}
-
-        {isInstructor && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="rounded-xl border border-theme bg-surface p-5 shadow-2xs">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold text-muted uppercase">Authored Courses</p>
-                <BookOpen className="size-4 text-indigo-400" />
-              </div>
-              <p className="mt-2 text-3xl font-black text-primary">
-                {instructorCourses.data?.data?.length ?? 0}
-              </p>
-              <Link href="/dashboard" className="text-xs font-bold text-indigo-400 hover:underline mt-1 inline-block">
-                Manage Courses in Dashboard &rarr;
-              </Link>
-            </div>
-
-            <div className="rounded-xl border border-theme bg-surface p-5 shadow-2xs">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold text-muted uppercase">Instructor Privileges</p>
-                <Shield className="size-4 text-indigo-400" />
-              </div>
-              <p className="text-xs text-secondary mt-2 leading-relaxed">
-                Full authoring rights to create courses, structure syllabus, add lessons, build auto-graded MCQ quizzes, and monitor student completion rosters.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {roleName === 'Admin' && (
-          <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-5 shadow-2xs space-y-3">
-            <div className="flex items-center gap-2 text-sm font-bold text-purple-400">
-              <Shield className="size-4" />
-              <span>Full Administrative Control</span>
-            </div>
-            <p className="text-xs text-secondary leading-relaxed">
-              You hold the master platform role. You can govern all users, assign roles, inspect platform statistics, build courses, and write technical articles.
-            </p>
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Link
-                href="/admin"
-                className="rounded-lg bg-purple-600 hover:bg-purple-500 text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition"
-              >
-                Admin Overview
-              </Link>
-              <Link
-                href="/admin/user-management"
-                className="rounded-lg border border-purple-500/30 bg-surface text-purple-300 hover:bg-elevated px-3.5 py-1.5 text-xs font-bold transition"
-              >
-                Manage Users
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {roleName === 'Content Manager' && (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 shadow-2xs space-y-3">
-            <div className="flex items-center gap-2 text-sm font-bold text-amber-400">
-              <FileText className="size-4" />
-              <span>Content Manager Control</span>
-            </div>
-            <p className="text-xs text-secondary leading-relaxed">
-              You manage the course library and engineering blogs across the platform. You can author courses, lessons, and draft or publish technical articles.
-            </p>
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Link
-                href="/admin/course-management"
-                className="rounded-lg bg-amber-600 hover:bg-amber-500 text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition"
-              >
-                Course Management
-              </Link>
-              <Link
-                href="/admin/blog-management"
-                className="rounded-lg border border-amber-500/30 bg-surface text-amber-300 hover:bg-elevated px-3.5 py-1.5 text-xs font-bold transition"
-              >
-                Blog Management
-              </Link>
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* 3. Two-Column Layout: Edit Personal Profile vs Security & Password Reset */}
+      {/* 2. Two-Column Layout: Edit Personal Profile vs Security & Password Reset */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Left Column: Edit Personal Information */}
         <Card className="space-y-5">
