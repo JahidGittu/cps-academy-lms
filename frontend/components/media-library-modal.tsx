@@ -187,12 +187,35 @@ export const MediaLibraryModal = ({
     const assetsMap = new Map<string, MediaAsset>();
     const rawHost = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
     const strapiBase = rawHost.replace(/\/api\/?$/, '').replace(/\/+$/, '');
-    const token = typeof window !== 'undefined' ? localStorage.getItem('lms.jwt') || localStorage.getItem('token') : null;
 
-    // 1. Fetch from Strapi Upload Plugin (/api/upload/files)
+    // Always read token fresh from localStorage (never cache in closure)
+    const getToken = () => {
+      if (typeof window === 'undefined') return null;
+      return (
+        localStorage.getItem('lms.jwt') ||
+        localStorage.getItem('token') ||
+        localStorage.getItem('jwt') ||
+        null
+      );
+    };
+
+    const authHeaders = (): Record<string, string> => {
+      const t = getToken();
+      return t ? { Authorization: `Bearer ${t}` } : {};
+    };
+
+    // Helper: resolve any URL (relative or absolute) to absolute
+    const resolveUrl = (raw: string) => {
+      if (!raw) return '';
+      raw = raw.trim();
+      if (raw.startsWith('http') || raw.startsWith('//') || raw.startsWith('data:')) return raw;
+      return `${strapiBase}${raw.startsWith('/') ? raw : `/${raw}`}`;
+    };
+
+    // 1. Fetch from Strapi Upload Plugin (/api/upload/files) — public read enabled
     try {
-      const res = await fetch(`${strapiBase}/api/upload/files?sort=createdAt:desc`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      const res = await fetch(`${strapiBase}/api/upload/files?sort=createdAt:desc&pagination[pageSize]=200`, {
+        headers: authHeaders(),
       });
 
       if (res.ok) {
@@ -202,7 +225,7 @@ export const MediaLibraryModal = ({
         files.forEach((f) => {
           const rawUrl = String(f.url ?? '');
           if (!rawUrl) return;
-          const finalUrl = rawUrl.startsWith('http') ? rawUrl : `${strapiBase}${rawUrl}`;
+          const finalUrl = resolveUrl(rawUrl);
           const sizeKB = typeof f.size === 'number' ? `${Math.round(f.size)} KB` : undefined;
 
           assetsMap.set(finalUrl, {
@@ -217,53 +240,63 @@ export const MediaLibraryModal = ({
             createdAt: typeof f.createdAt === 'string' ? f.createdAt : undefined,
           });
         });
+      } else {
+        console.warn('[MediaModal] /api/upload/files responded with', res.status);
       }
     } catch (err) {
       console.warn('Failed to fetch Strapi upload files', err);
     }
 
-    // 2. Fetch all Course Covers from database (/api/courses)
+    // 2. Fetch all Course Covers — public API, extract /uploads/ images
     try {
-      const res = await fetch(`${strapiBase}/api/courses?populate=*`);
+      const res = await fetch(
+        `${strapiBase}/api/courses?fields[0]=title&fields[1]=coverImageUrl&pagination[pageSize]=100`,
+        { headers: authHeaders() }
+      );
       if (res.ok) {
         const data = await res.json();
         const courses: Array<Record<string, unknown>> = Array.isArray(data) ? data : data?.data ?? [];
         courses.forEach((c) => {
           const cover = typeof c.coverImageUrl === 'string' ? c.coverImageUrl.trim() : '';
-          if (cover && !assetsMap.has(cover)) {
-            const finalUrl = cover.startsWith('http') || cover.startsWith('data:') ? cover : `${strapiBase}${cover.startsWith('/') ? '' : '/'}${cover}`;
-            assetsMap.set(finalUrl, {
-              id: `course-${c.documentId || c.id}`,
-              name: `${String(c.title || 'Course')} Cover`,
-              url: finalUrl,
-              category: 'course',
-              tag: 'Course Track',
-              isCustom: cover.includes('/uploads/'),
-            });
-          }
+          if (!cover) return;
+          const finalUrl = resolveUrl(cover);
+          // Add even if already in map from upload/files — course items get better labeling
+          assetsMap.set(finalUrl, {
+            id: assetsMap.get(finalUrl)?.id ?? `course-${c.documentId || c.id}`,
+            name: `${String(c.title || 'Course')} Cover`,
+            url: finalUrl,
+            category: 'course',
+            tag: 'Course Track',
+            size: assetsMap.get(finalUrl)?.size,
+            isCustom: true,
+          });
         });
       }
     } catch (err) {
       console.warn('Failed to fetch courses for media assets', err);
     }
 
-    // 3. Fetch all Blog Covers from database (/api/blog-posts)
+    // 3. Fetch all Blog Post Covers
     try {
-      const res = await fetch(`${strapiBase}/api/blog-posts?populate=*`);
+      const res = await fetch(
+        `${strapiBase}/api/blog-posts?fields[0]=title&fields[1]=coverImageUrl&fields[2]=topic&pagination[pageSize]=100`,
+        { headers: authHeaders() }
+      );
       if (res.ok) {
         const data = await res.json();
         const posts: Array<Record<string, unknown>> = Array.isArray(data) ? data : data?.data ?? [];
         posts.forEach((p) => {
           const cover = typeof p.coverImageUrl === 'string' ? p.coverImageUrl.trim() : '';
-          if (cover && !assetsMap.has(cover)) {
-            const finalUrl = cover.startsWith('http') || cover.startsWith('data:') ? cover : `${strapiBase}${cover.startsWith('/') ? '' : '/'}${cover}`;
+          if (!cover) return;
+          const finalUrl = resolveUrl(cover);
+          if (!assetsMap.has(finalUrl)) {
             assetsMap.set(finalUrl, {
               id: `blog-${p.documentId || p.id}`,
               name: `${String(p.title || 'Article')} Banner`,
               url: finalUrl,
               category: 'blog',
               tag: typeof p.topic === 'string' && p.topic ? p.topic : 'Article',
-              isCustom: cover.includes('/uploads/'),
+              isCustom: true,
             });
           }
         });
@@ -275,6 +308,8 @@ export const MediaLibraryModal = ({
     setUploadedFiles(Array.from(assetsMap.values()));
     setLoadingUploads(false);
   };
+
+
 
   // Upload new file directly to Strapi / Railway Backend
   const handleFileUpload = async (file: File) => {

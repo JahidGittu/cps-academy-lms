@@ -22,6 +22,7 @@ const matrix: Record<string, Record<string, string[]>> = {
   Public: {
     'api::course.course': READ,
     'api::blog-post.blog-post': READ,
+    'plugin::upload.content-api': ['find', 'findOne'],
     'plugin::users-permissions.auth': ['callback', 'connect', 'register', 'forgotPassword', 'resetPassword', 'emailConfirmation'],
   },
 
