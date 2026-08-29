@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { Alert, Button, Field } from '@/components/ui';
+import { Alert, Button, Field, LoadingState } from '@/components/ui';
 import { AuthFrame } from '@/components/auth-frame';
 
 const points = [
@@ -16,13 +16,21 @@ const points = [
 ];
 
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { user, loading, register } = useAuth();
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  // If already authenticated, redirect to role-specific dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      const isAdmin = user?.role?.name === 'Admin';
+      router.replace(isAdmin ? '/admin' : '/dashboard');
+    }
+  }, [user, loading, router]);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -37,6 +45,10 @@ export default function RegisterPage() {
       setBusy(false);
     }
   };
+
+  if (loading || user) {
+    return <LoadingState />;
+  }
 
   return (
     <AuthFrame

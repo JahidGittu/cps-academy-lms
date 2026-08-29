@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { KeyRound } from 'lucide-react';
@@ -17,7 +17,7 @@ const points = [
 ];
 
 function LoginForm() {
-  const { login } = useAuth();
+  const { user, loading, login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTarget = searchParams.get('redirect');
@@ -26,6 +26,22 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  // If already authenticated, automatically redirect user to their role-specific dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      if (
+        redirectTarget &&
+        redirectTarget.startsWith('/') &&
+        !redirectTarget.startsWith('//')
+      ) {
+        router.replace(redirectTarget);
+      } else {
+        const isAdmin = user?.role?.name === 'Admin';
+        router.replace(isAdmin ? '/admin' : '/dashboard');
+      }
+    }
+  }, [user, loading, redirectTarget, router]);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -51,6 +67,10 @@ function LoginForm() {
       setBusy(false);
     }
   };
+
+  if (loading || user) {
+    return <LoadingState />;
+  }
 
   return (
     <form onSubmit={submit} className="space-y-4">
@@ -105,4 +125,3 @@ export default function LoginPage() {
     </AuthFrame>
   );
 }
-
