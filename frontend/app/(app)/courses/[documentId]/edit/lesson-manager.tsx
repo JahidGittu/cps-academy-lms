@@ -25,18 +25,29 @@ export const LessonManager = ({
   // Keep local ordered list for instant optimistic rendering without UI jumping
   const [localLessons, setLocalLessons] = useState<Lesson[]>([]);
   // What the panel on the right is holding: a documentId, the word 'new', or empty
-  const [selected, setSelected] = useState('');
+  const [selected, setSelected] = useState('new');
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
 
-  // Synchronize server lessons into local state
+  // Synchronize server lessons into local state and auto-open first lesson or new form
   useEffect(() => {
     if (lessons.data?.data) {
       const sorted = [...lessons.data.data].sort((a, b) => a.order - b.order);
       setLocalLessons(sorted);
+
+      setSelected((prev) => {
+        // If current selection is valid, keep it
+        if (prev && (prev === 'new' || sorted.some((l) => l.documentId === prev))) {
+          return prev;
+        }
+        // Otherwise default to 1st lesson if available, or 'new' form
+        return sorted.length > 0 ? sorted[0].documentId : 'new';
+      });
+    } else if (!lessons.loading) {
+      setSelected('new');
     }
-  }, [lessons.data]);
+  }, [lessons.data, lessons.loading]);
 
   const rows = localLessons;
   const editing = rows.find((row) => row.documentId === selected) ?? null;
@@ -88,37 +99,34 @@ export const LessonManager = ({
 
       const currentSelected = selected;
 
-      // 1. Optimistically swap in local UI state immediately
-      const nextList = [...rows];
-      const movingNewOrder = other.order;
-      const otherNewOrder = moving.order;
+      // Optimistic swap
+      const reordered = [...rows];
+      reordered[index] = other;
+      reordered[index + delta] = moving;
+      setLocalLessons(reordered);
+      setSelected(currentSelected);
 
-      nextList[index] = { ...other, order: otherNewOrder };
-      nextList[index + delta] = { ...moving, order: movingNewOrder };
-      setLocalLessons(nextList);
-
-      // 2. Persist order values to backend in background
-      await api.put(`/lessons/${moving.documentId}`, { data: { order: movingNewOrder } });
-      await api.put(`/lessons/${other.documentId}`, { data: { order: otherNewOrder } });
-
-      // 3. Silently revalidate without unmounting
-      await refresh();
-
-      // 4. Ensure active lesson stays selected
-      if (currentSelected) {
-        setSelected(currentSelected);
+      try {
+        await Promise.all([
+          api.put(`/lessons/${moving.documentId}`, { data: { order: other.order } }),
+          api.put(`/lessons/${other.documentId}`, { data: { order: moving.order } }),
+        ]);
+        await refresh();
+      } catch (err) {
+        await lessons.reload();
+        throw err;
       }
     });
 
+  // Delete lesson confirmation
   const confirmDeleteLesson = () => {
     if (!lessonToDelete) return;
     const lesson = lessonToDelete;
 
-    void run(async () => {
-      // Optimistic removal
-      setLocalLessons((prev) => prev.filter((l) => l.documentId !== lesson.documentId));
+    run(async () => {
       if (selected === lesson.documentId) {
-        setSelected('');
+        const remaining = rows.filter((r) => r.documentId !== lesson.documentId);
+        setSelected(remaining.length > 0 ? remaining[0].documentId : 'new');
       }
 
       await api.delete(`/lessons/${lesson.documentId}`);
@@ -155,7 +163,7 @@ export const LessonManager = ({
             key={selected}
             lesson={editing}
             onSave={save}
-            onCancel={() => setSelected('')}
+            onCancel={() => setSelected(rows.length > 0 ? rows[0].documentId : 'new')}
           />
         ) : (
           <Empty>
