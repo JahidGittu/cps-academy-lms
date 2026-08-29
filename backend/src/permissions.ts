@@ -162,8 +162,12 @@ const ensureDefaultRole = async (strapi: StrapiCore) => {
   strapi.log.info(`default registration role set to ${student.name} (${student.type})`);
 };
 
-export const syncPermissions = async (strapi: StrapiCore) => {
-  await ensureRoles(strapi);
-  await applyMatrix(strapi);
-  await ensureDefaultRole(strapi);
+export const syncPermissions = async (opts: any) => {
+  const strapiInstance = opts?.strapi ?? opts;
+  await ensureRoles(strapiInstance);
+  await applyMatrix(strapiInstance);
+  await ensureDefaultRole(strapiInstance);
 };
+
+export default syncPermissions;
+
