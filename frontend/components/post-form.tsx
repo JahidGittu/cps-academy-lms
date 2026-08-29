@@ -95,25 +95,35 @@ export const PostForm = ({
     if (!trimmed) return;
 
     let nextTags: string[];
-    const exists = activeTags.some((t) => t.toLowerCase() === trimmed.toLowerCase());
+    const currentTags = latestValues.current.topic
+      ? latestValues.current.topic.split(',').map((t) => t.trim()).filter(Boolean)
+      : [];
+    const exists = currentTags.some((t) => t.toLowerCase() === trimmed.toLowerCase());
 
     if (exists) {
-      nextTags = activeTags.filter((t) => t.toLowerCase() !== trimmed.toLowerCase());
+      nextTags = currentTags.filter((t) => t.toLowerCase() !== trimmed.toLowerCase());
     } else {
-      nextTags = [...activeTags, trimmed];
+      nextTags = [...currentTags, trimmed];
     }
 
-    setValues((prev) => ({ ...prev, topic: nextTags.join(', ') }));
+    const nextTopic = nextTags.join(', ');
+    setValues((prev) => ({ ...prev, topic: nextTopic }));
+    latestValues.current = { ...latestValues.current, topic: nextTopic };
   };
 
   const addCustomTag = () => {
     const trimmed = customTagInput.trim();
     if (!trimmed) return;
 
-    const exists = activeTags.some((t) => t.toLowerCase() === trimmed.toLowerCase());
+    const currentTags = latestValues.current.topic
+      ? latestValues.current.topic.split(',').map((t) => t.trim()).filter(Boolean)
+      : [];
+    const exists = currentTags.some((t) => t.toLowerCase() === trimmed.toLowerCase());
     if (!exists) {
-      const nextTags = [...activeTags, trimmed];
-      setValues((prev) => ({ ...prev, topic: nextTags.join(', ') }));
+      const nextTags = [...currentTags, trimmed];
+      const nextTopic = nextTags.join(', ');
+      setValues((prev) => ({ ...prev, topic: nextTopic }));
+      latestValues.current = { ...latestValues.current, topic: nextTopic };
     }
     setCustomTagInput('');
   };
@@ -126,14 +136,22 @@ export const PostForm = ({
   };
 
   const removeTag = (tagToRemove: string) => {
-    const nextTags = activeTags.filter((t) => t !== tagToRemove);
-    setValues((prev) => ({ ...prev, topic: nextTags.join(', ') }));
+    const currentTags = latestValues.current.topic
+      ? latestValues.current.topic.split(',').map((t) => t.trim()).filter(Boolean)
+      : [];
+    const nextTags = currentTags.filter((t) => t !== tagToRemove);
+    const nextTopic = nextTags.join(', ');
+    setValues((prev) => ({ ...prev, topic: nextTopic }));
+    latestValues.current = { ...latestValues.current, topic: nextTopic };
   };
 
   const set =
     (field: keyof PostValues) =>
-    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | { target: { value: string } }) =>
-      setValues((prev) => ({ ...prev, [field]: event.target.value }));
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | { target: { value: string } }) => {
+      const nextVal = event.target.value;
+      setValues((prev) => ({ ...prev, [field]: nextVal }));
+      latestValues.current = { ...latestValues.current, [field]: nextVal };
+    };
 
   const latestValues = useRef<PostValues>(values);
   latestValues.current = values;
@@ -203,14 +221,15 @@ export const PostForm = ({
       debounceTimer.current = null;
     }
 
-    if (!values.title.trim()) {
+    const currentValues = latestValues.current;
+    if (!currentValues.title.trim()) {
       setError('Article title is required.');
       return;
     }
 
     const payload: PostValues = {
-      ...values,
-      publishState: targetState ?? values.publishState,
+      ...currentValues,
+      publishState: targetState ?? currentValues.publishState,
     };
 
     isSavingRef.current = true;
