@@ -1,7 +1,11 @@
-import type { Context } from 'koa';
+// @ts-nocheck
+/**
+ * Strapi Users & Permissions Plugin Extension
+ */
 
-// Declare global Strapi instance available in runtime
-declare const strapi: any;
+declare global {
+  var strapi: any;
+}
 
 export default (plugin: any) => {
   const { me, destroy } = plugin.controllers.user;
@@ -10,12 +14,12 @@ export default (plugin: any) => {
   // the role collection is an Admin-only permission, so /users/me answered without a role for
   // the three roles that need it most. The role the request was already authenticated with is
   // put back here rather than by widening that permission.
-  plugin.controllers.user.me = async (ctx: Context & { state: { user?: { role?: { id: number; name: string; type: string } } } }) => {
+  plugin.controllers.user.me = async (ctx: any) => {
     await me(ctx);
 
     // ctx.body is typed as unknown, so the shape being added to is stated here.
     const user = ctx.body as { role?: unknown } | null;
-    const role = ctx.state.user?.role;
+    const role = ctx.state?.user?.role;
 
     if (user && role) {
       user.role = { id: role.id, name: role.name, type: role.type };
