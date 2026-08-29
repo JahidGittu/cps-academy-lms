@@ -287,17 +287,6 @@ export default function PublicBlogPage() {
               ))}
             </div>
           </div>
-
-          {/* Platform Info Callout */}
-          <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-5 shadow-2xs space-y-2 text-sky-400">
-            <div className="flex items-center gap-2 font-bold text-xs">
-              <Layers className="size-4" />
-              <span>CPS Academy Engineering</span>
-            </div>
-            <p className="text-[11px] text-muted leading-relaxed">
-              Curated architectural deep-dives, database performance tuning, and full-stack software guides authored by our instructors.
-            </p>
-          </div>
         </aside>
       </div>
     </div>
