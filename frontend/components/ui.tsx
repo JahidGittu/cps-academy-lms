@@ -72,11 +72,11 @@ export const Empty = ({ children }: { children: React.ReactNode }) => (
 );
 
 const tones = {
-  brand: 'border-brand-border bg-brand-subtle text-brand',
-  green: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-[#3fb950]',
+  brand: 'badge-brand',
+  green: 'badge-green',
   slate: 'border-theme bg-subtle text-secondary',
-  amber: 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-[#e3b341]',
-  purple: 'border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-[#bc8cff]',
+  amber: 'badge-amber',
+  purple: 'badge-purple',
 };
 
 export const Badge = ({
@@ -87,7 +87,7 @@ export const Badge = ({
   tone?: keyof typeof tones;
 }) => (
   <span
-    className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-xs font-semibold ${tones[tone]}`}
+    className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-semibold ${tones[tone]}`}
   >
     {children}
   </span>
@@ -139,5 +139,5 @@ export const LoadingState = ({
 );
 
 export const Skeleton = ({ className = '' }: { className?: string }) => (
-  <div className={`animate-pulse rounded-md bg-slate-200/70 dark:bg-white/[0.07] ${className}`} />
+  <div className={`animate-pulse rounded-md skeleton-box ${className}`} />
 );

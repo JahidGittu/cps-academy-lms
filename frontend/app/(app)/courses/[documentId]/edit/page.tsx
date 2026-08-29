@@ -6,7 +6,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { useApi } from '@/lib/use-api';
 import type { Course, Single } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
-import { Alert, Empty } from '@/components/ui';
+import { Alert, Empty, Skeleton } from '@/components/ui';
 import { useSetBreadcrumbs } from '@/components/dashboard-shell';
 import { BuilderNav, type Section } from './builder-nav';
 import { CourseDetails } from './course-details';
@@ -59,10 +59,10 @@ const Builder = ({ documentId }: { documentId: string }) => {
           onSelect={() => {}}
         />
         <div className="rounded-xl border border-theme bg-surface p-6 shadow-xs space-y-4">
-          <div className="h-5 w-44 rounded-md bg-slate-200/70 dark:bg-white/[0.07] animate-pulse" />
-          <div className="h-10 w-full rounded-md bg-slate-200/70 dark:bg-white/[0.07] animate-pulse" />
-          <div className="h-24 w-full rounded-md bg-slate-200/70 dark:bg-white/[0.07] animate-pulse" />
-          <div className="h-36 w-full rounded-md bg-slate-200/70 dark:bg-white/[0.07] animate-pulse" />
+          <Skeleton className="h-5 w-44" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-36 w-full" />
         </div>
       </div>
     );

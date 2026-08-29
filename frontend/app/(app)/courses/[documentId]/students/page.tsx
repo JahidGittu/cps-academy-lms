@@ -149,10 +149,8 @@ const Roster = ({ documentId }: { documentId: string }) => {
 
                       <td className="px-5 py-3.5 text-right">
                         {hasQuiz ? (
-                          <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-bold border ${
-                            isPassed
-                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-[#3fb950] border-emerald-500/30'
-                              : 'bg-amber-500/15 text-amber-600 dark:text-[#e3b341] border-amber-500/30'
+                          <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-bold ${
+                            isPassed ? 'badge-green' : 'badge-amber'
                           }`}>
                             <CheckCircle2 className="size-3" />
                             <span>{quizScore} / {quizTotal} ({quizScorePercent}%)</span>

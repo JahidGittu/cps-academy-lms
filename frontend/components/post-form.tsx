@@ -403,7 +403,7 @@ export const PostForm = ({
                       onClick={() => toggleTag(topic)}
                       className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
                         isSelected
-                          ? 'bg-sky-600 dark:bg-sky-500 text-white shadow-xs border border-sky-600 dark:border-sky-500'
+                          ? 'brand-gradient text-white shadow-xs border border-transparent'
                           : 'bg-canvas text-secondary border border-theme hover:bg-elevated hover:text-primary'
                       }`}
                     >

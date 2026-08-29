@@ -36,9 +36,9 @@ export const Syllabus = ({
             <span
               className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                 finished
-                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-[#3fb950]'
+                  ? 'badge-green'
                   : reachable || isAuthor
-                  ? 'bg-sky-500/15 text-sky-400'
+                  ? 'bg-brand-subtle text-brand'
                   : 'bg-elevated text-muted'
               }`}
             >

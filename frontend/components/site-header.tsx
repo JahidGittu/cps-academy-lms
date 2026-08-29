@@ -50,10 +50,10 @@ const NavLink = ({
 };
 
 const roleBadgeColor: Record<string, string> = {
-  Admin: 'bg-purple-subtle text-purple-700 dark:text-[#bc8cff] border-purple-200 dark:border-[#a371f7]/30',
-  'Content Manager': 'bg-amber-subtle text-amber-700 dark:text-[#e3b341] border-amber-200 dark:border-[#d29922]/30',
-  Instructor: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800',
-  Student: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-[#3fb950] border-emerald-200 dark:border-emerald-800',
+  Admin: 'badge-purple',
+  'Content Manager': 'badge-amber',
+  Instructor: 'badge-brand',
+  Student: 'badge-green',
 };
 
 export const SiteHeader = () => {

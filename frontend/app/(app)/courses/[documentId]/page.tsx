@@ -149,9 +149,9 @@ const Detail = ({ documentId }: { documentId: string }) => {
           </div>
 
           {lastQuizResult && (
-            <div className="mt-3 rounded-md bg-emerald-500/15 border border-emerald-500/30 p-3 text-xs text-emerald-700 dark:text-[#3fb950] shadow-2xs">
+            <div className="mt-3 rounded-md badge-green p-3 text-xs shadow-2xs">
               <p className="font-bold flex items-center gap-1.5">
-                <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-[#3fb950]" />
+                <CheckCircle2 className="size-3.5" />
                 Course Completed
               </p>
               <p className="mt-1 text-[11px]">

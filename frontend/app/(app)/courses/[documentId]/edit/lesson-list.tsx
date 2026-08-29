@@ -96,13 +96,13 @@ export const LessonList = ({
                   title="Move Up in Syllabus"
                   disabled={busy || index === 0}
                   onClick={() => onMove(index, -1)}
-                  className={`flex size-7 items-center justify-center rounded-lg border text-white transition-all disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer ${
+                  className={`flex size-7 items-center justify-center rounded-lg border transition-all disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer ${
                     active
-                      ? 'bg-white/25 hover:bg-white/35 border-white/40 shadow-xs'
-                      : 'bg-slate-800/90 dark:bg-slate-700/90 hover:bg-sky-600 dark:hover:bg-sky-500 border-slate-600/80 dark:border-slate-500/80 shadow-xs'
+                      ? 'bg-white/25 hover:bg-white/35 border-white/40 text-white shadow-xs'
+                      : 'bg-elevated hover:bg-brand-subtle text-secondary hover:text-brand border-theme shadow-xs'
                   }`}
                 >
-                  <ArrowUp className="size-4 stroke-[2.5] text-white" />
+                  <ArrowUp className="size-4 stroke-[2.5]" />
                 </button>
 
                 {/* Down Arrow Tag */}
@@ -111,13 +111,13 @@ export const LessonList = ({
                   title="Move Down in Syllabus"
                   disabled={busy || index === rows.length - 1}
                   onClick={() => onMove(index, 1)}
-                  className={`flex size-7 items-center justify-center rounded-lg border text-white transition-all disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer ${
+                  className={`flex size-7 items-center justify-center rounded-lg border transition-all disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer ${
                     active
-                      ? 'bg-white/25 hover:bg-white/35 border-white/40 shadow-xs'
-                      : 'bg-slate-800/90 dark:bg-slate-700/90 hover:bg-sky-600 dark:hover:bg-sky-500 border-slate-600/80 dark:border-slate-500/80 shadow-xs'
+                      ? 'bg-white/25 hover:bg-white/35 border-white/40 text-white shadow-xs'
+                      : 'bg-elevated hover:bg-brand-subtle text-secondary hover:text-brand border-theme shadow-xs'
                   }`}
                 >
-                  <ArrowDown className="size-4 stroke-[2.5] text-white" />
+                  <ArrowDown className="size-4 stroke-[2.5]" />
                 </button>
 
                 {/* Delete Tag */}
@@ -126,13 +126,13 @@ export const LessonList = ({
                   title="Delete Lesson"
                   disabled={busy}
                   onClick={() => onRemove(lesson)}
-                  className={`flex size-7 items-center justify-center rounded-lg border text-white transition-all cursor-pointer ${
+                  className={`flex size-7 items-center justify-center rounded-lg border transition-all cursor-pointer ${
                     active
-                      ? 'bg-rose-500/40 hover:bg-rose-500 border-rose-300/50 shadow-xs'
-                      : 'bg-slate-800/90 dark:bg-slate-700/90 hover:bg-rose-600 dark:hover:bg-rose-500 border-slate-600/80 dark:border-slate-500/80 shadow-xs'
+                      ? 'bg-rose-500/40 hover:bg-rose-500 border-rose-300/50 text-white shadow-xs'
+                      : 'bg-elevated hover:bg-rose-500/15 text-secondary hover:text-rose-500 border-theme shadow-xs'
                   }`}
                 >
-                  <Trash2 className="size-4 stroke-[2.2] text-white" />
+                  <Trash2 className="size-4 stroke-[2.2]" />
                 </button>
               </div>
             </li>

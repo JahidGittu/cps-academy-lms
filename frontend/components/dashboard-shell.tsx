@@ -299,7 +299,7 @@ export const DashboardShell = ({
                         <span className="truncate">{item.label}</span>
                       </span>
                       {item.badge && (
-                        <span className="rounded bg-purple-subtle px-1.5 py-0.5 text-[10px] font-bold text-purple-700 dark:text-[#bc8cff] border border-purple-200 dark:border-[#a371f7]/30">
+                        <span className="rounded badge-purple px-1.5 py-0.5 text-[10px] font-bold">
                           {item.badge}
                         </span>
                       )}

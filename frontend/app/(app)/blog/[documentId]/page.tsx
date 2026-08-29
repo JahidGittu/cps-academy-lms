@@ -125,7 +125,7 @@ const Post = ({ documentId }: { documentId: string }) => {
               ))}
 
           {detail.publishState === 'draft' && (
-            <span className="rounded bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-600 dark:text-[#e3b341] border border-amber-500/30">
+            <span className="rounded badge-amber px-2 py-0.5 text-xs font-bold">
               Draft Mode
             </span>
           )}

@@ -234,7 +234,7 @@ export default function PublicBlogPage() {
                     onClick={() => setActiveTopic(topic)}
                     className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                       isSelected
-                        ? 'bg-sky-600 dark:bg-sky-500 text-white shadow-xs border border-sky-600 dark:border-sky-500'
+                        ? 'brand-gradient text-white shadow-xs border border-transparent'
                         : 'bg-canvas text-secondary border border-theme hover:bg-elevated hover:text-primary'
                     }`}
                   >
