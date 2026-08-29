@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Pencil,
   Users,
+  ShieldAlert,
 } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
@@ -17,13 +18,14 @@ import { useApi } from '@/lib/use-api';
 import type { Collection, Course, Enrollment, LessonProgress, QuizResult, Single, User } from '@/lib/types';
 import { Alert, Button, buttonStyle, Card, Empty, LoadingState, ProgressBar } from '@/components/ui';
 import { DetailHeader } from '@/components/course/detail-header';
-import { EnrolPanel } from '@/components/course/enrol-panel';
 import { JoinForm } from '@/components/course/join-form';
 import { Syllabus } from '@/components/course/syllabus';
 
 const Detail = ({ documentId }: { documentId: string }) => {
   const { user, loading: knowingUser } = useAuth();
   const isStudent = hasRole(user, 'Student');
+  const isAdmin = hasRole(user, 'Admin');
+  const isContentManager = hasRole(user, 'Content Manager');
 
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
@@ -89,31 +91,44 @@ const Detail = ({ documentId }: { documentId: string }) => {
   const lessons = detail.lessons ?? [];
   const percent = lessons.length ? Math.round((completed.size / lessons.length) * 100) : 0;
 
-  const readable = isStudent ? Boolean(enrollment) : Boolean(detail.owned);
+  const isAuthor = Boolean(detail.owned) || isAdmin || isContentManager;
+  const isEnrolledStudent = isStudent && Boolean(enrollment);
 
   const nextUp = lessons.findIndex((lesson) => !completed.has(lesson.documentId));
   const next = nextUp === -1 ? null : lessons[nextUp];
 
   const isOpen = (index: number) =>
-    readable && (isStudent ? nextUp === -1 || index <= nextUp : true);
+    isEnrolledStudent && (nextUp === -1 || index <= nextUp);
 
   const quizLink = detail.quiz ? `/quizzes/${detail.quiz.documentId}` : '';
 
   const action = () => {
-    if (detail.owned) {
+    if (isAuthor) {
       return (
-        <div className="space-y-2">
-          <Link href={`/courses/${documentId}/edit`} className={`${buttonStyle()} w-full`}>
-            <Pencil className="size-4" />
-            Edit this course
+        <div className="space-y-3">
+          <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-3.5 text-xs text-sky-400">
+            <p className="font-bold flex items-center gap-1.5">
+              <span>Course Author & Management</span>
+            </p>
+            <p className="mt-1 text-muted text-[11px]">
+              You manage this course. Use the studio below to edit lessons, update quizzes, and monitor enrolled students.
+            </p>
+          </div>
+
+          <Link
+            href={`/courses/${documentId}/edit`}
+            className="flex items-center justify-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/25 transition-all w-full"
+          >
+            <Pencil className="size-3.5" />
+            <span>Edit Course in Studio</span>
           </Link>
 
           <Link
             href={`/courses/${documentId}/students`}
-            className={`${buttonStyle('plain')} w-full`}
+            className="flex items-center justify-center gap-2 rounded-xl border border-theme bg-surface hover:bg-elevated px-4 py-2.5 text-xs font-bold text-secondary hover:text-primary transition-all w-full"
           >
-            <Users className="size-4" />
-            Student progress
+            <Users className="size-3.5" />
+            <span>View Student Progress & Roster</span>
           </Link>
         </div>
       );
@@ -162,22 +177,27 @@ const Detail = ({ documentId }: { documentId: string }) => {
 
     if (isStudent) {
       return (
-        <Button disabled={busy} className="w-full" onClick={enrol}>
-          {busy ? 'Enrolling' : 'Enrol in this course'}
+        <Button disabled={busy} className="w-full bg-sky-600 hover:bg-sky-500 font-bold" onClick={enrol}>
+          {busy ? 'Enrolling...' : 'Enroll in this course'}
         </Button>
       );
     }
 
     if (user) {
       return (
-        <p className="text-sm text-muted">
-          Enrolling is a student thing to do, and this account is signed in as{' '}
-          {user.role?.name ?? 'something else'}.
-        </p>
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-400">
+          <p className="font-bold flex items-center gap-1.5">
+            <ShieldAlert className="size-4 text-amber-400" />
+            <span>Role Notice</span>
+          </p>
+          <p className="mt-1 text-[11px] text-muted leading-relaxed">
+            Course enrollment and quiz grading are reserved for <strong>Student</strong> accounts. Your account is logged in as <strong>{user.role?.name ?? 'Staff'}</strong>.
+          </p>
+        </div>
       );
     }
 
-    if (knowingUser) return <p className="text-sm text-muted">One moment</p>;
+    if (knowingUser) return <p className="text-sm text-muted">One moment...</p>;
 
     return <JoinForm onAuthenticated={joined} />;
   };
@@ -197,15 +217,17 @@ const Detail = ({ documentId }: { documentId: string }) => {
               lessons={lessons}
               done={(id) => completed.has(id)}
               open={(index) => isOpen(index)}
+              isAuthor={isAuthor}
+              courseDocId={documentId}
             />
 
-            {isStudent && readable && nextUp !== -1 && (
+            {isEnrolledStudent && nextUp !== -1 && (
               <p className="mt-2 text-xs text-muted font-medium">
                 Lessons open one at a time. Mark the open one as complete to unlock the next.
               </p>
             )}
 
-            {!readable && lessons.length > 0 && (
+            {!isAuthor && !isEnrolledStudent && lessons.length > 0 && (
               <p className="mt-2 text-xs text-muted font-medium">
                 Titles are open to read. Enrolling is what opens the lessons themselves.
               </p>
@@ -220,10 +242,10 @@ const Detail = ({ documentId }: { documentId: string }) => {
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <p className="flex items-center gap-2 text-sm font-semibold text-primary">
-                      <ClipboardList className="size-4 text-purple-500" />
+                      <ClipboardList className="size-4 text-sky-400" />
                       <span>{detail.quiz.title}</span>
                       {lastQuizResult && (
-                        <span className="rounded bg-emerald-500/15 px-2 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-[#3fb950] border border-emerald-500/30">
+                        <span className="rounded bg-emerald-500/15 px-2 py-0.5 text-[11px] font-bold text-emerald-400 border border-emerald-500/30">
                           Score: {lastQuizResult.score} / {lastQuizResult.total}
                         </span>
                       )}
@@ -235,20 +257,28 @@ const Detail = ({ documentId }: { documentId: string }) => {
                     )}
                   </div>
 
-                  {readable ? (
+                  {isAuthor ? (
+                    <Link
+                      href={`/courses/${documentId}/edit?tab=quiz`}
+                      className="inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold bg-sky-500/15 text-sky-400 hover:bg-sky-500/25 border border-sky-500/30 transition shadow-2xs"
+                    >
+                      <Pencil className="size-3" />
+                      <span>Edit Quiz in Studio &rarr;</span>
+                    </Link>
+                  ) : isEnrolledStudent ? (
                     <Link
                       href={quizLink}
                       className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition shadow-2xs ${
                         lastQuizResult
-                          ? 'border border-theme bg-surface text-secondary hover:bg-elevated hover:text-brand'
-                          : 'bg-brand-subtle text-brand hover:bg-brand-subtle/80 border border-brand-border'
+                          ? 'border border-theme bg-surface text-secondary hover:bg-elevated hover:text-sky-400'
+                          : 'bg-sky-500/15 text-sky-400 hover:bg-sky-500/25 border border-sky-500/30'
                       }`}
                     >
                       <span>{lastQuizResult ? 'See Quiz Details' : 'Start Quiz'}</span>
                       <ArrowRight className="size-3.5" />
                     </Link>
                   ) : (
-                    <span className="text-xs text-muted font-medium">Opens once you enrol</span>
+                    <span className="text-xs text-muted font-medium">Opens once you enroll</span>
                   )}
                 </div>
               </Card>
@@ -256,18 +286,21 @@ const Detail = ({ documentId }: { documentId: string }) => {
           )}
         </div>
 
-        {/* Sticky Enrol Panel Column */}
+        {/* Sticky Enrol / Management Panel Column */}
         <aside className="lg:col-span-1 lg:sticky lg:top-24 self-start space-y-4">
-          <EnrolPanel course={detail} lessons={lessons.length}>
+          <div className="rounded-xl border border-theme bg-surface p-5 shadow-xs">
+            <h3 className="text-sm font-bold text-primary mb-3">
+              {isAuthor ? 'Course Management' : 'Enrollment & Progression'}
+            </h3>
             {action()}
-          </EnrolPanel>
+          </div>
         </aside>
       </div>
     </div>
   );
 };
 
-export default function CoursePage() {
+export default function CourseDetailPage() {
   const params = useParams<{ documentId: string }>();
 
   return <Detail documentId={params.documentId} />;
