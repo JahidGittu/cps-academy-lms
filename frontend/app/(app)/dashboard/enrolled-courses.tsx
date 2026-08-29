@@ -2,12 +2,13 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, BookOpen, CheckCircle2, PlayCircle, ClipboardList, Award, Sparkles } from 'lucide-react';
 
 import { useApi } from '@/lib/use-api';
 import type { Collection, Course, Enrollment, LessonProgress, QuizResult } from '@/lib/types';
-import { Alert, Card, Empty, ProgressBar } from '@/components/ui';
+import { Alert, Empty, ProgressBar } from '@/components/ui';
 import { EnrolledCoursesSkeleton } from '@/components/page-skeletons';
+import { CourseCover } from '@/components/course-cover';
 
 interface RowProps {
   course: Course;
@@ -36,65 +37,112 @@ const Row = ({ course, completedLessonIds, quizResult }: RowProps) => {
 
   const buttonLabel =
     completedCount === 0
-      ? 'Start Lesson'
+      ? 'Start Learning'
       : isDone
       ? course.quiz && !quizResult
-        ? 'Take Quiz'
-        : 'Retake Quiz'
-      : 'Continue';
+        ? 'Take Quiz Assessment'
+        : 'Review Track'
+      : `Continue (Lesson ${completedCount + 1})`;
 
   return (
-    <Card hover className="flex flex-col justify-between">
+    <div className="group flex flex-col justify-between overflow-hidden rounded-xl border border-theme bg-surface hover:border-active transition-all duration-200 shadow-sm hover:shadow-md">
       <div>
-        <div className="flex items-start justify-between gap-3">
+        {/* Course Cover Thumbnail Banner */}
+        <Link href={`/courses/${course.documentId}`} className="block relative overflow-hidden">
+          <CourseCover
+            title={course.title}
+            url={course.coverImageUrl}
+            className="h-40 sm:h-44 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+
+          {/* Instructor Chip */}
+          <div className="absolute top-3 left-3">
+            <span className="rounded-md bg-slate-900/80 backdrop-blur-md px-2.5 py-1 text-[11px] font-bold text-white border border-white/10 shadow-xs">
+              {course.instructor ? `By ${course.instructor}` : 'CPS Academy'}
+            </span>
+          </div>
+
+          {/* Quiz Score Badge */}
+          {quizResult && quizResult.score !== undefined && quizResult.total ? (
+            <div className="absolute top-3 right-3">
+              <span className="rounded-md bg-purple-600/90 backdrop-blur-md px-2.5 py-1 text-[11px] font-bold text-white border border-purple-400/30 shadow-xs flex items-center gap-1">
+                <Award className="size-3" />
+                <span>Quiz: {quizResult.score}/{quizResult.total}</span>
+              </span>
+            </div>
+          ) : isDone ? (
+            <div className="absolute top-3 right-3">
+              <span className="rounded-md bg-emerald-600/90 backdrop-blur-md px-2.5 py-1 text-[11px] font-bold text-white border border-emerald-400/30 shadow-xs flex items-center gap-1">
+                <CheckCircle2 className="size-3" />
+                <span>100% Done</span>
+              </span>
+            </div>
+          ) : null}
+        </Link>
+
+        {/* Card Body */}
+        <div className="p-4 sm:p-5">
           <Link
             href={`/courses/${course.documentId}`}
-            className="font-bold text-primary hover:text-brand transition-colors text-base"
+            className="font-bold text-primary hover:text-sky-400 transition-colors text-base line-clamp-1"
           >
             {course.title}
           </Link>
 
-          {quizResult && quizResult.score !== undefined && quizResult.total ? (
-            <span className="shrink-0 rounded-md bg-purple-500/10 px-2 py-0.5 text-xs font-semibold text-purple-400 border border-purple-500/20">
-              Quiz: {quizResult.score}/{quizResult.total}
-            </span>
-          ) : null}
-        </div>
+          {course.description && (
+            <p className="mt-1.5 text-xs text-muted line-clamp-2 leading-relaxed">
+              {course.description}
+            </p>
+          )}
 
-        <div className="mt-4 flex items-center justify-between text-xs text-muted">
-          <span className="flex items-center gap-1.5 font-medium text-primary">
-            <BookOpen className="size-3.5 text-brand" />
-            <span>
-              {completedCount} of {totalLessons} lessons completed
-            </span>
-          </span>
-          <span className="font-bold text-primary">{percentComplete}%</span>
-        </div>
+          {/* Progress Header & Bar */}
+          <div className="mt-4 pt-3 border-t border-theme/60 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1.5 font-medium text-secondary">
+                <BookOpen className="size-3.5 text-sky-400" />
+                <span>
+                  <strong>{completedCount}</strong> of {totalLessons} lessons completed
+                </span>
+              </span>
+              <span className="font-bold text-primary">{percentComplete}%</span>
+            </div>
 
-        <div className="mt-2">
-          <ProgressBar percent={percentComplete} />
+            <ProgressBar percent={percentComplete} />
+          </div>
         </div>
       </div>
 
-      <div className="mt-5 pt-3 border-t border-subtle flex items-center justify-between">
-        {isDone ? (
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400">
-            <CheckCircle2 className="size-3.5" />
-            <span>All Lessons Completed</span>
-          </span>
-        ) : (
-          <span className="text-xs text-muted font-medium">In Progress</span>
-        )}
+      {/* Card Action Footer */}
+      <div className="p-4 sm:p-5 pt-0 flex items-center justify-between gap-3">
+        <div className="text-xs">
+          {isDone ? (
+            <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-400">
+              <CheckCircle2 className="size-3.5" />
+              <span>Completed</span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 font-medium text-muted">
+              <span className="size-2 rounded-full bg-sky-400 animate-pulse" />
+              <span>In Progress</span>
+            </span>
+          )}
+        </div>
 
         <Link
           href={targetLink}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-subtle px-3 py-1.5 text-xs font-bold text-brand hover:opacity-90 transition"
+          className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold transition shadow-xs ${
+            isDone && quizResult
+              ? 'border border-theme bg-surface hover:bg-elevated text-secondary hover:text-primary'
+              : isDone && course.quiz
+              ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-600/20'
+              : 'bg-sky-600 hover:bg-sky-500 text-white shadow-sky-600/20'
+          }`}
         >
           <span>{buttonLabel}</span>
           <ArrowRight className="size-3.5" />
         </Link>
       </div>
-    </Card>
+    </div>
   );
 };
 
@@ -129,19 +177,22 @@ export const EnrolledCourses = () => {
   }
 
   return (
-    <section>
-      <div className="flex items-center justify-between mb-4">
+    <section className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-primary">My Enrolled Courses</h2>
-          <p className="text-sm text-muted">Resume your lessons and track overall course completion.</p>
+          <h2 className="text-xl font-bold text-primary flex items-center gap-2">
+            <Sparkles className="size-5 text-sky-400" />
+            <span>My Enrolled Courses</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-muted mt-0.5">Resume your lessons and track overall course completion.</p>
         </div>
-        <span className="rounded-lg bg-surface px-2.5 py-1 text-xs font-semibold text-secondary border border-theme">
-          {rows.length} {rows.length === 1 ? 'course' : 'courses'}
+        <span className="rounded-lg bg-surface px-3 py-1 text-xs font-bold text-secondary border border-theme shadow-2xs">
+          {rows.length} {rows.length === 1 ? 'Track' : 'Tracks'}
         </span>
       </div>
 
       {rows.length ? (
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
           {rows.map((enrollment) => {
             const course = enrollment.course;
             if (!course) return null;
@@ -162,10 +213,11 @@ export const EnrolledCourses = () => {
         </div>
       ) : (
         <Empty>
-          <p className="text-base font-medium text-primary">No active enrollments</p>
-          <p className="mt-1 text-sm text-muted">Browse the course catalogue to start learning.</p>
-          <Link href="/courses" className="mt-4 inline-block font-semibold text-brand hover:underline">
-            Explore Courses →
+          <p className="text-base font-medium text-primary">No active enrollments yet</p>
+          <p className="mt-1 text-sm text-muted">Browse the course catalogue to start learning software engineering tracks.</p>
+          <Link href="/courses" className="mt-4 inline-flex items-center gap-1.5 font-bold text-sky-400 hover:underline">
+            <span>Explore All Courses</span>
+            <ArrowRight className="size-4" />
           </Link>
         </Empty>
       )}
