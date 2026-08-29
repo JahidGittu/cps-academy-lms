@@ -148,10 +148,16 @@ export const ImagePicker = ({
           </div>
 
           <p className="text-sm font-bold text-primary">
-            {loading ? 'Processing & saving image...' : 'Click to browse or drag & drop image'}
+            {loading
+              ? 'Processing & saving image...'
+              : displayUrl
+                ? 'Click or drag & drop to replace image'
+                : 'Click to browse or drag & drop image'}
           </p>
           <p className="text-xs text-muted mt-0.5">
-            PNG, JPG, JPEG or WebP from your computer
+            {displayUrl
+              ? 'Upload a new file to change current cover photo'
+              : 'PNG, JPG, JPEG or WebP from your computer'}
           </p>
         </div>
       ) : (
