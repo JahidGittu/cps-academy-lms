@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { BookOpen, Layers, Plus, Video, FileText } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
@@ -19,6 +20,9 @@ export const LessonManager = ({
   course: string;
   onChanged: () => Promise<void>;
 }) => {
+  const searchParams = useSearchParams();
+  const lessonParam = searchParams.get('lesson');
+
   const lessons = useApi<Collection<Lesson>>(
     `/lessons?filters[course][documentId][$eq]=${course}&sort=order:asc`
   );
@@ -26,18 +30,22 @@ export const LessonManager = ({
   // Keep local ordered list for instant optimistic rendering without UI jumping
   const [localLessons, setLocalLessons] = useState<Lesson[]>([]);
   // What the panel on the right is holding: a documentId, the word 'new', or empty
-  const [selected, setSelected] = useState('new');
+  const [selected, setSelected] = useState(lessonParam || 'new');
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
 
-  // Synchronize server lessons into local state and auto-open first lesson or new form
+  // Synchronize server lessons into local state and auto-open targeted lesson, first lesson, or new form
   useEffect(() => {
     if (lessons.data?.data) {
       const sorted = [...lessons.data.data].sort((a, b) => a.order - b.order);
       setLocalLessons(sorted);
 
       setSelected((prev) => {
+        // If URL explicitly requested a specific lesson, select it!
+        if (lessonParam && sorted.some((l) => l.documentId === lessonParam)) {
+          return lessonParam;
+        }
         // If current selection is valid, keep it
         if (prev && (prev === 'new' || sorted.some((l) => l.documentId === prev))) {
           return prev;
@@ -48,7 +56,13 @@ export const LessonManager = ({
     } else if (!lessons.loading) {
       setSelected('new');
     }
-  }, [lessons.data, lessons.loading]);
+  }, [lessons.data, lessons.loading, lessonParam]);
+
+  const handleSelect = (id: string) => {
+    setSelected(id);
+    const url = `/courses/${course}/edit?tab=lessons${id === 'new' ? '' : `&lesson=${id}`}`;
+    window.history.replaceState(null, '', url);
+  };
 
   const rows = localLessons;
   const editing = rows.find((row) => row.documentId === selected) ?? null;
@@ -95,7 +109,7 @@ export const LessonManager = ({
     });
 
     await refresh();
-    setSelected(data.data.documentId);
+    handleSelect(data.data.documentId);
   };
 
   // Truly instant optimistic reorder with zero-buffering background sync
@@ -135,7 +149,7 @@ export const LessonManager = ({
     run(async () => {
       if (selected === lesson.documentId) {
         const remaining = rows.filter((r) => r.documentId !== lesson.documentId);
-        setSelected(remaining.length > 0 ? remaining[0].documentId : 'new');
+        handleSelect(remaining.length > 0 ? remaining[0].documentId : 'new');
       }
 
       await api.delete(`/lessons/${lesson.documentId}`);
@@ -153,7 +167,7 @@ export const LessonManager = ({
 
   return (
     <div className="space-y-5">
-      {/* Top Curriculum Studio Header Strip */}
+      {/* Top Curriculum Header Strip */}
       <div className="rounded-xl border border-theme bg-surface p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-primary flex items-center gap-2.5">
@@ -183,7 +197,7 @@ export const LessonManager = ({
 
         <button
           type="button"
-          onClick={() => setSelected('new')}
+          onClick={() => handleSelect('new')}
           className="flex items-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white px-4 py-2.5 text-xs font-bold shadow-md shadow-sky-600/25 hover:shadow-sky-500/35 cursor-pointer transition-all"
         >
           <Plus className="size-4" />
@@ -193,14 +207,14 @@ export const LessonManager = ({
 
       <Alert>{actionError}</Alert>
 
-      {/* Split Studio Grid: Syllabus Tree on Left (360px) and Editor on Right */}
+      {/* Split Grid: Syllabus Tree on Left (360px) and Editor on Right */}
       <div className="grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
         <LessonList
           rows={rows}
           selected={selected}
           busy={busy}
-          onSelect={setSelected}
-          onAdd={() => setSelected('new')}
+          onSelect={handleSelect}
+          onAdd={() => handleSelect('new')}
           onMove={move}
           onRemove={(lesson) => setLessonToDelete(lesson)}
         />
@@ -211,7 +225,7 @@ export const LessonManager = ({
             key={selected}
             lesson={editing}
             onSave={save}
-            onCancel={() => setSelected(rows.length > 0 ? rows[0].documentId : 'new')}
+            onCancel={() => handleSelect(rows.length > 0 ? rows[0].documentId : 'new')}
           />
         ) : (
           <Empty>

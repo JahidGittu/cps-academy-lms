@@ -48,7 +48,7 @@ export const Syllabus = ({
             {/* If Author/Admin -> Edit Lesson */}
             {isAuthor && courseDocId ? (
               <Link
-                href={`/courses/${courseDocId}/edit?tab=lessons`}
+                href={`/courses/${courseDocId}/edit?tab=lessons&lesson=${lesson.documentId}`}
                 className="flex-1 font-semibold text-primary hover:text-sky-400 transition-colors flex items-center justify-between gap-2 group"
               >
                 <span className="truncate">{lesson.title}</span>
