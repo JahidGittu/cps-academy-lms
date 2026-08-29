@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowRight,
   CheckCircle2,
@@ -29,6 +29,7 @@ import { JoinForm } from '@/components/course/join-form';
 import { Syllabus } from '@/components/course/syllabus';
 
 const Detail = ({ documentId }: { documentId: string }) => {
+  const router = useRouter();
   const { user, loading: knowingUser } = useAuth();
   const isStudent = hasRole(user, 'Student');
   const isAdmin = hasRole(user, 'Admin');
@@ -36,6 +37,7 @@ const Detail = ({ documentId }: { documentId: string }) => {
 
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   const course = useApi<Single<Course>>(`/courses/${documentId}`);
 
@@ -74,7 +76,12 @@ const Detail = ({ documentId }: { documentId: string }) => {
     }
   };
 
-  const enrol = () => act(() => api.post('/enrollments', { data: { course: documentId } }));
+  const enrol = async () => {
+    await act(async () => {
+      await api.post('/enrollments', { data: { course: documentId } });
+      setCountdown(3);
+    });
+  };
 
   const joined = async (who: User) => {
     await course.reload();
@@ -83,9 +90,42 @@ const Detail = ({ documentId }: { documentId: string }) => {
 
     const { data } = await api.get<Collection<Enrollment>>(mine);
 
-    if (data.data.length) await enrollments.reload();
-    else await enrol();
+    if (data.data.length) {
+      await enrollments.reload();
+    } else {
+      await enrol();
+    }
   };
+
+  const lessons = detail?.lessons ?? [];
+  const percent = lessons.length ? Math.round((completed.size / lessons.length) * 100) : 0;
+
+  const isAuthor = Boolean(detail?.owned) || isAdmin || isContentManager;
+  const isEnrolledStudent = isStudent && Boolean(enrollment);
+
+  const nextUp = lessons.findIndex((lesson) => !completed.has(lesson.documentId));
+  const next = nextUp === -1 ? null : lessons[nextUp];
+
+  // Automated 3-second redirect countdown to Lesson 1 upon successful enrollment
+  useEffect(() => {
+    if (countdown === null) return;
+
+    if (countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+
+    if (countdown === 0 && next) {
+      router.push(`/lessons/${next.documentId}`);
+    }
+  }, [countdown, next, router]);
+
+  const isOpen = (index: number) =>
+    isEnrolledStudent && (nextUp === -1 || index <= nextUp);
+
+  const quizLink = detail?.quiz ? `/quizzes/${detail.quiz.documentId}` : '';
 
   if (course.loading) {
     return <LoadingState />;
@@ -94,20 +134,6 @@ const Detail = ({ documentId }: { documentId: string }) => {
   if (course.error) return <Alert>{course.error}</Alert>;
 
   if (!detail) return <Empty>This course does not exist.</Empty>;
-
-  const lessons = detail.lessons ?? [];
-  const percent = lessons.length ? Math.round((completed.size / lessons.length) * 100) : 0;
-
-  const isAuthor = Boolean(detail.owned) || isAdmin || isContentManager;
-  const isEnrolledStudent = isStudent && Boolean(enrollment);
-
-  const nextUp = lessons.findIndex((lesson) => !completed.has(lesson.documentId));
-  const next = nextUp === -1 ? null : lessons[nextUp];
-
-  const isOpen = (index: number) =>
-    isEnrolledStudent && (nextUp === -1 || index <= nextUp);
-
-  const quizLink = detail.quiz ? `/quizzes/${detail.quiz.documentId}` : '';
 
   const action = () => {
     if (isAuthor) {
@@ -144,6 +170,24 @@ const Detail = ({ documentId }: { documentId: string }) => {
     if (enrollment) {
       return (
         <div className="space-y-3.5">
+          {/* Live 3-Second Auto-redirect Banner */}
+          {countdown !== null && countdown >= 0 && next && (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/15 p-3.5 text-xs text-emerald-400 shadow-sm animate-pulse">
+              <div className="flex items-center justify-between">
+                <p className="font-bold flex items-center gap-1.5">
+                  <Sparkles className="size-4 text-emerald-400" />
+                  <span>Enrollment Successful!</span>
+                </p>
+                <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 font-mono text-xs font-bold text-emerald-300 border border-emerald-500/40">
+                  {countdown}s
+                </span>
+              </div>
+              <p className="mt-1 text-[11px] text-emerald-300/90 leading-relaxed">
+                Redirecting you to <strong>Lesson 1</strong> in {countdown} {countdown === 1 ? 'second' : 'seconds'}...
+              </p>
+            </div>
+          )}
+
           <div className="flex items-baseline justify-between text-sm">
             <span className="font-bold text-primary flex items-center gap-1.5">
               <CheckCircle2 className="size-4 text-emerald-400" />
@@ -173,7 +217,13 @@ const Detail = ({ documentId }: { documentId: string }) => {
               href={`/lessons/${next.documentId}`}
               className="flex items-center justify-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-3 text-xs font-bold text-white shadow-md shadow-sky-600/25 transition-all w-full"
             >
-              <span>{completed.size ? 'Continue Next Lesson' : 'Start the First Lesson'}</span>
+              <span>
+                {countdown !== null && countdown >= 0
+                  ? `Entering Lesson 1 (${countdown}s)...`
+                  : completed.size
+                  ? 'Continue Next Lesson'
+                  : 'Start the First Lesson'}
+              </span>
               <ArrowRight className="size-4" />
             </Link>
           ) : detail.quiz && !lastQuizResult ? (
