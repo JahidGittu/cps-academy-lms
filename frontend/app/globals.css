@@ -17,33 +17,205 @@
   --color-brand-950: #172554;
 }
 
-body {
-  background-color: #f8fafc;
-  background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
-  background-size: 24px 24px;
+/* ==========================================================================
+   CSS Custom Properties Design System (Light / GitHub Sweet Dark Dimmed)
+   ========================================================================== */
+
+:root {
+  --bg-canvas: #f8fafc;
+  --bg-subtle: #f1f5f9;
+  --bg-surface: #ffffff;
+  --bg-elevated: #ffffff;
+  
+  --bg-table-even: #ffffff;
+  --bg-table-odd: #f8fafc;
+  --bg-table-hover: #f1f5f9;
+  
+  --border-default: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --border-active: #2563eb;
+  
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  
+  --brand-primary: #2563eb;
+  --brand-subtle: #eff6ff;
+  --brand-border: #bfdbfe;
+  --brand-text: #1d4ed8;
+  
+  --accent-green: #16a34a;
+  --accent-green-subtle: #f0fdf4;
+  --accent-green-border: #bbf7d0;
+  --accent-green-text: #15803d;
+
+  --accent-amber: #d97706;
+  --accent-amber-subtle: #fffbeb;
+  --accent-amber-border: #fde68a;
+  --accent-amber-text: #b45309;
+
+  --accent-purple: #7c3aed;
+  --accent-purple-subtle: #f5f3ff;
+  --accent-purple-border: #ddd6fe;
+  --accent-purple-text: #6d28d9;
+  
+  --accent-coral: #dc2626;
+  --accent-coral-subtle: #fef2f2;
+  --accent-coral-border: #fecaca;
+  --accent-coral-text: #b91c1c;
+
+  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --header-bg: rgba(255, 255, 255, 0.85);
+  --grid-pattern: #e2e8f0;
 }
 
+[data-theme='dark'],
+.dark {
+  /* Canvas Background - GitHub Dark Slate Canvas */
+  --bg-canvas: #0d1117;
+  
+  /* Section background - Subtle layered contrast */
+  --bg-subtle: #161b22;
+  
+  /* Card / Container / Surface - Distinct elevated slate surface */
+  --bg-surface: #212836;
+  
+  /* Interactive / Hover / Dropdown Surface - High clarity */
+  --bg-elevated: #2d3648;
+  
+  /* Zebra Alternating Row Striping for Tables */
+  --bg-table-even: #212836;
+  --bg-table-odd: #19202c;
+  --bg-table-hover: #2b3547;
+  
+  /* Soft, subtle muted gray borders easy on the eyes */
+  --border-default: #303746;
+  --border-subtle: #242c38;
+  --border-active: #58a6ff;
+  
+  /* High-contrast crystal clear typography */
+  --text-primary: #ffffff;
+  --text-secondary: #d1d9e6;
+  --text-muted: #94a1b2;
+  
+  /* GitHub Vibrant Accents */
+  --brand-primary: #388bfd;
+  --brand-subtle: rgba(56, 139, 253, 0.15);
+  --brand-border: rgba(88, 166, 255, 0.35);
+  --brand-text: #58a6ff;
+  
+  --accent-green: #3fb950;
+  --accent-green-subtle: rgba(63, 185, 80, 0.15);
+  --accent-green-border: rgba(63, 185, 80, 0.35);
+  --accent-green-text: #3fb950;
+
+  --accent-amber: #d29922;
+  --accent-amber-subtle: rgba(210, 153, 34, 0.15);
+  --accent-amber-border: rgba(210, 153, 34, 0.35);
+  --accent-amber-text: #e3b341;
+
+  --accent-purple: #a371f7;
+  --accent-purple-subtle: rgba(163, 113, 247, 0.15);
+  --accent-purple-border: rgba(163, 113, 247, 0.35);
+  --accent-purple-text: #bc8cff;
+  
+  --accent-coral: #f85149;
+  --accent-coral-subtle: rgba(248, 81, 73, 0.15);
+  --accent-coral-border: rgba(248, 81, 73, 0.35);
+  --accent-coral-text: #ff7b72;
+
+  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --header-bg: rgba(13, 17, 23, 0.85);
+  --grid-pattern: rgba(255, 255, 255, 0.05);
+}
+
+/* ==========================================================================
+   Base Elements & Global Styles
+   ========================================================================== */
+
+body {
+  background-color: var(--bg-canvas);
+  color: var(--text-secondary);
+  background-image: radial-gradient(var(--grid-pattern) 1px, transparent 1px);
+  background-size: 24px 24px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Semantic utility classes */
+.bg-canvas { background-color: var(--bg-canvas); }
+.bg-surface { background-color: var(--bg-surface); }
+.bg-subtle { background-color: var(--bg-subtle); }
+.bg-elevated { background-color: var(--bg-elevated); }
+
+.border-theme { border-color: var(--border-default); }
+.border-subtle { border-color: var(--border-subtle); }
+.border-active { border-color: var(--border-active); }
+
+/* Table and container dividers with soft subtle dark gray */
+.divide-theme > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border-default) !important;
+}
+
+.divide-subtle > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border-subtle) !important;
+}
+
+table, tr, th, td {
+  border-color: var(--border-subtle);
+}
+
+/* Table alternating zebra row striping & hover */
+table tbody tr:nth-child(even) {
+  background-color: var(--bg-table-even);
+}
+
+table tbody tr:nth-child(odd) {
+  background-color: var(--bg-table-odd);
+}
+
+table tbody tr:hover {
+  background-color: var(--bg-table-hover) !important;
+  transition: background-color 0.15s ease;
+}
+
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.text-brand { color: var(--brand-text); }
+
+/* Modern brand gradients */
 .brand-gradient {
-  background: linear-gradient(135deg, #1d4ed8 0%, #4338ca 50%, #6d28d9 100%);
+  background: linear-gradient(135deg, #1f6feb 0%, #2563eb 50%, #6366f1 100%);
 }
 
 .brand-gradient-subtle {
-  background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 50%, #f5f3ff 100%);
-}
-
-.hero-mesh {
-  background-color: #030712;
-  background-image: 
-    radial-gradient(at 0% 0%, hsla(222, 95%, 15%, 1) 0, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(250, 95%, 18%, 1) 0, transparent 50%),
-    radial-gradient(at 50% 100%, hsla(217, 95%, 12%, 1) 0, transparent 60%);
+  background: var(--brand-subtle);
 }
 
 .glass-card {
-  background: rgba(15, 23, 42, 0.75);
+  background: var(--bg-surface);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-default);
+}
+
+/* Custom Scrollbar for Sweet Dark Theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-canvas);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 @keyframes floatSlow {
