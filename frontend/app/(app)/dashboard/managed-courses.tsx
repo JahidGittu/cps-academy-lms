@@ -281,7 +281,7 @@ export const ManagedCourses = () => {
         <div className="overflow-hidden rounded-xl border border-theme bg-surface shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="border-b border-subtle bg-canvas text-[11px] font-bold uppercase tracking-wider text-muted">
+              <thead className="border-b border-theme bg-slate-100/90 dark:bg-slate-800/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-900 dark:text-slate-100">
                 <tr>
                   <th className="px-5 py-3.5">Course Title</th>
                   <th className="px-5 py-3.5">Lessons</th>

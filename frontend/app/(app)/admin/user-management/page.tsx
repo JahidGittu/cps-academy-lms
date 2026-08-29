@@ -222,8 +222,8 @@ const UserManagement = () => {
         <div className="overflow-hidden rounded-xl border border-theme bg-surface shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs sm:text-sm">
-              <thead>
-                <tr className="border-b border-subtle bg-elevated/40 text-[11px] font-bold text-muted uppercase tracking-wider">
+              <thead className="border-b border-theme bg-slate-100/90 dark:bg-slate-800/80 text-[11px] font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
+                <tr>
                   <th className="py-3.5 px-4">User</th>
                   <th className="py-3.5 px-4">Current Role</th>
                   <th className="py-3.5 px-4">Joined Platform</th>
