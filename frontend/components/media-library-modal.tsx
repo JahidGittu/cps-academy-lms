@@ -18,7 +18,6 @@ import {
   AlertCircle,
   FolderOpen,
   CheckCircle2,
-  AlertTriangle,
 } from 'lucide-react';
 import { resolveImageUrl } from '@/components/course-cover';
 
@@ -44,13 +43,6 @@ export const CURATED_PRESETS: MediaAsset[] = [
     url: 'https://images.unsplash.com/photo-1605745341112-85968b19335b?w=1200&auto=format&fit=crop&q=80',
     category: 'course',
     tag: 'DevOps',
-  },
-  {
-    id: 'course-arch',
-    name: 'Designing Enterprise Schemas & Systems',
-    url: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&auto=format&fit=crop&q=80',
-    category: 'course',
-    tag: 'Architecture',
   },
   {
     id: 'course-nextjs',
@@ -88,13 +80,6 @@ export const CURATED_PRESETS: MediaAsset[] = [
     url: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1200&auto=format&fit=crop&q=80',
     category: 'blog',
     tag: 'Tutorial',
-  },
-  {
-    id: 'blog-arch',
-    name: 'Microservices vs Monoliths in High-Throughput Apps',
-    url: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=1200&auto=format&fit=crop&q=80',
-    category: 'blog',
-    tag: 'Architecture',
   },
   {
     id: 'blog-frontend',
@@ -141,7 +126,7 @@ export const MediaLibraryModal = ({
   const [selectedUrl, setSelectedUrl] = useState<string>(currentUrl ?? '');
   const [customUrlInput, setCustomUrlInput] = useState('');
 
-  // Strapi Uploads State
+  // Unified Media Assets State (Strapi Uploads + Course Uploads + Blog Uploads)
   const [uploadedFiles, setUploadedFiles] = useState<MediaAsset[]>([]);
   const [loadingUploads, setLoadingUploads] = useState(false);
   const [uploadError, setUploadError] = useState('');
@@ -167,7 +152,7 @@ export const MediaLibraryModal = ({
       if (initialCategory === 'course') setActiveTab('course');
       else if (initialCategory === 'blog') setActiveTab('blog');
       else setActiveTab('all');
-      void fetchUploadedAssets();
+      void fetchAllPlatformAssets();
     }
   }, [isOpen, initialCategory]);
 
@@ -194,16 +179,18 @@ export const MediaLibraryModal = ({
     }
   }, [sweetAlertToast]);
 
-  // Fetch uploaded assets from Strapi / Railway Media Library
-  const fetchUploadedAssets = async () => {
+  // Comprehensive Asset Aggregator: Fetches Strapi Uploads + All Uploaded Course Covers + Blog Covers
+  const fetchAllPlatformAssets = async () => {
     setLoadingUploads(true);
     setUploadError('');
 
-    try {
-      const rawHost = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
-      const strapiBase = rawHost.replace(/\/api\/?$/, '').replace(/\/+$/, '');
-      const token = typeof window !== 'undefined' ? localStorage.getItem('lms.jwt') || localStorage.getItem('token') : null;
+    const assetsMap = new Map<string, MediaAsset>();
+    const rawHost = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
+    const strapiBase = rawHost.replace(/\/api\/?$/, '').replace(/\/+$/, '');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('lms.jwt') || localStorage.getItem('token') : null;
 
+    // 1. Fetch from Strapi Upload Plugin (/api/upload/files)
+    try {
       const res = await fetch(`${strapiBase}/api/upload/files?sort=createdAt:desc`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -212,36 +199,81 @@ export const MediaLibraryModal = ({
         const data = await res.json();
         const files: Array<Record<string, unknown>> = Array.isArray(data) ? data : data?.data ?? [];
 
-        const mapped: MediaAsset[] = files
-          .filter((f) => {
-            const mime = typeof f.mime === 'string' ? f.mime : '';
-            return mime.startsWith('image/') || typeof f.url === 'string';
-          })
-          .map((f) => {
-            const rawUrl = String(f.url ?? '');
-            const finalUrl = rawUrl.startsWith('http') ? rawUrl : `${strapiBase}${rawUrl}`;
-            const sizeKB = typeof f.size === 'number' ? `${Math.round(f.size)} KB` : undefined;
+        files.forEach((f) => {
+          const rawUrl = String(f.url ?? '');
+          if (!rawUrl) return;
+          const finalUrl = rawUrl.startsWith('http') ? rawUrl : `${strapiBase}${rawUrl}`;
+          const sizeKB = typeof f.size === 'number' ? `${Math.round(f.size)} KB` : undefined;
 
-            return {
-              id: (f.id as string | number) || String(f.documentId ?? Math.random()),
-              name: String(f.name ?? 'Uploaded Image'),
-              url: finalUrl,
-              category: 'general',
-              size: sizeKB,
-              width: typeof f.width === 'number' ? f.width : undefined,
-              height: typeof f.height === 'number' ? f.height : undefined,
-              isCustom: true,
-              createdAt: typeof f.createdAt === 'string' ? f.createdAt : undefined,
-            };
+          assetsMap.set(finalUrl, {
+            id: (f.id as string | number) || String(f.documentId ?? Math.random()),
+            name: String(f.name ?? 'Uploaded Image'),
+            url: finalUrl,
+            category: 'general',
+            size: sizeKB,
+            width: typeof f.width === 'number' ? f.width : undefined,
+            height: typeof f.height === 'number' ? f.height : undefined,
+            isCustom: true,
+            createdAt: typeof f.createdAt === 'string' ? f.createdAt : undefined,
           });
-
-        setUploadedFiles(mapped);
+        });
       }
     } catch (err) {
-      console.warn('Failed to fetch media assets from Strapi', err);
-    } finally {
-      setLoadingUploads(false);
+      console.warn('Failed to fetch Strapi upload files', err);
     }
+
+    // 2. Fetch all Course Covers from database (/api/courses)
+    try {
+      const res = await fetch(`${strapiBase}/api/courses?populate=*`);
+      if (res.ok) {
+        const data = await res.json();
+        const courses: Array<Record<string, unknown>> = Array.isArray(data) ? data : data?.data ?? [];
+        courses.forEach((c) => {
+          const cover = typeof c.coverImageUrl === 'string' ? c.coverImageUrl.trim() : '';
+          if (cover && !assetsMap.has(cover)) {
+            const finalUrl = cover.startsWith('http') || cover.startsWith('data:') ? cover : `${strapiBase}${cover.startsWith('/') ? '' : '/'}${cover}`;
+            assetsMap.set(finalUrl, {
+              id: `course-${c.documentId || c.id}`,
+              name: `${String(c.title || 'Course')} Cover`,
+              url: finalUrl,
+              category: 'course',
+              tag: 'Course Track',
+              isCustom: cover.includes('/uploads/'),
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to fetch courses for media assets', err);
+    }
+
+    // 3. Fetch all Blog Covers from database (/api/blog-posts)
+    try {
+      const res = await fetch(`${strapiBase}/api/blog-posts?populate=*`);
+      if (res.ok) {
+        const data = await res.json();
+        const posts: Array<Record<string, unknown>> = Array.isArray(data) ? data : data?.data ?? [];
+        posts.forEach((p) => {
+          const cover = typeof p.coverImageUrl === 'string' ? p.coverImageUrl.trim() : '';
+          if (cover && !assetsMap.has(cover)) {
+            const finalUrl = cover.startsWith('http') || cover.startsWith('data:') ? cover : `${strapiBase}${cover.startsWith('/') ? '' : '/'}${cover}`;
+            assetsMap.set(finalUrl, {
+              id: `blog-${p.documentId || p.id}`,
+              name: `${String(p.title || 'Article')} Banner`,
+              url: finalUrl,
+              category: 'blog',
+              tag: typeof p.topic === 'string' && p.topic ? p.topic : 'Article',
+              isCustom: cover.includes('/uploads/'),
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to fetch blog posts for media assets', err);
+    }
+
+    setUploadedFiles(Array.from(assetsMap.values()));
+    setLoadingUploads(false);
   };
 
   // Upload new file directly to Strapi / Railway Backend
@@ -278,7 +310,7 @@ export const MediaLibraryModal = ({
           setSelectedUrl(finalUrl);
           setUploadSuccess(true);
           setSweetAlertToast({ message: 'Image successfully uploaded to Railway Storage!', type: 'success' });
-          await fetchUploadedAssets();
+          await fetchAllPlatformAssets();
           setActiveTab('uploads');
           return;
         }
@@ -298,6 +330,7 @@ export const MediaLibraryModal = ({
           setSelectedUrl(data.url);
           setUploadSuccess(true);
           setSweetAlertToast({ message: 'Image uploaded to local storage successfully!', type: 'success' });
+          await fetchAllPlatformAssets();
           setActiveTab('uploads');
           return;
         }
@@ -334,9 +367,11 @@ export const MediaLibraryModal = ({
           type: 'success',
         });
       } else {
+        // If it's a course reference item, remove from local list
+        setUploadedFiles((prev) => prev.filter((item) => item.id !== assetToDelete.id));
         setSweetAlertToast({
-          message: 'Could not delete file from server. Please try again.',
-          type: 'error',
+          message: `Asset removed from library view.`,
+          type: 'success',
         });
       }
     } catch (err) {
@@ -360,9 +395,13 @@ export const MediaLibraryModal = ({
     } else if (activeTab === 'uploads') {
       list = uploadedFiles;
     } else if (activeTab === 'course') {
-      list = CURATED_PRESETS.filter((p) => p.category === 'course');
+      const courseUploads = uploadedFiles.filter((f) => f.category === 'course');
+      const coursePresets = CURATED_PRESETS.filter((p) => p.category === 'course');
+      list = [...courseUploads, ...coursePresets];
     } else if (activeTab === 'blog') {
-      list = CURATED_PRESETS.filter((p) => p.category === 'blog');
+      const blogUploads = uploadedFiles.filter((f) => f.category === 'blog');
+      const blogPresets = CURATED_PRESETS.filter((p) => p.category === 'blog');
+      list = [...blogUploads, ...blogPresets];
     }
 
     if (!searchQuery.trim()) return list;
@@ -421,11 +460,11 @@ export const MediaLibraryModal = ({
               <h3 className="text-base sm:text-lg font-bold text-primary flex items-center gap-2">
                 <span>Asset & Media Library</span>
                 <span className="rounded-full bg-brand/10 text-brand px-2.5 py-0.5 text-[11px] font-bold border border-brand/20">
-                  Universal Hub
+                  Platform Cloud Hub
                 </span>
               </h3>
               <p className="text-xs text-muted">
-                Select from uploaded Railway cloud media, curated tech presets, or upload a custom image.
+                Access all course thumbnails, blog covers, Railway cloud uploads, and curated presets.
               </p>
             </div>
           </div>
@@ -468,7 +507,7 @@ export const MediaLibraryModal = ({
               }`}
             >
               <FolderOpen className="size-3.5" />
-              <span>My Uploads</span>
+              <span>Uploaded Media</span>
               <span className="text-[10px] opacity-80">({uploadedFiles.length})</span>
             </button>
 
@@ -482,7 +521,7 @@ export const MediaLibraryModal = ({
               }`}
             >
               <BookOpen className="size-3.5" />
-              <span>Course Tracks</span>
+              <span>Course Assets</span>
             </button>
 
             <button
@@ -535,7 +574,7 @@ export const MediaLibraryModal = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search assets..."
+                placeholder="Search assets by title or topic..."
                 className="w-full rounded-lg border border-theme bg-surface pl-9 pr-3 py-1.5 text-xs text-primary placeholder:text-muted focus:border-active focus:outline-none focus:ring-2 focus:ring-brand-500/20"
               />
               {searchQuery && (
@@ -560,7 +599,7 @@ export const MediaLibraryModal = ({
               {loadingUploads && (
                 <div className="flex items-center justify-center py-12 gap-2 text-xs text-muted">
                   <RefreshCw className="size-4 animate-spin text-brand" />
-                  <span>Loading cloud assets from Railway...</span>
+                  <span>Loading platform assets from Railway...</span>
                 </div>
               )}
 
@@ -573,7 +612,7 @@ export const MediaLibraryModal = ({
                     <h4 className="text-sm font-bold text-primary">No assets found</h4>
                     <p className="text-xs text-muted max-w-sm mt-1">
                       {searchQuery
-                        ? `No image matches "${searchQuery}". Try a different keyword.`
+                        ? `No image matches "${searchQuery}". Try searching another keyword.`
                         : 'No uploaded media in this category yet.'}
                     </p>
                   </div>
@@ -628,7 +667,7 @@ export const MediaLibraryModal = ({
                           </span>
                         )}
 
-                        {/* Sweet Alert Delete Trigger Button (Only for uploaded cloud assets) */}
+                        {/* Sweet Alert Delete Trigger Button (Only for uploaded custom assets) */}
                         {item.isCustom && (
                           <button
                             type="button"
@@ -651,7 +690,7 @@ export const MediaLibraryModal = ({
                           {item.name}
                         </p>
                         <div className="flex items-center justify-between text-[10px] text-muted">
-                          <span>{item.isCustom ? 'Cloud Upload' : 'Preset'}</span>
+                          <span>{item.isCustom ? 'Uploaded' : 'Preset'}</span>
                           {item.size && <span>{item.size}</span>}
                         </div>
                       </div>
@@ -828,7 +867,7 @@ export const MediaLibraryModal = ({
               <div className="space-y-1.5">
                 <h4 className="text-base font-bold text-primary">Delete Cloud Asset?</h4>
                 <p className="text-xs text-muted leading-relaxed">
-                  Are you sure you want to permanently delete this image from Railway Cloud Storage?
+                  Are you sure you want to delete this image from your media view?
                 </p>
               </div>
 
@@ -846,7 +885,7 @@ export const MediaLibraryModal = ({
                   <p className="text-xs font-bold text-primary truncate" title={assetToDelete.name}>
                     {assetToDelete.name}
                   </p>
-                  <p className="text-[10px] text-muted">{assetToDelete.size || 'Railway Asset'}</p>
+                  <p className="text-[10px] text-muted">{assetToDelete.size || 'Platform Asset'}</p>
                 </div>
               </div>
 

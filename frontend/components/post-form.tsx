@@ -31,7 +31,7 @@ export type PostValues = {
   publishState: 'draft' | 'published';
 };
 
-const PRESET_TOPICS = ['Architecture', 'Security', 'Tutorial', 'Database', 'DevOps', 'Frontend', 'Backend'];
+const PRESET_TOPICS = ['Tutorial', 'DevOps', 'Security', 'Database', 'Frontend', 'Backend', 'Architecture'];
 
 export const PostForm = ({
   post,
@@ -406,7 +406,7 @@ export const PostForm = ({
             </div>
 
             {/* Selected Active Tag Pills */}
-            {activeTags.length > 0 && (
+            {activeTags.length > 0 ? (
               <div className="flex flex-wrap gap-1.5 p-2 rounded-lg bg-canvas border border-theme">
                 {activeTags.map((tag) => (
                   <span
@@ -424,6 +424,10 @@ export const PostForm = ({
                     </button>
                   </span>
                 ))}
+              </div>
+            ) : (
+              <div className="p-2 rounded-lg bg-canvas border border-dashed border-theme text-center">
+                <span className="text-[11px] text-muted">No tags selected (click a topic below or add custom)</span>
               </div>
             )}
 

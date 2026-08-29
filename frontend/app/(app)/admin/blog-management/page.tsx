@@ -26,7 +26,7 @@ import { BlogManagementSkeleton } from '@/components/page-skeletons';
 import { ConfirmModal } from '@/components/confirm-modal';
 import { resolveImageUrl } from '@/components/course-cover';
 
-const TOPICS = ['All Topics', 'Architecture', 'Security', 'Tutorial', 'Database'];
+const TOPICS = ['All Topics', 'Tutorial', 'DevOps', 'Security', 'Database', 'Architecture'];
 
 const DEFAULT_POST_COVERS = [
   'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&auto=format&fit=crop&q=80',
