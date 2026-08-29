@@ -167,13 +167,9 @@ function RegisterForm() {
 
       <Alert>{error}</Alert>
 
-      <p className="text-xs text-muted">
-        New accounts are registered as <strong>Students</strong>. Instructor and staff accounts are assigned by an Admin.
-      </p>
-
       <Button type="submit" disabled={busy} className="w-full gap-2 font-bold py-2.5">
         <UserPlus className="size-4" />
-        <span>{busy ? 'Creating Student Account...' : 'Create Account'}</span>
+        <span>{busy ? 'Creating Account...' : 'Create Account'}</span>
       </Button>
     </form>
   );
