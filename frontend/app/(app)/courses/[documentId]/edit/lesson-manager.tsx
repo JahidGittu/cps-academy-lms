@@ -53,8 +53,8 @@ export const LessonManager = ({
   const rows = localLessons;
   const editing = rows.find((row) => row.documentId === selected) ?? null;
 
-  const videoLessonsCount = rows.filter((r) => Boolean(r.videoUrl)).length;
-  const textLessonsCount = rows.length - videoLessonsCount;
+  const videoLessonsCount = rows.filter((r) => Boolean(r.videoUrl?.trim())).length;
+  const readingMaterialsCount = rows.filter((r) => Boolean(r.content?.trim())).length;
 
   // The header counts lessons off the course read, so a write here has to refresh both.
   const refresh = async () => {
@@ -171,7 +171,7 @@ export const LessonManager = ({
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2.5 py-1">
               <FileText className="size-3.5" />
-              <span>{textLessonsCount} Reading Materials</span>
+              <span>{readingMaterialsCount} Reading Materials & Notes</span>
             </span>
           </div>
         </div>
