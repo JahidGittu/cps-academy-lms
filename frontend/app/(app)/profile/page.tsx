@@ -71,7 +71,7 @@ const ProfileContent = () => {
     setProfileBusy(true);
 
     try {
-      await api.put(`/users/${user.id}`, {
+      await api.put('/users/me', {
         username: username.trim(),
       });
 

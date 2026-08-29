@@ -4,7 +4,21 @@ type UsersPermissionsPlugin = {
   controllers: {
     user: {
       me: (ctx: Context) => Promise<void>;
+      updateMe?: (ctx: Context) => Promise<void>;
       destroy: (ctx: Context) => Promise<void>;
+    };
+  };
+  routes: {
+    'content-api': {
+      routes: Array<{
+        method: string;
+        path: string;
+        handler: string;
+        config?: {
+          prefix?: string;
+          policies?: unknown[];
+        };
+      }>;
     };
   };
 };
@@ -27,6 +41,57 @@ export default (plugin: UsersPermissionsPlugin) => {
       user.role = { id: role.id, name: role.name, type: role.type };
     }
   };
+
+  // Dedicated controller for authenticated user to update their own profile username safely
+  plugin.controllers.user.updateMe = async (ctx: Context) => {
+    const authUser = ctx.state.user;
+    if (!authUser) {
+      return ctx.unauthorized();
+    }
+
+    const { username } = (ctx.request.body as { username?: string }) || {};
+
+    if (!username || !username.trim()) {
+      return ctx.badRequest('Username cannot be empty.');
+    }
+
+    const cleanUsername = username.trim();
+
+    // Check if username is already taken by another user
+    const existing = await strapi.db.query('plugin::users-permissions.user').findOne({
+      where: {
+        username: cleanUsername,
+        id: { $ne: authUser.id },
+      },
+    });
+
+    if (existing) {
+      return ctx.badRequest('Username is already taken. Please choose another username.');
+    }
+
+    const updatedUser = await strapi.db.query('plugin::users-permissions.user').update({
+      where: { id: authUser.id },
+      data: { username: cleanUsername },
+    });
+
+    return ctx.send({
+      id: updatedUser.id,
+      username: updatedUser.username,
+      email: updatedUser.email,
+      role: authUser.role ? { id: authUser.role.id, name: authUser.role.name } : undefined,
+    });
+  };
+
+  // Register PUT /users/me endpoint in users-permissions router
+  plugin.routes['content-api'].routes.push({
+    method: 'PUT',
+    path: '/users/me',
+    handler: 'user.updateMe',
+    config: {
+      prefix: '',
+      policies: [],
+    },
+  });
 
   // Cascade delete all student-related data when an account is deleted
   plugin.controllers.user.destroy = async (ctx: Context) => {
