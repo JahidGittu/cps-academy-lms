@@ -42,7 +42,7 @@ export const LessonEditor = ({
 }: {
   lesson: Lesson | null;
   onSave: (values: LessonValues) => Promise<void>;
-  onCancel: () => void;
+  onCancel?: () => void;
 }) => {
   const getSnapshot = (l: Lesson | null): LessonValues => ({
     title: l?.title ?? '',
@@ -247,21 +247,20 @@ export const LessonEditor = ({
           rows={10}
         />
 
-        <Alert>{error}</Alert>
-
         <div className="flex items-center justify-between border-t border-subtle pt-4">
-          <div className="flex gap-2.5">
-            <Button
-              type="submit"
-              disabled={busy || (Boolean(lesson) && !isDirty && saveStatus !== 'saving')}
-              className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-2.5 shadow-md shadow-sky-600/20 hover:shadow-sky-500/30"
-            >
-              {busy ? 'Saving...' : lesson ? 'Save Lesson' : 'Create Lesson'}
-            </Button>
-            <Button variant="plain" type="button" onClick={onCancel}>
-              Cancel
-            </Button>
-          </div>
+          <Button
+            type="submit"
+            disabled={busy || (Boolean(lesson) && !isDirty && saveStatus !== 'saving')}
+            className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/20 hover:shadow-sky-500/30 transition-all"
+          >
+            {busy ? 'Saving...' : lesson ? 'Save Lesson' : 'Create Lesson'}
+          </Button>
+
+          {Boolean(lesson) && !isDirty && (
+            <span className="text-xs text-muted font-medium">
+              All changes synced
+            </span>
+          )}
         </div>
       </div>
     </form>
