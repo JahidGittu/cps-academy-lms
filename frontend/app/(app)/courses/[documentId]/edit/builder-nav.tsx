@@ -8,7 +8,7 @@ export const BuilderNav = ({
   lessons,
   hasQuiz,
   courseId,
-  courseTitle = 'Course Studio',
+  courseTitle = 'Course Builder',
   isNewCourse = false,
   onSelect,
 }: {
@@ -43,7 +43,7 @@ export const BuilderNav = ({
 
   return (
     <nav className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0 lg:sticky lg:top-20 z-10">
-      {/* Studio Header Card */}
+      {/* Header Card */}
       <div className="hidden lg:block rounded-xl border border-theme bg-surface p-3.5 shadow-2xs mb-2">
         <div className="flex items-center gap-2.5">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-500/15 text-sky-400 border border-sky-500/30">
@@ -92,7 +92,7 @@ export const BuilderNav = ({
         })}
       </div>
 
-      {/* Step Progression: Next / Finish Action Buttons */}
+      {/* Step Progression: Next Action Button */}
       {!isNewCourse && (
         <div className="hidden lg:flex lg:flex-col gap-2 pt-3 border-t border-subtle mt-1">
           {section === 'details' && (
@@ -117,34 +117,22 @@ export const BuilderNav = ({
             </button>
           )}
 
-          {section === 'quiz' && courseId && (
-            <div className="space-y-2">
-              <a
-                href={`/courses/${courseId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-between gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-3 text-xs font-bold text-white shadow-md shadow-emerald-600/20 hover:shadow-emerald-500/30 transition-all"
-              >
-                <span>View Live Course ↗</span>
-                <ExternalLink className="size-4" />
-              </a>
-
-              <button
-                type="button"
-                onClick={() => onSelect('lessons')}
-                className="w-full flex items-center justify-between gap-2 rounded-xl border border-theme bg-surface px-4 py-2.5 text-xs font-bold text-secondary hover:bg-elevated hover:text-primary cursor-pointer transition-all"
-              >
-                <span className="flex items-center gap-1.5">
-                  <ArrowLeft className="size-3.5" />
-                  <span>Back to Curriculum</span>
-                </span>
-              </button>
-            </div>
+          {section === 'quiz' && (
+            <button
+              type="button"
+              onClick={() => onSelect('lessons')}
+              className="w-full flex items-center justify-between gap-2 rounded-xl border border-theme bg-surface px-4 py-2.5 text-xs font-bold text-secondary hover:bg-elevated hover:text-primary cursor-pointer transition-all"
+            >
+              <span className="flex items-center gap-1.5">
+                <ArrowLeft className="size-3.5" />
+                <span>Back to Curriculum</span>
+              </span>
+            </button>
           )}
         </div>
       )}
 
-      {/* Quick Studio Links */}
+      {/* Quick Links: Students & Single Preview Course */}
       {courseId && (
         <div className="hidden lg:flex lg:flex-col gap-1.5 pt-3 border-t border-subtle">
           <Link
@@ -159,10 +147,13 @@ export const BuilderNav = ({
             href={`/courses/${courseId}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2.5 rounded-xl border border-theme bg-surface px-3.5 py-2.5 text-xs font-semibold text-secondary hover:bg-elevated hover:text-sky-400 transition"
+            className="flex items-center justify-between gap-2 rounded-xl border border-theme bg-surface px-3.5 py-2.5 text-xs font-semibold text-secondary hover:bg-elevated hover:text-sky-400 transition group"
           >
-            <Eye className="size-4 text-muted" />
-            <span>Live Course Page ↗</span>
+            <span className="flex items-center gap-2.5">
+              <Eye className="size-4 text-muted group-hover:text-sky-400" />
+              <span>Preview Course</span>
+            </span>
+            <ExternalLink className="size-3.5 text-muted group-hover:text-sky-400" />
           </a>
         </div>
       )}
