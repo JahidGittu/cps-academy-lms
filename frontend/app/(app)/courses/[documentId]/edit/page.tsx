@@ -31,7 +31,23 @@ const Builder = ({ documentId }: { documentId: string }) => {
   );
 
   if (course.loading && !course.data) {
-    return <LoadingState />;
+    return (
+      <div className="grid gap-6 lg:grid-cols-[200px_minmax(0,1fr)] lg:items-start animate-in fade-in duration-200">
+        <BuilderNav
+          section="details"
+          lessons={0}
+          hasQuiz={false}
+          courseId={documentId}
+          onSelect={() => {}}
+        />
+        <div className="rounded-xl border border-theme bg-surface p-6 shadow-xs space-y-4">
+          <div className="h-5 w-44 rounded-md bg-slate-200/70 dark:bg-white/[0.07] animate-pulse" />
+          <div className="h-10 w-full rounded-md bg-slate-200/70 dark:bg-white/[0.07] animate-pulse" />
+          <div className="h-24 w-full rounded-md bg-slate-200/70 dark:bg-white/[0.07] animate-pulse" />
+          <div className="h-36 w-full rounded-md bg-slate-200/70 dark:bg-white/[0.07] animate-pulse" />
+        </div>
+      </div>
+    );
   }
 
   if (course.error) return <Alert>{course.error}</Alert>;
