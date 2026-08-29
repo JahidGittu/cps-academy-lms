@@ -1,67 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-
-import { api, errorMessage } from '@/lib/api';
+import { api } from '@/lib/api';
 import type { Course } from '@/lib/types';
-import { Alert, Button, Card } from '@/components/ui';
+import { Card } from '@/components/ui';
 import { CourseForm } from '@/components/course-form';
-import { ConfirmModal } from '@/components/confirm-modal';
-
-const Delete = ({ course }: { course: Course }) => {
-  const router = useRouter();
-
-  const [showModal, setShowModal] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-
-  const confirmRemove = async () => {
-    setBusy(true);
-    setError('');
-
-    try {
-      await api.delete(`/courses/${course.documentId}`);
-      router.push('/dashboard');
-    } catch (caught) {
-      setError(errorMessage(caught));
-      setBusy(false);
-      setShowModal(false);
-    }
-  };
-
-  return (
-    <>
-      <Card className="border-red-500/30 bg-red-500/10">
-        <h2 className="text-sm font-bold text-red-500">Delete this course</h2>
-
-        <p className="mt-1 text-xs text-muted">
-          The lessons, the quiz and every student enrolment go with it, and none of it can be recovered.
-        </p>
-
-        <div className="mt-4 space-y-3">
-          <Alert>{error}</Alert>
-
-          <Button variant="danger" disabled={busy} onClick={() => setShowModal(true)}>
-            Delete course
-          </Button>
-        </div>
-      </Card>
-
-      {/* Course Deletion Modal */}
-      <ConfirmModal
-        isOpen={showModal}
-        title="Delete This Course?"
-        message={`Are you sure you want to delete "${course.title}"? This will permanently erase all associated syllabus lessons, student records, and quizzes.`}
-        confirmText="Yes, Delete Course"
-        cancelText="Cancel"
-        loading={busy}
-        onConfirm={confirmRemove}
-        onClose={() => setShowModal(false)}
-      />
-    </>
-  );
-};
 
 export const CourseDetails = ({
   course,
@@ -81,7 +23,5 @@ export const CourseDetails = ({
         }}
       />
     </Card>
-
-    <Delete course={course} />
   </div>
 );

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BookOpen, ClipboardList, Settings, Users, Eye, Lock } from 'lucide-react';
+import { BookOpen, ClipboardList, Settings, Users, Eye, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export type Section = 'details' | 'lessons' | 'quiz';
 
@@ -64,6 +64,46 @@ export const BuilderNav = ({
           );
         })}
       </div>
+
+      {/* Step Navigation Actions */}
+      {!isNewCourse && (
+        <div className="hidden lg:flex lg:flex-col gap-2 pt-3 border-t border-subtle">
+          {section === 'details' && (
+            <button
+              type="button"
+              onClick={() => onSelect('lessons')}
+              className="brand-gradient flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs font-bold text-white shadow-xs hover:opacity-95 cursor-pointer transition-all"
+            >
+              <span>Next: Lessons</span>
+              <ArrowRight className="size-3.5" />
+            </button>
+          )}
+
+          {section === 'lessons' && (
+            <button
+              type="button"
+              onClick={() => onSelect('quiz')}
+              className="brand-gradient flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs font-bold text-white shadow-xs hover:opacity-95 cursor-pointer transition-all"
+            >
+              <span>Next: Quiz</span>
+              <ArrowRight className="size-3.5" />
+            </button>
+          )}
+
+          {section === 'quiz' && (
+            <button
+              type="button"
+              onClick={() => onSelect('lessons')}
+              className="flex items-center justify-between gap-2 rounded-lg border border-theme bg-surface px-3 py-2.5 text-xs font-bold text-secondary hover:bg-elevated hover:text-primary cursor-pointer transition-all"
+            >
+              <span className="flex items-center gap-1.5">
+                <ArrowLeft className="size-3.5" />
+                <span>Back to Lessons</span>
+              </span>
+            </button>
+          )}
+        </div>
+      )}
 
       {courseId && (
         <div className="hidden lg:flex lg:flex-col gap-1.5 pt-3 border-t border-subtle">
