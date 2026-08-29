@@ -65,9 +65,14 @@ export const PostForm = ({
   });
 
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  // Track which documentId we've already initialized, so reload() after auto-save
+  // does NOT reset the form and lose the user's in-progress tag selections.
+  const initializedDocIdRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
-    if (post) {
+    if (post && post.documentId !== initializedDocIdRef.current) {
+      // Only run when switching to a NEW post (different documentId)
+      initializedDocIdRef.current = post.documentId;
       const nextValues: PostValues = {
         title: post.title ?? '',
         body: post.body ?? '',
@@ -76,10 +81,11 @@ export const PostForm = ({
         publishState: post.publishState ?? 'draft',
       };
       setValues(nextValues);
+      latestValues.current = { ...nextValues };
       lastSavedRef.current = { ...nextValues };
       setSaveStatus('idle');
     }
-  }, [post?.documentId, post?.createdAt, post?.publishState, post?.topic]);
+  }, [post?.documentId]);
 
   // Parse active tags array from comma-separated string
   const activeTags = useMemo(() => {
@@ -153,8 +159,10 @@ export const PostForm = ({
       latestValues.current = { ...latestValues.current, [field]: nextVal };
     };
 
+  // latestValues holds the most recent form state for use in debounced/async callbacks.
+  // IMPORTANT: do NOT do `latestValues.current = values` here — that would overwrite
+  // the synchronous updates done in toggleTag/set/addCustomTag on every render.
   const latestValues = useRef<PostValues>(values);
-  latestValues.current = values;
 
   const saveRef = useRef(save);
   saveRef.current = save;
