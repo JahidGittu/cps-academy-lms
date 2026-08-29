@@ -32,9 +32,11 @@ export const LessonManager = ({
   // What the panel on the right is holding: a documentId, the word 'new', or empty
   const [selected, setSelected] = useState<string>(lessonParam || 'new');
   const [busy, setBusy] = useState(false);
+  const [reorderStatus, setReorderStatus] = useState<'saving' | 'saved' | null>(null);
   const [actionError, setActionError] = useState('');
   const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
   const hasInitializedRef = useRef(false);
+  const reorderTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Synchronize server lessons into local state:
   useEffect(() => {
@@ -114,6 +116,12 @@ export const LessonManager = ({
   const move = async (index: number, delta: number) => {
     if (index + delta < 0 || index + delta >= rows.length) return;
 
+    if (reorderTimerRef.current) {
+      clearTimeout(reorderTimerRef.current);
+    }
+
+    setReorderStatus('saving');
+
     // 1. Instant local array splice and clean sequential order (1, 2, 3...)
     const reordered = [...rows];
     const [movedLesson] = reordered.splice(index, 1);
@@ -133,9 +141,14 @@ export const LessonManager = ({
           api.put(`/lessons/${l.documentId}`, { data: { order: l.order } })
         )
       );
+      setReorderStatus('saved');
+      reorderTimerRef.current = setTimeout(() => {
+        setReorderStatus(null);
+      }, 2500);
       onChanged();
     } catch (caught) {
       setActionError(errorMessage(caught));
+      setReorderStatus(null);
       await lessons.reload();
     }
   };
@@ -214,6 +227,7 @@ export const LessonManager = ({
           rows={rows}
           selected={selected}
           busy={busy}
+          reorderStatus={reorderStatus}
           onSelect={handleSelect}
           onAdd={() => handleSelect('new')}
           onMove={move}

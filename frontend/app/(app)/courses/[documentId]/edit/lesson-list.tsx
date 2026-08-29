@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, FileText, Plus, Trash2, Video } from 'lucide-react';
+import { ArrowDown, ArrowUp, CheckCircle2, FileText, Plus, RefreshCw, Trash2, Video } from 'lucide-react';
 
 import type { Lesson } from '@/lib/types';
 
@@ -8,6 +8,7 @@ export const LessonList = ({
   rows,
   selected,
   busy,
+  reorderStatus,
   onSelect,
   onAdd,
   onMove,
@@ -16,6 +17,7 @@ export const LessonList = ({
   rows: Lesson[];
   selected: string;
   busy: boolean;
+  reorderStatus?: 'saving' | 'saved' | null;
   onSelect: (documentId: string) => void;
   onAdd: () => void;
   onMove: (index: number, delta: number) => void;
@@ -28,9 +30,26 @@ export const LessonList = ({
         <span className="size-2 rounded-full bg-sky-500" />
         <h2 className="text-sm font-bold text-primary">Course Syllabus</h2>
       </div>
-      <span className="rounded-full bg-sky-500/15 border border-sky-500/30 px-2.5 py-0.5 text-xs font-bold text-sky-400">
-        {rows.length} {rows.length === 1 ? 'Lesson' : 'Lessons'}
-      </span>
+
+      {reorderStatus === 'saving' && (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/15 border border-sky-500/30 px-2.5 py-0.5 text-[11px] font-bold text-sky-400 animate-pulse">
+          <RefreshCw className="size-3 animate-spin text-sky-400" />
+          <span>Auto-saving order...</span>
+        </span>
+      )}
+
+      {reorderStatus === 'saved' && (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 animate-in fade-in">
+          <CheckCircle2 className="size-3.5 text-emerald-400" />
+          <span>Order saved & synced!</span>
+        </span>
+      )}
+
+      {!reorderStatus && (
+        <span className="rounded-full bg-sky-500/15 border border-sky-500/30 px-2.5 py-0.5 text-xs font-bold text-sky-400">
+          {rows.length} {rows.length === 1 ? 'Lesson' : 'Lessons'}
+        </span>
+      )}
     </div>
 
     {/* Syllabus Items List */}
