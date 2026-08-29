@@ -76,10 +76,11 @@ function LoginForm() {
   return (
     <form onSubmit={submit} className="space-y-4">
       <Field
-        label="Username or Email"
+        label="Email Address"
+        type="email"
         value={identifier}
         onChange={(event) => setIdentifier(event.target.value)}
-        autoComplete="username"
+        autoComplete="email"
         placeholder="your@email.com"
         required
       />
