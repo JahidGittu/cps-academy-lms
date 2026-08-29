@@ -10,6 +10,95 @@ declare global {
 export default (plugin: any) => {
   const { me, destroy } = plugin.controllers.user;
 
+  // Custom register controller to ensure new signups are ALWAYS created as Student role
+  plugin.controllers.auth.register = async (ctx: any) => {
+    const pluginStore = await strapi.store({ type: 'plugin', name: 'users-permissions' });
+    const settings = await pluginStore.get({ key: 'advanced' });
+
+    if (settings && settings.allow_register === false) {
+      return ctx.badRequest('Register action is currently disabled');
+    }
+
+    const { email, username, password } = ctx.request?.body || {};
+
+    if (!email || !email.trim()) return ctx.badRequest('Email is required');
+    if (!username || !username.trim()) return ctx.badRequest('Username is required');
+    if (!password || password.length < 6) return ctx.badRequest('Password must be at least 6 characters');
+
+    const cleanEmail = email.toLowerCase().trim();
+    const cleanUsername = username.trim();
+
+    // Check if username is already taken
+    const userWithSameUsername = await strapi.db.query('plugin::users-permissions.user').findOne({
+      where: { username: cleanUsername },
+    });
+
+    if (userWithSameUsername) {
+      return ctx.badRequest('Username or Name is already taken. Please choose another.');
+    }
+
+    // Check if email is already taken
+    const userWithSameEmail = await strapi.db.query('plugin::users-permissions.user').findOne({
+      where: { email: cleanEmail },
+    });
+
+    if (userWithSameEmail) {
+      return ctx.badRequest('An account with this email address already exists.');
+    }
+
+    // Find Student role
+    let studentRole = await strapi.db.query('plugin::users-permissions.role').findOne({
+      where: { type: 'student' },
+    });
+
+    if (!studentRole) {
+      studentRole = await strapi.db.query('plugin::users-permissions.role').findOne({
+        where: { name: 'Student' },
+      });
+    }
+
+    if (!studentRole) {
+      studentRole = await strapi.db.query('plugin::users-permissions.role').findOne({
+        where: { type: 'authenticated' },
+      });
+    }
+
+    if (!studentRole) {
+      return ctx.badRequest('Student role is not configured in database.');
+    }
+
+    // Create user securely via users-permissions service to hash password
+    const newUser = await strapi.plugin('users-permissions').service('user').add({
+      username: cleanUsername,
+      email: cleanEmail,
+      password,
+      provider: 'local',
+      confirmed: true,
+      role: studentRole.id,
+    });
+
+    // Issue JWT token
+    const jwt = strapi.plugin('users-permissions').service('jwt').issue({
+      id: newUser.id,
+    });
+
+    return ctx.send({
+      jwt,
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        confirmed: newUser.confirmed,
+        blocked: newUser.blocked,
+        role: {
+          id: studentRole.id,
+          name: studentRole.name,
+          type: studentRole.type,
+        },
+      },
+    });
+  };
+
   // The output sanitizer removes every relation the caller is not allowed to read, and reading
   // the role collection is an Admin-only permission, so /users/me answered without a role for
   // the three roles that need it most. The role the request was already authenticated with is
