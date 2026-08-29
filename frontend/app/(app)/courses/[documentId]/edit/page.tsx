@@ -88,7 +88,7 @@ const Builder = ({ documentId }: { documentId: string }) => {
       <div className="min-w-0">
         {section === 'details' && <CourseDetails course={detail} onSaved={course.reload} />}
         {section === 'lessons' && <LessonManager course={documentId} onChanged={course.reload} />}
-        {section === 'quiz' && <QuizPanel course={detail} />}
+        {section === 'quiz' && <QuizPanel course={detail} onSaved={course.reload} />}
       </div>
     </div>
   );

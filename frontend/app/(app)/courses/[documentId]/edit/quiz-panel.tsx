@@ -1,99 +1,434 @@
 'use client';
 
-import Link from 'next/link';
-import { ClipboardList, Plus, SquarePen, HelpCircle, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
+import {
+  HelpCircle,
+  Plus,
+  Trash2,
+  CheckCircle2,
+  AlertCircle,
+  FileQuestion,
+  RefreshCw,
+  Sparkles,
+} from 'lucide-react';
 
+import { api, errorMessage } from '@/lib/api';
 import { useApi } from '@/lib/use-api';
 import type { Course, Quiz, Single } from '@/lib/types';
-import { Alert, Card, LoadingState } from '@/components/ui';
+import { Alert, Button, Card, Field, inputStyle, LoadingState } from '@/components/ui';
+import { ConfirmModal } from '@/components/confirm-modal';
 
-const Preview = ({ documentId }: { documentId: string }) => {
-  const quiz = useApi<Single<Quiz>>(`/quizzes/${documentId}?populate=questions`);
+export type DraftQuestion = { text: string; options: string[]; correctIndex: number };
 
-  if (quiz.loading) {
+const blankQuestion = (): DraftQuestion => ({
+  text: '',
+  options: ['', '', '', ''],
+  correctIndex: 0,
+});
+
+export const QuizPanel = ({
+  course,
+  onSaved,
+}: {
+  course: Course;
+  onSaved?: () => Promise<void>;
+}) => {
+  const quizDocId = course.quiz?.documentId;
+  const quizData = useApi<Single<Quiz>>(
+    quizDocId ? `/quizzes/${quizDocId}?populate=questions` : null
+  );
+
+  const [title, setTitle] = useState('');
+  const [questions, setQuestions] = useState<DraftQuestion[]>([blankQuestion()]);
+  const [busy, setBusy] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // Sync server quiz data when loaded
+  useEffect(() => {
+    if (quizData.data?.data) {
+      const q = quizData.data.data;
+      setTitle(q.title || '');
+      if (q.questions && q.questions.length > 0) {
+        setQuestions(
+          q.questions.map((item) => ({
+            text: item.text,
+            options: item.options && item.options.length >= 2 ? item.options : ['', ''],
+            correctIndex: item.correctIndex ?? 0,
+          }))
+        );
+      }
+    } else if (!course.quiz && !title) {
+      setTitle(`${course.title} - Final Assessment`);
+    }
+  }, [quizData.data, course.quiz, course.title]);
+
+  const updateQuestion = (at: number, next: DraftQuestion) => {
+    setQuestions((prev) => prev.map((q, i) => (i === at ? next : q)));
+  };
+
+  const removeQuestion = (at: number) => {
+    setQuestions((prev) => prev.filter((_, i) => i !== at));
+  };
+
+  const setOptionText = (qIndex: number, optIndex: number, text: string) => {
+    setQuestions((prev) =>
+      prev.map((q, i) => {
+        if (i !== qIndex) return q;
+        const newOptions = [...q.options];
+        newOptions[optIndex] = text;
+        return { ...q, options: newOptions };
+      })
+    );
+  };
+
+  const setCorrectOption = (qIndex: number, optIndex: number) => {
+    setQuestions((prev) =>
+      prev.map((q, i) => (i === qIndex ? { ...q, correctIndex: optIndex } : q))
+    );
+  };
+
+  const addOption = (qIndex: number) => {
+    setQuestions((prev) =>
+      prev.map((q, i) => (i === qIndex ? { ...q, options: [...q.options, ''] } : q))
+    );
+  };
+
+  const removeOption = (qIndex: number, optIndex: number) => {
+    setQuestions((prev) =>
+      prev.map((q, i) => {
+        if (i !== qIndex) return q;
+        const newOptions = q.options.filter((_, idx) => idx !== optIndex);
+        let nextCorrect = q.correctIndex;
+        if (optIndex === q.correctIndex) nextCorrect = 0;
+        else if (optIndex < q.correctIndex) nextCorrect = Math.max(0, q.correctIndex - 1);
+        return { ...q, options: newOptions, correctIndex: nextCorrect };
+      })
+    );
+  };
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+
+    if (!questions.length) {
+      setError('Quiz assessment must have at least one question.');
+      return;
+    }
+
+    // Validate that all questions have non-empty text and at least 2 non-empty options
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i];
+      if (!q.text.trim()) {
+        setError(`Question ${i + 1} text is empty. Please enter question text.`);
+        return;
+      }
+      const validOptions = q.options.filter((o) => o.trim().length > 0);
+      if (validOptions.length < 2) {
+        setError(`Question ${i + 1} must have at least 2 non-empty options.`);
+        return;
+      }
+    }
+
+    setBusy(true);
+    setError('');
+    setSaveStatus('saving');
+
+    try {
+      const data = {
+        title: title.trim() || `${course.title} Assessment`,
+        questions,
+        course: course.documentId,
+      };
+
+      if (course.quiz?.documentId) {
+        await api.put(`/quizzes/${course.quiz.documentId}`, { data });
+      } else {
+        await api.post('/quizzes', { data });
+      }
+
+      if (onSaved) await onSaved();
+      if (quizData.reload) await quizData.reload();
+
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } catch (caught) {
+      setError(errorMessage(caught));
+      setSaveStatus('idle');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const confirmDeleteQuiz = async () => {
+    if (!course.quiz?.documentId) return;
+
+    setDeleteBusy(true);
+    setError('');
+
+    try {
+      await api.delete(`/quizzes/${course.quiz.documentId}`);
+      if (onSaved) await onSaved();
+      setQuestions([blankQuestion()]);
+      setShowDeleteModal(false);
+    } catch (caught) {
+      setError(errorMessage(caught));
+    } finally {
+      setDeleteBusy(false);
+    }
+  };
+
+  if (quizDocId && quizData.loading && !quizData.data) {
     return <LoadingState />;
   }
 
-  if (quiz.error) return <Alert>{quiz.error}</Alert>;
-
-  const questions = quiz.data?.data.questions ?? [];
-
   return (
-    <Card className="border border-theme">
-      <div className="flex items-center justify-between border-b border-subtle pb-3 mb-4">
+    <form onSubmit={submit} className="space-y-6">
+      {/* Quiz Studio Header Strip */}
+      <div className="rounded-xl border border-theme bg-surface p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="font-bold text-base text-primary flex items-center gap-2">
-            <HelpCircle className="size-5 text-sky-400" />
-            <span>{quiz.data?.data.title}</span>
-          </h2>
-          <p className="text-xs text-muted mt-0.5">{questions.length} Multiple Choice Assessment Questions</p>
+          <h1 className="text-xl sm:text-2xl font-black text-primary flex items-center gap-2.5">
+            <HelpCircle className="size-6 text-sky-400" />
+            <span>Course Quiz Assessment</span>
+          </h1>
+          <p className="text-xs text-muted mt-1">
+            End-of-course MCQ knowledge evaluation &bull; Server-side auto grading with instant score results.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-3 mt-3 text-xs font-semibold">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-500/15 text-sky-400 border border-sky-500/30 px-2.5 py-1">
+              <FileQuestion className="size-3.5" />
+              <span>{questions.length} Assessment Questions</span>
+            </span>
+
+            {course.quiz ? (
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2.5 py-1">
+                <CheckCircle2 className="size-3.5" />
+                <span>Active Published Quiz</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2.5 py-1">
+                <AlertCircle className="size-3.5" />
+                <span>Quiz Setup In Progress</span>
+              </span>
+            )}
+          </div>
         </div>
-        <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-xs font-bold text-emerald-400 flex items-center gap-1">
-          <CheckCircle2 className="size-3.5" />
-          <span>Active Assessment</span>
-        </span>
+
+        <div className="flex items-center gap-2.5">
+          {course.quiz && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(true)}
+              className="rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 px-3.5 py-2.5 text-xs font-bold transition cursor-pointer"
+            >
+              Delete Quiz
+            </button>
+          )}
+
+          <Button
+            type="submit"
+            disabled={busy}
+            className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-2.5 shadow-md shadow-sky-600/25 hover:shadow-sky-500/35 transition-all"
+          >
+            {busy ? 'Saving Assessment...' : course.quiz ? 'Update Quiz' : 'Save & Publish Quiz'}
+          </Button>
+        </div>
       </div>
 
-      <ol className="space-y-2.5">
-        {questions.map((question, index) => (
-          <li key={question.id} className="flex items-center gap-3 rounded-xl bg-canvas p-3 text-xs sm:text-sm border border-theme">
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-elevated text-xs font-bold text-primary">
-              {index + 1}
-            </span>
-            <span className="min-w-0 flex-1 text-primary font-medium">{question.text}</span>
-            <span className="shrink-0 rounded-md bg-sky-500/15 border border-sky-500/30 px-2 py-0.5 text-[11px] font-bold text-sky-400">
-              {question.options.length} Options
-            </span>
-          </li>
+      <Alert>{error}</Alert>
+
+      {/* Quiz Title & Settings Card */}
+      <div className="rounded-xl border border-theme bg-surface p-5 shadow-2xs space-y-4">
+        <Field
+          label="Quiz Assessment Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="e.g. Cloud Architecture & Microservices Final MCQ Assessment"
+          required
+        />
+      </div>
+
+      {/* Questions Stack */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold text-primary flex items-center gap-2">
+            <span>Assessment Questions ({questions.length})</span>
+          </h2>
+
+          <button
+            type="button"
+            onClick={() => setQuestions((prev) => [...prev, blankQuestion()])}
+            className="flex items-center gap-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-400 border border-sky-500/30 px-3 py-1.5 text-xs font-bold transition cursor-pointer"
+          >
+            <Plus className="size-3.5" />
+            <span>Add Question</span>
+          </button>
+        </div>
+
+        {questions.map((question, qIndex) => (
+          <div
+            key={qIndex}
+            className="rounded-xl border border-theme bg-surface p-5 shadow-2xs space-y-4"
+          >
+            {/* Question Card Header */}
+            <div className="flex items-center justify-between border-b border-subtle pb-3">
+              <div className="flex items-center gap-2">
+                <span className="flex size-6 items-center justify-center rounded-md bg-sky-600 text-white font-black text-xs">
+                  {qIndex + 1}
+                </span>
+                <span className="text-sm font-bold text-primary">Question {qIndex + 1}</span>
+              </div>
+
+              {questions.length > 1 && (
+                <button
+                  type="button"
+                  title="Remove Question"
+                  onClick={() => removeQuestion(qIndex)}
+                  className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 font-semibold cursor-pointer"
+                >
+                  <Trash2 className="size-3.5" />
+                  <span>Remove</span>
+                </button>
+              )}
+            </div>
+
+            {/* Question Text */}
+            <Field
+              label="Question Text"
+              value={question.text}
+              onChange={(e) => updateQuestion(qIndex, { ...question, text: e.target.value })}
+              placeholder="e.g. Which Docker instruction specifies the base operating system image?"
+              required
+            />
+
+            {/* Options List */}
+            <div className="space-y-2.5 pt-1">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-primary">
+                  Multiple Choice Options &bull; <span className="text-sky-400 font-normal">Select the radio button next to the correct answer</span>
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                {question.options.map((option, optIndex) => {
+                  const isCorrect = question.correctIndex === optIndex;
+                  const optionLabel = String.fromCharCode(65 + optIndex); // A, B, C, D
+
+                  return (
+                    <div
+                      key={optIndex}
+                      className={`flex items-center gap-2.5 rounded-lg border p-2 transition-all ${
+                        isCorrect
+                          ? 'border-emerald-500/50 bg-emerald-500/10'
+                          : 'border-theme bg-canvas'
+                      }`}
+                    >
+                      {/* Radio button for Correct Answer */}
+                      <label className="flex items-center gap-1.5 cursor-pointer shrink-0 px-1">
+                        <input
+                          type="radio"
+                          name={`correct-answer-${qIndex}`}
+                          checked={isCorrect}
+                          onChange={() => setCorrectOption(qIndex, optIndex)}
+                          className="size-4 accent-emerald-500 cursor-pointer"
+                        />
+                        <span
+                          className={`text-xs font-extrabold px-1.5 py-0.5 rounded ${
+                            isCorrect
+                              ? 'bg-emerald-500 text-white'
+                              : 'bg-elevated text-muted border border-theme'
+                          }`}
+                        >
+                          {optionLabel}
+                        </span>
+                      </label>
+
+                      {/* Option Text Input */}
+                      <input
+                        type="text"
+                        value={option}
+                        onChange={(e) => setOptionText(qIndex, optIndex, e.target.value)}
+                        placeholder={`Option ${optionLabel} text...`}
+                        required
+                        className="w-full bg-transparent text-xs sm:text-sm text-primary outline-none placeholder:text-muted"
+                      />
+
+                      {/* Delete Option (if > 2 options) */}
+                      {question.options.length > 2 && (
+                        <button
+                          type="button"
+                          title="Remove Option"
+                          onClick={() => removeOption(qIndex, optIndex)}
+                          className="rounded p-1 text-muted hover:text-red-400 cursor-pointer shrink-0 transition"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Add Option button */}
+              {question.options.length < 6 && (
+                <button
+                  type="button"
+                  onClick={() => addOption(qIndex)}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-sky-400 hover:text-sky-300 cursor-pointer mt-1"
+                >
+                  <Plus className="size-3" />
+                  <span>Add another option</span>
+                </button>
+              )}
+            </div>
+          </div>
         ))}
-      </ol>
-    </Card>
+
+        {/* Add Question Button */}
+        <button
+          type="button"
+          onClick={() => setQuestions((prev) => [...prev, blankQuestion()])}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-theme py-3.5 text-xs sm:text-sm font-bold text-muted hover:border-sky-500/50 hover:bg-elevated hover:text-sky-400 transition cursor-pointer"
+        >
+          <Plus className="size-4" />
+          <span>Add Another Assessment Question</span>
+        </button>
+      </div>
+
+      {/* Bottom Save Action */}
+      <div className="flex items-center justify-between border-t border-subtle pt-5">
+        <div className="flex items-center gap-3">
+          <Button
+            type="submit"
+            disabled={busy}
+            className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/25 hover:shadow-sky-500/35"
+          >
+            {busy ? 'Saving...' : course.quiz ? 'Update Quiz Assessment' : 'Save Quiz Assessment'}
+          </Button>
+
+          {saveStatus === 'saved' && (
+            <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+              <CheckCircle2 className="size-4" />
+              <span>Assessment saved successfully!</span>
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Delete Quiz Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        title="Delete Quiz Assessment?"
+        message="Are you sure you want to permanently delete this course quiz? All student assessment attempt records for this quiz will also be removed."
+        confirmText="Yes, Delete Quiz"
+        cancelText="Cancel"
+        loading={deleteBusy}
+        onConfirm={confirmDeleteQuiz}
+        onClose={() => setShowDeleteModal(false)}
+      />
+    </form>
   );
 };
-
-export const QuizPanel = ({ course }: { course: Course }) => (
-  <div className="space-y-5">
-    {/* Studio Header Strip */}
-    <div className="rounded-xl border border-theme bg-surface p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-black text-primary flex items-center gap-2.5">
-          <HelpCircle className="size-6 text-sky-400" />
-          <span>Course Quiz Assessment</span>
-        </h1>
-        <p className="text-xs text-muted mt-1">
-          End-of-course MCQ knowledge evaluation &bull; Server-side auto grading with instant score results.
-        </p>
-      </div>
-
-      <Link
-        href={`/courses/${course.documentId}/quiz`}
-        className="flex items-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white px-4 py-2.5 text-xs font-bold shadow-md shadow-sky-600/25 hover:shadow-sky-500/35 transition-all"
-      >
-        {course.quiz ? <SquarePen className="size-4" /> : <Plus className="size-4" />}
-        <span>{course.quiz ? 'Edit Quiz Questions' : 'Build Course Quiz'}</span>
-      </Link>
-    </div>
-
-    {course.quiz ? (
-      <Preview documentId={course.quiz.documentId} />
-    ) : (
-      <Card className="text-center p-8">
-        <span className="mx-auto flex size-12 items-center justify-center rounded-xl bg-sky-500/15 text-sky-400 border border-sky-500/30">
-          <ClipboardList className="size-6" />
-        </span>
-
-        <h3 className="mt-3 text-base font-bold text-primary">No Quiz Added Yet</h3>
-        <p className="mt-1 text-xs text-muted max-w-md mx-auto">
-          Add an end-of-course quiz with multiple-choice questions to test students after completing all syllabus lessons.
-        </p>
-        <Link
-          href={`/courses/${course.documentId}/quiz`}
-          className="inline-flex items-center gap-1.5 mt-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white px-4 py-2 text-xs font-bold shadow-md transition"
-        >
-          <Plus className="size-3.5" />
-          <span>Add Assessment Quiz</span>
-        </Link>
-      </Card>
-    )}
-  </div>
-);
