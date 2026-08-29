@@ -20,30 +20,44 @@ export const LessonEditor = ({
   onSave: (values: LessonValues) => Promise<void>;
   onCancel: () => void;
 }) => {
-  const [values, setValues] = useState<LessonValues>({
-    title: lesson?.title ?? '',
-    videoUrl: lesson?.videoUrl ?? '',
-    content: lesson?.content ?? '',
+  const getSnapshot = (l: Lesson | null): LessonValues => ({
+    title: l?.title ?? '',
+    videoUrl: l?.videoUrl ?? '',
+    content: l?.content ?? '',
   });
 
+  const [values, setValues] = useState<LessonValues>(() => getSnapshot(lesson));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'unsaved' | 'saving' | 'saved'>('idle');
 
-  const isInitialMount = useRef(true);
+  const lastSavedRef = useRef<LessonValues>(getSnapshot(lesson));
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const latestValues = useRef(values);
   latestValues.current = values;
 
-  // Debounced auto-save for existing lessons (1200ms debounce)
+  // Sync state if lesson selection changes without triggering false dirty save
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
+    const snapshot = getSnapshot(lesson);
+    lastSavedRef.current = snapshot;
+    setValues(snapshot);
+    setSaveStatus('idle');
+  }, [lesson?.documentId, lesson?.id]);
+
+  const isDirty =
+    Boolean(lesson) &&
+    (values.title !== lastSavedRef.current.title ||
+      values.videoUrl !== lastSavedRef.current.videoUrl ||
+      values.content !== lastSavedRef.current.content);
+
+  // Debounced auto-save ONLY when actual unsaved changes exist (1500ms debounce)
+  useEffect(() => {
+    if (!lesson || !isDirty || !values.title.trim()) {
+      if (!isDirty && saveStatus === 'unsaved') {
+        setSaveStatus('idle');
+      }
       return;
     }
-
-    // Only auto-save if editing an existing lesson and title is present
-    if (!lesson || !values.title.trim()) return;
 
     setSaveStatus('unsaved');
 
@@ -57,19 +71,21 @@ export const LessonEditor = ({
 
       try {
         await onSave(latestValues.current);
+        lastSavedRef.current = { ...latestValues.current };
         setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2500);
       } catch (caught) {
         setError(errorMessage(caught));
         setSaveStatus('idle');
       }
-    }, 1200);
+    }, 1500);
 
     return () => {
       if (debounceTimer.current) {
         clearTimeout(debounceTimer.current);
       }
     };
-  }, [values.title, values.videoUrl, values.content, lesson]);
+  }, [values.title, values.videoUrl, values.content, isDirty, lesson]);
 
   const set =
     (field: keyof LessonValues) =>
@@ -88,9 +104,12 @@ export const LessonEditor = ({
 
     try {
       await onSave(values);
+      lastSavedRef.current = { ...values };
       setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2500);
     } catch (caught) {
       setError(errorMessage(caught));
+      setSaveStatus('idle');
     } finally {
       setBusy(false);
     }
@@ -120,10 +139,15 @@ export const LessonEditor = ({
                 <span>Saved</span>
               </span>
             )}
-            {saveStatus === 'unsaved' && (
-              <span className="inline-flex items-center gap-1.5 text-muted font-medium">
-                <span className="size-1.5 rounded-full bg-amber-500" />
+            {saveStatus === 'unsaved' && isDirty && (
+              <span className="inline-flex items-center gap-1.5 text-amber-500 font-medium">
+                <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
                 <span>Unsaved changes</span>
+              </span>
+            )}
+            {saveStatus === 'idle' && !isDirty && (
+              <span className="inline-flex items-center gap-1 text-muted text-[11px]">
+                <span>✓ Up to date</span>
               </span>
             )}
           </div>
@@ -138,37 +162,31 @@ export const LessonEditor = ({
         label="Video URL (Optional)"
         value={values.videoUrl}
         onChange={set('videoUrl')}
-        placeholder="https://www.youtube.com/watch?v=..."
+        placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/..."
       />
 
       <RichTextEditor
-        label="Lesson Content"
+        label="Lesson Content & Materials"
         value={values.content}
         onChange={set('content')}
-        placeholder="Write lesson notes, explanations, code snippets, or instructions..."
-        rows={12}
+        placeholder="Type or paste lesson notes, markdown, and embed code blocks..."
+        rows={10}
       />
-
-      <p className="text-xs text-muted">
-        A lesson can be a video, a written page, or both. Whatever is filled in is what students see.
-      </p>
 
       <Alert>{error}</Alert>
 
-      <div className="flex items-center gap-3">
-        <Button type="submit" disabled={busy}>
-          {busy ? 'Saving...' : lesson ? 'Save lesson' : 'Create lesson'}
-        </Button>
-
-        <Button type="button" variant="plain" onClick={onCancel}>
-          Close
-        </Button>
-
-        {lesson && saveStatus === 'saved' && (
-          <span className="text-xs font-medium text-muted hidden sm:inline">
-            ✓ Auto-synced with cloud
-          </span>
-        )}
+      <div className="flex items-center justify-between pt-2">
+        <div className="flex gap-2">
+          <Button
+            type="submit"
+            disabled={busy || (Boolean(lesson) && !isDirty && saveStatus !== 'saving')}
+          >
+            {busy ? 'Saving...' : lesson ? 'Save lesson' : 'Create lesson'}
+          </Button>
+          <Button variant="plain" type="button" onClick={onCancel}>
+            Cancel
+          </Button>
+        </div>
       </div>
     </form>
   );
