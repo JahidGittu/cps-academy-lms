@@ -420,13 +420,6 @@ export const RichTextEditor = ({
           style={{ whiteSpace: 'pre-wrap' }}
         />
       </div>
-
-      <p className="text-[11px] text-muted flex items-center justify-between">
-        <span>
-          💡 <strong>Pro Tip:</strong> Click any toolbar button to apply, and click again or press Enter to return to normal text.
-        </span>
-        <span className="hidden sm:inline">HTML & WYSIWYG sync enabled</span>
-      </p>
     </div>
   );
 };
