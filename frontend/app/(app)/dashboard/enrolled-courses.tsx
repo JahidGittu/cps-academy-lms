@@ -101,7 +101,7 @@ const Row = ({ course, completedLessonIds, quizResult }: RowProps) => {
 export const EnrolledCourses = () => {
   // Unified O(1) single-level queries eliminating N+1 card waterfalls
   const enrollments = useApi<Collection<Enrollment>>(
-    '/enrollments?populate[course][populate]=lessons,quiz'
+    '/enrollments?populate[course][populate][0]=lessons&populate[course][populate][1]=quiz'
   );
   const progresses = useApi<Collection<LessonProgress>>('/lesson-progresses?populate=lesson');
   const quizResults = useApi<Collection<QuizResult>>('/quiz-results?populate=quiz&sort=createdAt:desc');

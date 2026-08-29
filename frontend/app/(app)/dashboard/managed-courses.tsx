@@ -37,7 +37,7 @@ export const ManagedCourses = () => {
   const [actionError, setActionError] = useState('');
 
   const courses = useApi<Collection<Course>>('/courses?mine=true');
-  const enrollments = useApi<Collection<Enrollment>>('/enrollments?populate=course,student');
+  const enrollments = useApi<Collection<Enrollment>>('/enrollments?populate[0]=course&populate[1]=student');
 
   const confirmDelete = async () => {
     if (!deletingCourse) return;
