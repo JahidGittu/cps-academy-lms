@@ -17,8 +17,13 @@ const Create = () => {
       <PostForm
         save={async (values) => {
           // The byline is not in the body: the controller takes the author from the session
-          await api.post<Single<BlogPost>>('/blog-posts', { data: values });
-          router.push('/admin/blog-management');
+          const res = await api.post<Single<BlogPost>>('/blog-posts', { data: values });
+          const docId = res.data?.data?.documentId;
+          if (docId) {
+            router.push(`/admin/blog-management/${docId}/edit`);
+          } else {
+            router.push('/admin/blog-management');
+          }
         }}
       />
     </Card>

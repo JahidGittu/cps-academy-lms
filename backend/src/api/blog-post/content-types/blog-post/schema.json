@@ -23,8 +23,7 @@
       "type": "text"
     },
     "topic": {
-      "type": "string",
-      "default": "Architecture"
+      "type": "string"
     },
     "author": {
       "type": "relation",

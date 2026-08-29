@@ -75,15 +75,17 @@ const Post = ({ documentId }: { documentId: string }) => {
         )}
       </div>
 
-      {/* High-res Blog Cover Image Banner */}
-      <div className="overflow-hidden rounded-lg border border-theme shadow-sm bg-black/40">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={coverImage}
-          alt={detail.title}
-          className="h-64 sm:h-80 md:h-96 w-full object-cover"
-        />
-      </div>
+      {/* High-res Blog Cover Image Banner (Only if image provided) */}
+      {detail.coverImageUrl && (
+        <div className="overflow-hidden rounded-lg border border-theme shadow-sm bg-black/40">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={detail.coverImageUrl}
+            alt={detail.title}
+            className="h-64 sm:h-80 md:h-96 w-full object-cover"
+          />
+        </div>
+      )}
 
       <div>
         <div className="flex flex-wrap items-center gap-4 text-xs text-muted font-medium mb-3">

@@ -37,8 +37,9 @@ export const ImagePicker = ({
 
     // 1. Primary Upload: Strapi / Railway Backend API
     try {
-      const strapiBase = (process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337').replace(/\/api\/?$/, '');
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const rawHost = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
+      const strapiBase = rawHost.replace(/\/api\/?$/, '').replace(/\/+$/, '');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('lms.jwt') || localStorage.getItem('token') : null;
       const formData = new FormData();
       formData.append('files', file);
 

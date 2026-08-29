@@ -46,7 +46,7 @@ export const PostForm = ({
     title: post?.title ?? '',
     body: post?.body ?? '',
     coverImageUrl: post?.coverImageUrl ?? '',
-    topic: post?.topic ?? 'Architecture',
+    topic: post?.topic ?? '',
     publishState: post?.publishState ?? 'draft',
   });
 
@@ -60,7 +60,7 @@ export const PostForm = ({
     title: post?.title ?? '',
     body: post?.body ?? '',
     coverImageUrl: post?.coverImageUrl ?? '',
-    topic: post?.topic ?? 'Architecture',
+    topic: post?.topic ?? '',
     publishState: post?.publishState ?? 'draft',
   });
 
@@ -72,7 +72,7 @@ export const PostForm = ({
         title: post.title ?? '',
         body: post.body ?? '',
         coverImageUrl: post.coverImageUrl ?? '',
-        topic: post.topic ?? 'Architecture',
+        topic: post.topic ?? '',
         publishState: post.publishState ?? 'draft',
       };
       setValues(nextValues);
@@ -135,6 +135,14 @@ export const PostForm = ({
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | { target: { value: string } }) =>
       setValues((prev) => ({ ...prev, [field]: event.target.value }));
 
+  const latestValues = useRef<PostValues>(values);
+  latestValues.current = values;
+
+  const saveRef = useRef(save);
+  saveRef.current = save;
+
+  const isSavingRef = useRef(false);
+
   // Check if form has unsaved modifications
   const isDirty =
     Boolean(values.title.trim()) &&
@@ -146,7 +154,7 @@ export const PostForm = ({
 
   // Debounced auto-save for existing articles (1500ms after user pauses typing)
   useEffect(() => {
-    if (!isEditing || !isDirty || !values.title.trim()) {
+    if (!isEditing || !isDirty || !values.title.trim() || isSavingRef.current) {
       if (!isDirty && saveStatus === 'unsaved') {
         setSaveStatus('idle');
       }
@@ -160,17 +168,22 @@ export const PostForm = ({
     }
 
     debounceTimer.current = setTimeout(async () => {
+      if (isSavingRef.current) return;
+      isSavingRef.current = true;
       setSaveStatus('saving');
       setError('');
 
       try {
-        await save(values);
-        lastSavedRef.current = { ...values };
+        const payloadToSave = { ...latestValues.current };
+        await saveRef.current(payloadToSave);
+        lastSavedRef.current = { ...payloadToSave };
         setSaveStatus('saved');
         setTimeout(() => setSaveStatus('idle'), 2500);
       } catch (caught) {
         setError(errorMessage(caught));
         setSaveStatus('idle');
+      } finally {
+        isSavingRef.current = false;
       }
     }, 1500);
 
@@ -179,12 +192,15 @@ export const PostForm = ({
         clearTimeout(debounceTimer.current);
       }
     };
-  }, [isEditing, values, isDirty, save]);
+  }, [isEditing, isDirty, values.title, values.body, values.coverImageUrl, values.topic, values.publishState]);
 
   // Unified submit handler supporting distinct Draft and Publish triggers
   const handleSaveAction = async (targetState?: 'draft' | 'published') => {
+    if (isSavingRef.current || busy) return;
+
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
+      debounceTimer.current = null;
     }
 
     if (!values.title.trim()) {
@@ -197,13 +213,14 @@ export const PostForm = ({
       publishState: targetState ?? values.publishState,
     };
 
+    isSavingRef.current = true;
     setBusy(true);
     setSubmittingAction(targetState ?? (isEditing ? 'save' : 'published'));
     setError('');
     setSaveStatus('saving');
 
     try {
-      await save(payload);
+      await saveRef.current(payload);
       setValues(payload);
       lastSavedRef.current = { ...payload };
       setSaveStatus('saved');
@@ -212,6 +229,7 @@ export const PostForm = ({
       setError(errorMessage(caught));
       setSaveStatus('idle');
     } finally {
+      isSavingRef.current = false;
       setBusy(false);
       setSubmittingAction(null);
     }

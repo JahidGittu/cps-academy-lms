@@ -16,6 +16,7 @@ import {
   Clock,
   Unlock,
   Video,
+  FileText,
 } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
@@ -100,6 +101,7 @@ const Detail = ({ documentId }: { documentId: string }) => {
   };
 
   const lessons = detail?.lessons ?? [];
+  const hasVideos = lessons.some((lesson) => Boolean(lesson.videoUrl && lesson.videoUrl.trim() !== ''));
   const hasQuiz = Boolean(detail?.quiz);
   const totalMilestones = lessons.length + (hasQuiz ? 1 : 0);
   const completedMilestones = completed.size + (lastQuizResult ? 1 : 0);
@@ -411,8 +413,17 @@ const Detail = ({ documentId }: { documentId: string }) => {
                 </li>
 
                 <li className="flex items-center gap-2.5">
-                  <Video className="size-4 text-indigo-400 shrink-0" />
-                  <span>HD Video players & rich text tutorials</span>
+                  {hasVideos ? (
+                    <>
+                      <Video className="size-4 text-indigo-400 shrink-0" />
+                      <span>HD Video players & rich text tutorials</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="size-4 text-indigo-400 shrink-0" />
+                      <span>In-depth technical guides & reading notes</span>
+                    </>
+                  )}
                 </li>
 
                 {detail.quiz && (
@@ -421,11 +432,6 @@ const Detail = ({ documentId }: { documentId: string }) => {
                     <span>Instant auto-graded MCQ assessment</span>
                   </li>
                 )}
-
-                <li className="flex items-center gap-2.5">
-                  <Unlock className="size-4 text-emerald-400 shrink-0" />
-                  <span>Sequential unlock progression & auto-save</span>
-                </li>
 
                 <li className="flex items-center gap-2.5">
                   <Clock className="size-4 text-amber-400 shrink-0" />

@@ -278,3 +278,58 @@ export const EnrolledCoursesSkeleton = () => (
     </div>
   </div>
 );
+
+export const BlogEditSkeleton = () => (
+  <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="rounded-xl border border-theme bg-surface p-6 shadow-xs space-y-6">
+      {/* Header Skeleton */}
+      <div className="flex items-center justify-between pb-4 border-b border-subtle">
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-3.5 w-72 max-w-full" />
+        </div>
+        <Skeleton className="h-7 w-24 rounded-full" />
+      </div>
+
+      {/* Grid Layout Skeleton */}
+      <div className="grid gap-6 lg:grid-cols-12">
+        {/* Left Column (8 cols) */}
+        <div className="space-y-5 lg:col-span-8">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-72 w-full rounded-lg" />
+          </div>
+        </div>
+
+        {/* Right Column (4 cols) */}
+        <div className="space-y-5 lg:col-span-4">
+          <div className="rounded-xl border border-theme bg-canvas p-4 space-y-3">
+            <Skeleton className="h-4 w-28" />
+            <div className="grid grid-cols-2 gap-2">
+              <Skeleton className="h-10 rounded-lg" />
+              <Skeleton className="h-10 rounded-lg" />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-theme bg-canvas p-4 space-y-3">
+            <Skeleton className="h-4 w-32" />
+            <div className="flex flex-wrap gap-1.5">
+              <Skeleton className="h-6 w-20 rounded-lg" />
+              <Skeleton className="h-6 w-16 rounded-lg" />
+              <Skeleton className="h-6 w-24 rounded-lg" />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-theme bg-canvas p-4 space-y-3">
+            <Skeleton className="h-4 w-36" />
+            <Skeleton className="h-28 w-full rounded-lg" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);

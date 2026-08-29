@@ -6,9 +6,10 @@ import { api } from '@/lib/api';
 import { useApi } from '@/lib/use-api';
 import type { BlogPost, Single } from '@/lib/types';
 import { RequireAuth } from '@/components/require-auth';
-import { Alert, Card, Empty, LoadingState } from '@/components/ui';
+import { Alert, Card, Empty } from '@/components/ui';
 import { PostForm } from '@/components/post-form';
 import { useSetBreadcrumbs } from '@/components/dashboard-shell';
+import { BlogEditSkeleton } from '@/components/page-skeletons';
 
 const Edit = ({ documentId }: { documentId: string }) => {
   const post = useApi<Single<BlogPost>>(`/blog-posts/${documentId}`);
@@ -23,7 +24,7 @@ const Edit = ({ documentId }: { documentId: string }) => {
       : [{ label: 'Blogs', href: '/admin/blog-management' }, { label: 'Edit Article' }]
   );
 
-  if (post.loading && !post.data) return <LoadingState />;
+  if (post.loading && !post.data) return <BlogEditSkeleton />;
 
   if (post.error) return <Alert>{post.error}</Alert>;
 

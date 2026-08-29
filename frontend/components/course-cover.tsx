@@ -9,14 +9,12 @@ export const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1517694712202-1
 
 export const resolveImageUrl = (url?: string | null): string => {
   if (!url) return FALLBACK_IMAGE;
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('/')) {
     return url;
   }
-  if (url.startsWith('/uploads/')) {
-    const strapiBase = (process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337').replace(/\/api\/?$/, '');
-    return `${strapiBase}${url}`;
-  }
-  return url;
+  const rawHost = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
+  const strapiBase = rawHost.replace(/\/api\/?$/, '').replace(/\/+$/, '');
+  return `${strapiBase}/${url.replace(/^\/+/, '')}`;
 };
 
 export const CourseCover = ({

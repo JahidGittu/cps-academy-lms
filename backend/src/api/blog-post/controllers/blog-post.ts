@@ -7,14 +7,14 @@ const UID = 'api::blog-post.blog-post';
 
 const PUBLISHED_ONLY = { publishState: 'published' } as const;
 
-type Writable = { title?: string; body?: string; coverImageUrl?: string; publishState?: string };
+type Writable = { title?: string; body?: string; coverImageUrl?: string; topic?: string; publishState?: string };
 
 const stateOf = (value?: string) => (value === 'published' ? 'published' : 'draft');
 
 export default factories.createCoreController(UID, ({ strapi }) => ({
   async create(ctx: Context) {
     const body = ctx.request.body as { data?: Writable };
-    const { title, body: postBody, coverImageUrl, publishState } = body.data ?? {};
+    const { title, body: postBody, coverImageUrl, topic, publishState } = body.data ?? {};
 
     if (!title) return ctx.badRequest('data.title is required');
     if (!postBody) return ctx.badRequest('data.body is required');
@@ -24,6 +24,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
         title,
         body: postBody,
         coverImageUrl,
+        topic,
         publishState: stateOf(publishState),
         author: caller(ctx).id,
       },
@@ -35,7 +36,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
   async update(ctx: Context) {
     const body = ctx.request.body as { data?: Writable };
-    const { title, body: postBody, coverImageUrl, publishState } = body.data ?? {};
+    const { title, body: postBody, coverImageUrl, topic, publishState } = body.data ?? {};
 
     const post = await strapi.documents(UID).update({
       documentId: ctx.params.id,
@@ -43,6 +44,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
         title,
         body: postBody,
         coverImageUrl,
+        topic,
         publishState: stateOf(publishState),
       },
     });

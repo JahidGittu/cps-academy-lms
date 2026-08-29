@@ -13,6 +13,7 @@ import {
   Tag,
   Globe,
   Lock,
+  Newspaper,
 } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
@@ -23,6 +24,7 @@ import { RequireAuth } from '@/components/require-auth';
 import { Alert, Button, Empty } from '@/components/ui';
 import { BlogManagementSkeleton } from '@/components/page-skeletons';
 import { ConfirmModal } from '@/components/confirm-modal';
+import { resolveImageUrl } from '@/components/course-cover';
 
 const TOPICS = ['All Topics', 'Architecture', 'Security', 'Tutorial', 'Database'];
 
@@ -342,24 +344,29 @@ const BlogManagement = () => {
               </thead>
 
               <tbody className="divide-y divide-subtle">
-                {filtered.map((post, idx) => {
+                {filtered.map((post) => {
                   const isPublished = post.publishState === 'published';
                   const isPostUpdating = updatingDocId === post.documentId;
                   const isPostUpdated = updatedSuccessDocId === post.documentId;
-                  const cover = post.coverImageUrl || DEFAULT_POST_COVERS[idx % DEFAULT_POST_COVERS.length];
 
                   return (
                     <tr key={post.documentId} className="hover:bg-elevated/50 transition-colors">
                       {/* Cover & Clean Excerpt */}
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3.5">
-                          <div className="size-12 rounded-lg overflow-hidden bg-canvas shrink-0 border border-theme shadow-2xs">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={cover}
-                              alt={post.title}
-                              className="size-full object-cover"
-                            />
+                          <div className="size-12 rounded-lg overflow-hidden bg-canvas shrink-0 border border-theme shadow-2xs flex items-center justify-center">
+                            {post.coverImageUrl ? (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img
+                                src={resolveImageUrl(post.coverImageUrl)}
+                                alt={post.title}
+                                className="size-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex size-full items-center justify-center bg-elevated text-muted">
+                                <Newspaper className="size-5 text-muted/60" />
+                              </div>
+                            )}
                           </div>
                           <div className="min-w-0 max-w-md">
                             <div className="flex items-center gap-2">

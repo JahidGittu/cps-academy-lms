@@ -2,12 +2,13 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Calendar, Search, Sparkles, Tag, ArrowRight, BookOpen, Layers, CheckCircle2 } from 'lucide-react';
+import { Calendar, Search, Sparkles, Tag, ArrowRight, BookOpen, Layers, CheckCircle2, Newspaper } from 'lucide-react';
 
 import { excerpt } from '@/lib/excerpt';
 import { useApi } from '@/lib/use-api';
 import type { BlogPost, Collection } from '@/lib/types';
 import { Alert, Card, Empty, LoadingState } from '@/components/ui';
+import { resolveImageUrl } from '@/components/course-cover';
 
 const listQuery = '/blog-posts?sort=createdAt:desc';
 const TOPICS = ['All', 'Architecture', 'Security', 'Tutorial', 'Database', 'DevOps'];
@@ -145,20 +146,25 @@ export default function PublicBlogPage() {
             </Empty>
           ) : (
             <div className="grid gap-6 sm:grid-cols-2">
-              {filtered.map((post, idx) => {
-                const cover = post.coverImageUrl || DEFAULT_POST_COVERS[idx % DEFAULT_POST_COVERS.length];
-
+              {filtered.map((post) => {
                 return (
                   <Link key={post.documentId} href={`/blog/${post.documentId}`} className="block group">
                     <Card hover className="flex flex-col h-full overflow-hidden p-0 rounded-xl border-theme shadow-2xs">
                       {/* Image Banner with Multi-Tag Badges */}
-                      <div className="h-44 w-full overflow-hidden bg-canvas relative">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={cover}
-                          alt={post.title}
-                          className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
+                      <div className="h-44 w-full overflow-hidden bg-canvas relative flex items-center justify-center">
+                        {post.coverImageUrl ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={resolveImageUrl(post.coverImageUrl)}
+                            alt={post.title}
+                            className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex size-full flex-col items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 p-6 text-center text-slate-400">
+                            <Newspaper className="size-8 mb-1.5 opacity-50 text-brand" />
+                            <span className="text-xs font-semibold text-slate-300 line-clamp-1">{post.title}</span>
+                          </div>
+                        )}
                         {post.topic && (
                           <div className="absolute top-3 left-3 flex flex-wrap gap-1 max-w-[85%]">
                             {post.topic
