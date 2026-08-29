@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 
 import { errorMessage } from '@/lib/api';
@@ -15,13 +15,6 @@ export type PostValues = {
   coverImageUrl: string;
   publishState: 'draft' | 'published';
 };
-
-const BLOG_PRESETS = [
-  { label: 'Engineering Workspace', url: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&auto=format&fit=crop&q=80' },
-  { label: 'Coding Setup', url: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&auto=format&fit=crop&q=80' },
-  { label: 'Software Review', url: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80' },
-  { label: 'System Architecture', url: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80' },
-];
 
 export const PostForm = ({
   post,
@@ -41,6 +34,17 @@ export const PostForm = ({
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (post) {
+      setValues({
+        title: post.title ?? '',
+        body: post.body ?? '',
+        coverImageUrl: post.coverImageUrl ?? '',
+        publishState: post.publishState ?? 'draft',
+      });
+    }
+  }, [post?.documentId, post?.createdAt]);
 
   const set =
     (field: keyof PostValues) =>
