@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, type ChangeEvent } from 'react';
+import { useRef, type ChangeEvent } from 'react';
 import {
   Bold,
   Italic,
@@ -13,10 +13,7 @@ import {
   Code,
   Link as LinkIcon,
   Image as ImageIcon,
-  Eye,
-  Edit3,
 } from 'lucide-react';
-import { RichContent } from '@/components/rich-content';
 
 interface RichTextEditorProps {
   label: string;
@@ -35,7 +32,6 @@ export const RichTextEditor = ({
   rows = 12,
   required = false,
 }: RichTextEditorProps) => {
-  const [mode, setMode] = useState<'write' | 'preview'>('write');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const applyFormatting = (prefix: string, suffix: string = '', defaultPlaceholder: string = '') => {
@@ -101,39 +97,9 @@ export const RichTextEditor = ({
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-primary">
-          {label}
-        </label>
-
-        {/* Write vs Preview Mode Pills */}
-        <div className="flex items-center rounded-lg bg-canvas p-0.5 border border-theme text-xs">
-          <button
-            type="button"
-            onClick={() => setMode('write')}
-            className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 font-semibold transition-all cursor-pointer ${
-              mode === 'write'
-                ? 'bg-surface text-brand shadow-2xs font-bold'
-                : 'text-secondary hover:text-primary'
-            }`}
-          >
-            <Edit3 className="size-3.5" />
-            <span>Write</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('preview')}
-            className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 font-semibold transition-all cursor-pointer ${
-              mode === 'preview'
-                ? 'bg-surface text-brand shadow-2xs font-bold'
-                : 'text-secondary hover:text-primary'
-            }`}
-          >
-            <Eye className="size-3.5" />
-            <span>Live Preview</span>
-          </button>
-        </div>
-      </div>
+      <label className="block text-sm font-medium text-primary">
+        {label}
+      </label>
 
       <div className="overflow-hidden rounded-lg border border-theme bg-surface shadow-2xs focus-within:border-active focus-within:ring-2 focus-within:ring-brand-500/20 transition-all">
         {/* Formatting Toolbar */}
@@ -267,27 +233,15 @@ export const RichTextEditor = ({
         </div>
 
         {/* Editor Body */}
-        {mode === 'write' ? (
-          <textarea
-            ref={textareaRef}
-            rows={rows}
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            required={required}
-            className="w-full bg-surface p-4 text-xs sm:text-sm text-primary outline-none placeholder:text-muted font-mono leading-relaxed resize-y"
-          />
-        ) : (
-          <div className="min-h-[220px] bg-canvas p-5 overflow-auto">
-            {value.trim() ? (
-              <div className="text-xs sm:text-sm text-secondary leading-relaxed">
-                <RichContent content={value} />
-              </div>
-            ) : (
-              <p className="text-xs text-muted italic">No content to preview yet. Start typing in the Write tab.</p>
-            )}
-          </div>
-        )}
+        <textarea
+          ref={textareaRef}
+          rows={rows}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          required={required}
+          className="w-full bg-surface p-4 text-xs sm:text-sm text-primary outline-none placeholder:text-muted font-mono leading-relaxed resize-y"
+        />
       </div>
     </div>
   );
