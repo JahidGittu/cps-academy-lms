@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { BookOpen, Layers, Plus, Video, FileText } from 'lucide-react';
 
@@ -34,38 +34,24 @@ export const LessonManager = ({
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
+  const hasInitializedRef = useRef(false);
 
   // Synchronize server lessons into local state:
-  // - If lessons exist: default to 1st lesson (or targeted lesson from URL)
-  // - If user has 'new' selected, KEEP 'new'
   useEffect(() => {
     if (lessons.data?.data) {
       const sorted = [...lessons.data.data].sort((a, b) => a.order - b.order);
       setLocalLessons(sorted);
 
-      setSelected((prev) => {
-        // 1. If user has actively selected 'new' creation form, keep it
-        if (prev === 'new') {
-          return 'new';
-        }
-
-        // 2. If URL explicitly requested a specific lesson, select it
+      if (!hasInitializedRef.current) {
+        hasInitializedRef.current = true;
         if (lessonParam && sorted.some((l) => l.documentId === lessonParam)) {
-          return lessonParam;
+          setSelected(lessonParam);
+        } else if (sorted.length > 0) {
+          setSelected(sorted[0].documentId);
+        } else {
+          setSelected('new');
         }
-
-        // 3. If user had already selected an existing lesson that still exists, maintain it
-        if (prev && sorted.some((l) => l.documentId === prev)) {
-          return prev;
-        }
-
-        // 4. Otherwise default to the FIRST lesson
-        if (sorted.length > 0) {
-          return sorted[0].documentId;
-        }
-
-        return 'new';
-      });
+      }
     }
   }, [lessons.data, lessonParam]);
 

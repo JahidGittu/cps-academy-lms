@@ -46,7 +46,7 @@ export const LessonList = ({
               className={`group flex items-center justify-between gap-2 rounded-lg p-2.5 transition-all cursor-pointer ${
                 active
                   ? 'bg-sky-600 text-white font-bold shadow-md shadow-sky-600/25'
-                  : 'bg-canvas/50 text-secondary hover:bg-elevated hover:text-primary'
+                  : 'bg-canvas/80 text-secondary hover:bg-elevated hover:text-primary shadow-xs hover:shadow-sm'
               }`}
               onClick={() => onSelect(lesson.documentId)}
             >
