@@ -1,36 +1,16 @@
 import type { Context } from 'koa';
 
-type UsersPermissionsPlugin = {
-  controllers: {
-    user: {
-      me: (ctx: Context) => Promise<void>;
-      updateMe?: (ctx: Context) => Promise<void>;
-      destroy: (ctx: Context) => Promise<void>;
-    };
-  };
-  routes: {
-    'content-api': {
-      routes: Array<{
-        method: string;
-        path: string;
-        handler: string;
-        config?: {
-          prefix?: string;
-          policies?: unknown[];
-        };
-      }>;
-    };
-  };
-};
+// Declare global Strapi instance available in runtime
+declare const strapi: any;
 
-export default (plugin: UsersPermissionsPlugin) => {
+export default (plugin: any) => {
   const { me, destroy } = plugin.controllers.user;
 
   // The output sanitizer removes every relation the caller is not allowed to read, and reading
   // the role collection is an Admin-only permission, so /users/me answered without a role for
   // the three roles that need it most. The role the request was already authenticated with is
   // put back here rather than by widening that permission.
-  plugin.controllers.user.me = async (ctx: Context) => {
+  plugin.controllers.user.me = async (ctx: Context & { state: { user?: { role?: { id: number; name: string; type: string } } } }) => {
     await me(ctx);
 
     // ctx.body is typed as unknown, so the shape being added to is stated here.
@@ -43,13 +23,13 @@ export default (plugin: UsersPermissionsPlugin) => {
   };
 
   // Dedicated controller for authenticated user to update their own profile username safely
-  plugin.controllers.user.updateMe = async (ctx: Context) => {
-    const authUser = ctx.state.user;
+  plugin.controllers.user.updateMe = async (ctx: any) => {
+    const authUser = ctx.state?.user;
     if (!authUser) {
       return ctx.unauthorized();
     }
 
-    const { username } = (ctx.request.body as { username?: string }) || {};
+    const { username } = (ctx.request?.body as { username?: string }) || {};
 
     if (!username || !username.trim()) {
       return ctx.badRequest('Username cannot be empty.');
@@ -83,19 +63,21 @@ export default (plugin: UsersPermissionsPlugin) => {
   };
 
   // Register PUT /users/me endpoint in users-permissions router
-  plugin.routes['content-api'].routes.push({
-    method: 'PUT',
-    path: '/users/me',
-    handler: 'user.updateMe',
-    config: {
-      prefix: '',
-      policies: [],
-    },
-  });
+  if (plugin.routes?.['content-api']?.routes) {
+    plugin.routes['content-api'].routes.push({
+      method: 'PUT',
+      path: '/users/me',
+      handler: 'user.updateMe',
+      config: {
+        prefix: '',
+        policies: [],
+      },
+    });
+  }
 
   // Cascade delete all student-related data when an account is deleted
-  plugin.controllers.user.destroy = async (ctx: Context) => {
-    const targetUserId = Number(ctx.params.id);
+  plugin.controllers.user.destroy = async (ctx: any) => {
+    const targetUserId = Number(ctx.params?.id);
 
     if (targetUserId) {
       try {
