@@ -2,8 +2,10 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
 
 // strip any trailing /api from the env var so we can compose URLs cleanly
-const rawHost = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:1337';
-const host    = rawHost.replace(/\/api\/?$/, '').replace(/\/+$/, '');
+const rawHost =
+  process.env.NEXT_PUBLIC_API_URL ||
+  'https://cps-academy-lms-production.up.railway.app';
+const host = rawHost.replace(/\/api\/?$/, '').replace(/\/+$/, '');
 
 export const strapiHost = host;
 
