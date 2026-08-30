@@ -117,9 +117,11 @@ export default (plugin: any) => {
   };
 
 
-  // expose PUT /users/me in the content-api router
-  if (plugin.routes?.['content-api']?.routes) {
-    plugin.routes['content-api'].routes.push({
+  // unshift so this route is matched BEFORE the default PUT /users/:id
+  // (if we push, Strapi matches 'me' as an id string and crashes with 500)
+  const routeList = plugin.routes?.['content-api']?.routes;
+  if (Array.isArray(routeList)) {
+    routeList.unshift({
       method:  'PUT',
       path:    '/users/me',
       handler: 'user.updateMe',
