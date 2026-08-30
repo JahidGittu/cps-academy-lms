@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import { accessToken, api, clearTokens, setSignedOutHandler, storeTokens } from './api';
 import type { RoleName, User } from './types';
@@ -23,6 +23,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser]       = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
 
   // fetch the current user from /users/me; clears tokens if the request fails
@@ -75,13 +76,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const reloadUser = async () => loadUser();
 
+  const isProtectedPath = (path: string | null) => {
+    if (!path) return false;
+    return (
+      path.startsWith('/admin') ||
+      path.startsWith('/dashboard') ||
+      path.startsWith('/profile') ||
+      path.startsWith('/lessons') ||
+      path.startsWith('/quizzes') ||
+      path.includes('/edit') ||
+      path.includes('/new') ||
+      path.includes('/students')
+    );
+  };
+
   const logout = async () => {
     try {
       await api.post('/auth/logout');
     } finally {
       clearTokens();
       setUser(null);
-      router.push('/login');
+      if (isProtectedPath(pathname)) {
+        router.push('/login');
+      }
     }
   };
 
