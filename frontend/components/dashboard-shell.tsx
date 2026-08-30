@@ -290,7 +290,7 @@ export const DashboardShell = ({
                       href={item.href}
                       className={`flex items-center justify-between gap-2.5 rounded-md px-3 py-2 text-xs font-semibold transition-all ${
                         active
-                          ? 'bg-brand-subtle text-brand shadow-2xs font-bold border border-brand-border'
+                          ? 'bg-brand-subtle text-brand font-bold shadow-sm shadow-brand-500/25'
                           : 'text-secondary hover:bg-elevated hover:text-primary'
                       }`}
                     >
@@ -387,7 +387,7 @@ export const DashboardShell = ({
                   href="/"
                   className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs sm:text-sm font-semibold transition ${
                     pathname === '/'
-                      ? 'bg-brand-subtle text-brand font-bold shadow-2xs border border-brand-border'
+                      ? 'bg-brand-subtle text-brand font-bold shadow-sm shadow-brand-500/25'
                       : 'text-secondary hover:bg-elevated hover:text-primary'
                   }`}
                 >
@@ -399,7 +399,7 @@ export const DashboardShell = ({
                   href="/courses"
                   className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs sm:text-sm font-semibold transition ${
                     pathname.startsWith('/courses')
-                      ? 'bg-brand-subtle text-brand font-bold shadow-2xs border border-brand-border'
+                      ? 'bg-brand-subtle text-brand font-bold shadow-sm shadow-brand-500/25'
                       : 'text-secondary hover:bg-elevated hover:text-primary'
                   }`}
                 >
@@ -411,7 +411,7 @@ export const DashboardShell = ({
                   href="/blog"
                   className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs sm:text-sm font-semibold transition ${
                     pathname.startsWith('/blog')
-                      ? 'bg-brand-subtle text-brand font-bold shadow-2xs border border-brand-border'
+                      ? 'bg-brand-subtle text-brand font-bold shadow-sm shadow-brand-500/25'
                       : 'text-secondary hover:bg-elevated hover:text-primary'
                   }`}
                 >
