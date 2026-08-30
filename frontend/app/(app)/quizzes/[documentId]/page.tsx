@@ -115,29 +115,29 @@ const Taking = ({ documentId }: { documentId: string }) => {
         {course && (
           <Link
             href={`/courses/${course.documentId}`}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-brand-600 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-brand-500 transition-colors"
           >
             <ArrowLeft className="size-3.5" />
             <span>Back to {course.title}</span>
           </Link>
         )}
 
-        <div className="rounded-xl border border-slate-200 bg-white p-6 sm:p-8 text-center shadow-sm space-y-5">
+        <div className="rounded-xl border border-theme bg-surface p-6 sm:p-8 text-center shadow-sm space-y-5">
           <div className="mx-auto flex size-16 items-center justify-center rounded-2xl brand-gradient text-white shadow-md">
             <Award className="size-8" />
           </div>
 
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{detail.title}</h1>
-            <p className="text-xs text-slate-500 mt-1">Quiz Assessment Completed</p>
+            <h1 className="text-2xl font-bold text-primary">{detail.title}</h1>
+            <p className="text-xs text-muted mt-1">Quiz Assessment Completed</p>
           </div>
 
-          <div className="rounded-lg bg-slate-50 border border-slate-100 p-4">
-            <p className="text-xs uppercase font-bold tracking-wider text-slate-400">Final Score</p>
-            <p className="text-3xl font-extrabold text-brand-700 mt-1">
-              {lastAttempt.score} <span className="text-base text-slate-400 font-normal">/ {lastAttempt.total}</span>
+          <div className="rounded-lg bg-elevated border border-subtle p-4">
+            <p className="text-xs uppercase font-bold tracking-wider text-muted">Final Score</p>
+            <p className="text-3xl font-extrabold text-brand-500 mt-1">
+              {lastAttempt.score} <span className="text-base text-muted font-normal">/ {lastAttempt.total}</span>
             </p>
-            <p className="text-xs font-semibold text-slate-600 mt-1">
+            <p className="text-xs font-semibold text-secondary mt-1">
               Accuracy: {Math.round((lastAttempt.score / lastAttempt.total) * 100)}%
             </p>
           </div>
@@ -166,23 +166,23 @@ const Taking = ({ documentId }: { documentId: string }) => {
   return (
     <div className="max-w-4xl mx-auto flex flex-col justify-center space-y-4">
       {/* Top Breadcrumb & Quiz Title Combined Compact Row */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200/80">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-subtle">
         <div className="flex items-center gap-2 min-w-0">
           {course && (
             <Link
               href={`/courses/${course.documentId}`}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-brand-600 transition-colors shrink-0"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-muted hover:text-brand-500 transition-colors shrink-0"
             >
               <ArrowLeft className="size-3.5" />
               <span className="truncate max-w-[140px] sm:max-w-xs">{course.title}</span>
             </Link>
           )}
-          <span className="text-slate-300">/</span>
-          <span className="text-xs sm:text-sm font-bold text-slate-800">Quiz</span>
+          <span className="text-subtle">/</span>
+          <span className="text-xs sm:text-sm font-bold text-primary">Quiz</span>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <span className="rounded-md bg-brand-50 border border-brand-200 px-2.5 py-0.5 text-xs font-bold text-brand-700">
+          <span className="rounded-md bg-brand-500/10 border border-brand-500/30 px-2.5 py-0.5 text-xs font-bold text-brand-400">
             Question {currentIndex + 1} of {questions.length}
           </span>
         </div>
@@ -192,12 +192,12 @@ const Taking = ({ documentId }: { documentId: string }) => {
 
       {/* Viewport-Optimized Single Question Box */}
       {questions.length > 0 && currentQuestion && (
-        <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm space-y-4">
-          {/* Step-by-Step Progress Bar: Advances only when moving to next question */}
+        <div className="rounded-xl border border-theme bg-surface p-5 sm:p-6 shadow-sm space-y-4">
+          {/* Step-by-Step Progress Bar */}
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+            <div className="flex items-center justify-between text-xs font-medium text-muted">
               <span>
-                Completed: <strong className="text-slate-800 font-semibold">{currentIndex} of {questions.length}</strong>
+                Completed: <strong className="text-primary font-semibold">{currentIndex} of {questions.length}</strong>
               </span>
               <span>{Math.round((currentIndex / questions.length) * 100)}%</span>
             </div>
@@ -208,16 +208,16 @@ const Taking = ({ documentId }: { documentId: string }) => {
           <div className="pt-1">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 flex-1 min-w-0">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded bg-brand-100 text-xs font-bold text-brand-800">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded bg-brand-500/15 text-xs font-bold text-brand-400">
                   {currentIndex + 1}
                 </span>
-                <h2 className="font-bold text-slate-900 text-sm sm:text-base leading-snug">
+                <h2 className="font-bold text-primary text-sm sm:text-base leading-snug">
                   {currentQuestion.text}
                 </h2>
               </div>
 
               {/* Question Format Tag */}
-              <span className="shrink-0 inline-flex items-center rounded-md bg-slate-100 border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+              <span className="shrink-0 inline-flex items-center rounded-md bg-elevated border border-theme px-2 py-0.5 text-[11px] font-semibold text-secondary">
                 Single Choice
               </span>
             </div>
@@ -233,8 +233,8 @@ const Taking = ({ documentId }: { documentId: string }) => {
                   key={choice}
                   className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-xs sm:text-sm font-medium transition-all ${
                     isSelected
-                      ? 'border-brand-500 bg-brand-50/80 text-brand-900 shadow-2xs ring-2 ring-brand-500/20 font-semibold'
-                      : 'border-slate-200 bg-slate-50/50 text-slate-700 hover:border-slate-300 hover:bg-white'
+                      ? 'border-brand-500 bg-brand-500/10 text-brand-400 shadow-2xs ring-2 ring-brand-500/20 font-semibold'
+                      : 'border-theme bg-canvas text-secondary hover:border-active hover:bg-elevated'
                   }`}
                 >
                   <input
@@ -248,7 +248,7 @@ const Taking = ({ documentId }: { documentId: string }) => {
 
                   <span
                     className={`flex size-5 shrink-0 items-center justify-center rounded text-[11px] font-bold ${
-                      isSelected ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-600'
+                      isSelected ? 'bg-brand-600 text-white' : 'bg-elevated text-muted'
                     }`}
                   >
                     {optionLabel[choice]}
@@ -263,7 +263,7 @@ const Taking = ({ documentId }: { documentId: string }) => {
           <Alert>{actionError}</Alert>
 
           {/* Integrated Compact Navigation Footer inside the Quiz Box */}
-          <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-100">
+          <div className="flex items-center justify-between gap-3 pt-3 border-t border-subtle">
             {/* Previous Button */}
             {currentIndex > 0 ? (
               <Button
