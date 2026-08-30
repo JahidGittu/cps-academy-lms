@@ -20,7 +20,10 @@ const config: Core.Config.Middlewares = [
   {
     name: 'strapi::cors',
     config: {
-      origin: (process.env.FRONTEND_URLS ?? 'http://localhost:3000,*').split(','),
+      origin: [
+        ...(process.env.FRONTEND_URLS ? process.env.FRONTEND_URLS.split(',').map((u) => u.trim()) : ['http://localhost:3000']),
+        '*',
+      ],
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
       headers: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
       keepHeaderOnError: true,
