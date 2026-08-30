@@ -297,11 +297,6 @@ export const DashboardShell = ({
                         <Icon className={`size-4 shrink-0 ${active ? 'text-indigo-400' : 'text-muted'}`} />
                         <span className="truncate">{item.label}</span>
                       </span>
-                      {item.badge && (
-                        <span className="rounded badge-purple px-1.5 py-0.5 text-[10px] font-bold">
-                          {item.badge}
-                        </span>
-                      )}
                     </Link>
                   );
                 })}
