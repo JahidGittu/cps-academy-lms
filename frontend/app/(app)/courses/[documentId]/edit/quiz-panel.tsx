@@ -29,9 +29,11 @@ const blankQuestion = (): DraftQuestion => ({
 export const QuizPanel = ({
   course,
   onSaved,
+  courseId,
 }: {
   course: Course;
   onSaved?: () => Promise<void>;
+  courseId?: string;
 }) => {
   const quizDocId = course.quiz?.documentId;
   const quizData = useApi<Single<Quiz>>(
@@ -547,32 +549,43 @@ export const QuizPanel = ({
           </Button>
         </div>
 
-        {/* Live Auto-Save Status in Bottom Bar */}
-        <div className="text-xs">
-          {saveStatus === 'saving' && (
-            <span className="inline-flex items-center gap-1.5 font-bold text-sky-400 animate-pulse">
-              <RefreshCw className="size-3.5 animate-spin text-sky-400" />
-              <span>Auto-saving questions to cloud...</span>
-            </span>
-          )}
-          {saveStatus === 'saved' && (
-            <span className="inline-flex items-center gap-1.5 font-bold text-emerald-400 animate-in fade-in">
-              <CheckCircle2 className="size-4 text-emerald-400" />
-              <span>All quiz questions & answers synced</span>
-            </span>
-          )}
-          {saveStatus === 'unsaved' && isDirty && (
-            <span className="inline-flex items-center gap-1.5 font-medium text-amber-400">
-              <span className="size-2 rounded-full bg-amber-400 animate-pulse" />
-              <span>Unsaved changes (auto-saving in 1s...)</span>
-            </span>
-          )}
-          {saveStatus === 'idle' && !isDirty && (
-            <span className="inline-flex items-center gap-1 text-muted font-medium">
-              <span>✓ All questions & answers synced</span>
-            </span>
-          )}
-        </div>
+        {/* Right side: View Course link when courseId provided, otherwise autosave status */}
+        {courseId ? (
+          <a
+            href={`/courses/${courseId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 text-xs font-bold text-white shadow-sm shadow-emerald-600/25 transition"
+          >
+            View Course ↗
+          </a>
+        ) : (
+          <div className="text-xs">
+            {saveStatus === 'saving' && (
+              <span className="inline-flex items-center gap-1.5 font-bold text-sky-400 animate-pulse">
+                <RefreshCw className="size-3.5 animate-spin text-sky-400" />
+                <span>Auto-saving questions to cloud...</span>
+              </span>
+            )}
+            {saveStatus === 'saved' && (
+              <span className="inline-flex items-center gap-1.5 font-bold text-emerald-400 animate-in fade-in">
+                <CheckCircle2 className="size-4 text-emerald-400" />
+                <span>All quiz questions & answers synced</span>
+              </span>
+            )}
+            {saveStatus === 'unsaved' && isDirty && (
+              <span className="inline-flex items-center gap-1.5 font-medium text-amber-400">
+                <span className="size-2 rounded-full bg-amber-400 animate-pulse" />
+                <span>Unsaved changes (auto-saving in 1s...)</span>
+              </span>
+            )}
+            {saveStatus === 'idle' && !isDirty && (
+              <span className="inline-flex items-center gap-1 text-muted font-medium">
+                <span>✓ All questions & answers synced</span>
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Delete Quiz Confirmation Modal */}

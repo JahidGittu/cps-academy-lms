@@ -85,65 +85,28 @@ const Builder = ({ documentId }: { documentId: string }) => {
         onSelect={setSection}
       />
 
-      <div className="min-w-0 space-y-4">
-
-        {/* Active section panel */}
-        {section === 'details' && <CourseDetails course={detail} onSaved={course.reload} />}
-        {section === 'lessons' && <LessonManager course={documentId} onChanged={course.reload} />}
-        {section === 'quiz' && <QuizPanel course={detail} onSaved={course.reload} />}
-
-        {/* Next-step footer — guides the user through the builder like a wizard */}
-        <div className="flex items-center justify-between rounded-xl border border-theme bg-surface px-5 py-3.5 shadow-xs">
-
-          <p className="text-xs text-muted font-medium">
-            {section === 'details' && 'Step 1 of 3 — Course Info'}
-            {section === 'lessons' && 'Step 2 of 3 — Curriculum'}
-            {section === 'quiz' && 'Step 3 of 3 — Quiz Assessment'}
-          </p>
-
-          <div className="flex items-center gap-2">
-            {section !== 'details' && (
-              <button
-                type="button"
-                onClick={() => setSection(section === 'quiz' ? 'lessons' : 'details')}
-                className="flex items-center gap-1.5 rounded-lg border border-theme bg-canvas px-3.5 py-2 text-xs font-semibold text-secondary hover:text-primary hover:bg-elevated transition cursor-pointer"
-              >
-                ← Back
-              </button>
-            )}
-
-            {section === 'details' && (
-              <button
-                type="button"
-                onClick={() => setSection('lessons')}
-                className="flex items-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-sky-600/25 transition cursor-pointer"
-              >
-                Next: Curriculum →
-              </button>
-            )}
-
-            {section === 'lessons' && (
-              <button
-                type="button"
-                onClick={() => setSection('quiz')}
-                className="flex items-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-sky-600/25 transition cursor-pointer"
-              >
-                Next: Quiz Assessment →
-              </button>
-            )}
-
-            {section === 'quiz' && (
-              <a
-                href={`/courses/${documentId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-emerald-600/25 transition"
-              >
-                View Course ↗
-              </a>
-            )}
-          </div>
-        </div>
+      <div className="min-w-0">
+        {section === 'details' && (
+          <CourseDetails
+            course={detail}
+            onSaved={course.reload}
+            onNext={() => setSection('lessons')}
+          />
+        )}
+        {section === 'lessons' && (
+          <LessonManager
+            course={documentId}
+            onChanged={course.reload}
+            onNext={() => setSection('quiz')}
+          />
+        )}
+        {section === 'quiz' && (
+          <QuizPanel
+            course={detail}
+            onSaved={course.reload}
+            courseId={documentId}
+          />
+        )}
       </div>
     </div>
   );

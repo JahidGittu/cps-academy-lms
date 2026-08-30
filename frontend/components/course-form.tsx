@@ -19,10 +19,12 @@ export const CourseForm = ({
   course,
   save,
   label,
+  onNext,
 }: {
   course?: Course;
   save: (values: CourseValues) => Promise<void>;
   label: string;
+  onNext?: () => void;
 }) => {
   const getSnapshot = (c?: Course): CourseValues => ({
     title: c?.title ?? '',
@@ -207,7 +209,16 @@ export const CourseForm = ({
           </Button>
         </div>
 
-        {course && (
+        {/* Right side: Next button when provided, otherwise autosave status */}
+        {onNext ? (
+          <button
+            type="button"
+            onClick={onNext}
+            className="flex items-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 px-4 py-2.5 text-xs font-bold text-white shadow-sm shadow-sky-600/25 transition cursor-pointer"
+          >
+            Next: Curriculum →
+          </button>
+        ) : course && (
           <div className="text-xs">
             {saveStatus === 'saving' && (
               <span className="inline-flex items-center gap-1.5 font-bold text-sky-400 animate-pulse">
