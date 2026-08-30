@@ -79,6 +79,12 @@ export const ManagedCourses = () => {
     return Array.from(set);
   }, [rows]);
 
+  // Total lesson count across all managed courses
+  const totalLessons = useMemo(
+    () => rows.reduce((sum, c) => sum + (c.lessons?.length ?? 0), 0),
+    [rows]
+  );
+
   const filteredCourses = useMemo(() => {
     return rows
       .filter((course) => {
@@ -186,13 +192,13 @@ export const ManagedCourses = () => {
 
         <div className="rounded-xl border border-theme bg-surface p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-muted">Active Instructors</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted">Total Lessons</p>
             <div className="size-9 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-              <GraduationCap className="size-4" />
+              <BookOpen className="size-4" />
             </div>
           </div>
-          <p className="mt-2 text-3xl font-extrabold text-purple-400">{instructors.length || 1}</p>
-          <p className="mt-1 text-[11px] font-medium text-muted">Content creators & faculty</p>
+          <p className="mt-2 text-3xl font-extrabold text-purple-400">{totalLessons}</p>
+          <p className="mt-1 text-[11px] font-medium text-muted">Lessons across all courses</p>
         </div>
       </div>
 
