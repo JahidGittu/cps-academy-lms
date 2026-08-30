@@ -14,7 +14,7 @@ const MANAGE = ['find', 'findOne', 'create', 'update', 'delete'];
 
 // four roles the app ships with — synced to the DB on every boot
 export const roles = [
-  { name: 'Admin',           type: 'admin',           description: 'Full control of the platform.' },
+  { name: 'Admin',           type: 'admin',            description: 'Full control of the platform.' },
   { name: 'Content Manager', type: 'content_manager',  description: 'Builds the course library and writes the blog.' },
   { name: 'Instructor',      type: 'instructor',       description: 'Manages their own courses, lessons and quizzes.' },
   { name: 'Student',         type: 'student',          description: 'Enrolls in courses, reads lessons and takes quizzes.' },
