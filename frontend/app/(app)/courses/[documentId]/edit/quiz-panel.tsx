@@ -361,10 +361,13 @@ export const QuizPanel = ({
 
           <Button
             type="submit"
-            disabled={busy || (!isDirty && saveStatus !== 'saving')}
-            className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-2.5 shadow-md shadow-sky-600/25 hover:shadow-sky-500/35 transition-all"
+            disabled={busy || saveStatus === 'saving' || (!isDirty && saveStatus !== 'saving')}
+            className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-2.5 shadow-md shadow-sky-600/25 hover:shadow-sky-500/35 transition-all inline-flex items-center gap-2"
           >
-            {busy ? 'Saving...' : course.quiz ? 'Save changes' : 'Save Quiz'}
+            {(busy || saveStatus === 'saving') && (
+              <RefreshCw className="size-3.5 animate-spin" />
+            )}
+            {busy || saveStatus === 'saving' ? 'Saving...' : course.quiz ? 'Save changes' : 'Save Quiz'}
           </Button>
         </div>
       </div>
@@ -542,10 +545,13 @@ export const QuizPanel = ({
         <div className="flex items-center gap-3">
           <Button
             type="submit"
-            disabled={busy || (!isDirty && saveStatus !== 'saving')}
-            className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/25 hover:shadow-sky-500/35 transition-all cursor-pointer"
+            disabled={busy || saveStatus === 'saving' || (!isDirty && saveStatus !== 'saving')}
+            className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/25 hover:shadow-sky-500/35 transition-all cursor-pointer inline-flex items-center gap-2"
           >
-            {busy ? 'Saving...' : course.quiz ? 'Save changes' : 'Save Quiz'}
+            {(busy || saveStatus === 'saving') && (
+              <RefreshCw className="size-3.5 animate-spin" />
+            )}
+            {busy || saveStatus === 'saving' ? 'Saving...' : course.quiz ? 'Save changes' : 'Save Quiz'}
           </Button>
         </div>
 
