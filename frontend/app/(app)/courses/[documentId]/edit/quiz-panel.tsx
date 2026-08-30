@@ -115,14 +115,20 @@ export const QuizPanel = ({
       return;
     }
 
-    // Validate that questions are filled before auto-saving
-    const isValid = questions.every(
-      (q) => q.text.trim().length > 0 && q.options.filter((o) => o.trim().length > 0).length >= 2
+    // Auto-save only when EVERY question is fully filled:
+    //   - question text is non-empty
+    //   - ALL option fields are non-empty (not just 2)
+    //   - a correct answer is selected
+    const isComplete = questions.every(
+      (q) =>
+        q.text.trim().length > 0 &&
+        q.options.every((o) => o.trim().length > 0) &&
+        typeof q.correctIndex === 'number'
     );
 
-    if (!isValid) {
+    if (!isComplete) {
       setSaveStatus('unsaved');
-      return;
+      return; // Do not schedule auto-save until the form is complete
     }
 
     setSaveStatus('unsaved');
@@ -144,11 +150,14 @@ export const QuizPanel = ({
           course: course.documentId,
         };
 
-        if (course.quiz?.documentId) {
-          await api.put(`/quizzes/${course.quiz.documentId}`, { data });
+        if (effectiveQuizDocId) {
+          await api.put(`/quizzes/${effectiveQuizDocId}`, { data });
         } else {
-          await api.post<Single<Quiz>>('/quizzes', { data });
-          if (onSaved) await onSaved();
+          const res = await api.post<Single<Quiz>>('/quizzes', { data });
+          const newDocId = res.data.data?.documentId;
+          if (newDocId) setLocalQuizDocId(newDocId);
+          // Silently sync course in background — no await = no loading flash
+          if (onSaved) onSaved().catch(() => null);
         }
 
         lastSavedRef.current = {
@@ -168,7 +177,7 @@ export const QuizPanel = ({
         clearTimeout(debounceTimer.current);
       }
     };
-  }, [title, questions, isDirty, course.documentId, course.quiz?.documentId]);
+  }, [title, questions, isDirty, course.documentId, effectiveQuizDocId]);
 
   const updateQuestion = (at: number, next: DraftQuestion) => {
     setQuestions((prev) => prev.map((q, i) => (i === at ? next : q)));
