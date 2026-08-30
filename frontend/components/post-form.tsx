@@ -121,9 +121,9 @@ export const PostForm = ({
       latestValues.current = { ...latestValues.current, [field]: nextVal };
     };
 
-  // Keep latest form state accessible in async callbacks without stale closure issues.
-  // Never assign latestValues.current = values on render — it breaks manual syncs.
+  // Keep latest form state accessible in async callbacks
   const latestValues = useRef<PostValues>(values);
+  latestValues.current = values;
 
   const saveRef = useRef(save);
   saveRef.current = save;
@@ -187,14 +187,17 @@ export const PostForm = ({
       debounceTimer.current = null;
     }
 
-    const currentValues = latestValues.current;
+    const currentValues = { ...values, ...latestValues.current };
     if (!currentValues.title.trim()) {
       setError('Article title is required.');
       return;
     }
 
     const payload: PostValues = {
-      ...currentValues,
+      title: currentValues.title.trim(),
+      body: currentValues.body,
+      coverImageUrl: currentValues.coverImageUrl || values.coverImageUrl || '',
+      topic: currentValues.topic,
       publishState: targetState ?? currentValues.publishState,
     };
 
@@ -207,6 +210,7 @@ export const PostForm = ({
     try {
       await saveRef.current(payload);
       setValues(payload);
+      latestValues.current = { ...payload };
       lastSavedRef.current = { ...payload };
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2500);
@@ -376,7 +380,10 @@ export const PostForm = ({
             label="Cover Image"
             value={values.coverImageUrl}
             category="blog"
-            onChange={(url) => setValues((prev) => ({ ...prev, coverImageUrl: url }))}
+            onChange={(url) => {
+              setValues((prev) => ({ ...prev, coverImageUrl: url }));
+              latestValues.current = { ...latestValues.current, coverImageUrl: url };
+            }}
           />
         </div>
       </div>

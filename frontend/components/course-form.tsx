@@ -191,7 +191,10 @@ export const CourseForm = ({
             label="Course Thumbnail / Cover Image"
             value={values.coverImageUrl}
             category="course"
-            onChange={(url) => setValues((prev) => ({ ...prev, coverImageUrl: url }))}
+            onChange={(url) => {
+              setValues((prev) => ({ ...prev, coverImageUrl: url }));
+              latestValues.current = { ...latestValues.current, coverImageUrl: url };
+            }}
           />
         </div>
       </div>
