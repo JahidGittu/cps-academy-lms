@@ -58,7 +58,7 @@ const Row = ({ course, completedLessonIds, quizResult }: RowProps) => {
     <div className="group flex flex-col justify-between overflow-hidden rounded-xl border border-theme bg-surface hover:border-active transition-all duration-200 shadow-sm hover:shadow-md">
       <div>
         {/* Course Cover Thumbnail Banner */}
-        <Link href={`/courses/${course.documentId}`} className="block relative overflow-hidden">
+        <Link href={targetLink} className="block relative overflow-hidden">
           <CourseCover
             title={course.title}
             url={course.coverImageUrl}
