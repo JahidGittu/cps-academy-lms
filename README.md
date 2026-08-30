@@ -14,6 +14,16 @@ A full-stack Learning Management System built with **Next.js** (frontend on Verc
 
 ---
 
+## 🔑 Demo Accounts
+
+| Role | Email | Password |
+|------|-------|----------|
+| **Admin** | `admin@demo.test` | `Admin@123` |
+| **Content Manager** | `manager@content.test` | `Manager@123` |
+| **Instructor** | `rayhan@instructor.test` | `Instructor@123` |
+| **Student** | `jahid.hossen.me@gmail.com` | `Jahid@123` |
+
+
 ## 🧱 Tech Stack
 
 | Layer | Technology | Hosting |
