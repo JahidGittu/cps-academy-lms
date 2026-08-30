@@ -6,22 +6,26 @@ import { useRouter } from 'next/navigation';
 import { accessToken, api, clearTokens, setSignedOutHandler, storeTokens } from './api';
 import type { RoleName, User } from './types';
 
+
 type AuthValue = {
-  user: User | null;
-  loading: boolean;
-  login: (identifier: string, password: string) => Promise<User | null>;
-  register: (username: string, email: string, password: string) => Promise<User | null>;
+  user:       User | null;
+  loading:    boolean;
+  login:      (identifier: string, password: string) => Promise<User | null>;
+  register:   (username: string, email: string, password: string) => Promise<User | null>;
   reloadUser: () => Promise<User | null>;
-  logout: () => Promise<void>;
+  logout:     () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthValue | null>(null);
 
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser]       = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+
+  // fetch the current user from /users/me; clears tokens if the request fails
   const loadUser = useCallback(async () => {
     if (!accessToken()) {
       setUser(null);
@@ -42,6 +46,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
+
+  // wire up the global sign-out handler so the interceptor can redirect on refresh failure
   useEffect(() => {
     setSignedOutHandler(() => {
       setUser(null);
@@ -49,9 +55,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }, [router]);
 
+
+  // load the user once on mount
   useEffect(() => {
     void loadUser();
   }, [loadUser]);
+
 
   const login = async (identifier: string, password: string) => {
     const { data } = await api.post('/auth/local', { identifier, password });
@@ -65,9 +74,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return loadUser();
   };
 
-  const reloadUser = async () => {
-    return loadUser();
-  };
+  const reloadUser = async () => loadUser();
 
   const logout = async () => {
     try {
@@ -79,6 +86,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+
   return (
     <AuthContext.Provider value={{ user, loading, login, register, reloadUser, logout }}>
       {children}
@@ -86,13 +94,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+
 export const useAuth = () => {
   const value = useContext(AuthContext);
-
   if (!value) throw new Error('useAuth has to be called inside AuthProvider');
-
   return value;
 };
 
+
+// quick role check — pass one or more role names, returns true if the user has any of them
 export const hasRole = (user: User | null, ...names: RoleName[]) =>
   !!user?.role && names.includes(user.role.name);

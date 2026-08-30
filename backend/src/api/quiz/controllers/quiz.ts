@@ -1,29 +1,28 @@
-/**
- * quiz controller
- */
-
 import { factories } from '@strapi/strapi';
 import type { Context } from 'koa';
 
 import { caller, courseScope, narrow, seesEveryRow } from '../../../utils/caller';
 
+
 const UID = 'api::quiz.quiz';
 
-// This file decides who may read a quiz, not what a quiz says. The answer key is kept out of every
-// response by marking correctIndex private in components/quiz/question.json, because a quiz travels
-// as a populated relation on courses, lessons, enrollments and past results, and a check written
-// here would only have covered the two routes below.
+
+// This controller only decides who may read a quiz — not what it says.
+// The correctIndex field is kept out of every response by marking it private in
+// components/quiz/question.json, so the answer key cannot leak through any route.
 export default factories.createCoreController(UID, ({ strapi }) => ({
+
   async find(ctx: Context) {
     await super.validateQuery(ctx);
     const query = await super.sanitizeQuery(ctx);
 
+    // students see quizzes for enrolled courses; instructors see their own
     if (!seesEveryRow(ctx)) narrow(query, courseScope(ctx));
 
     const { results, pagination } = await strapi.service(UID).find(query);
-
     return super.transformResponse(await super.sanitizeOutput(results, ctx), { pagination });
   },
+
 
   async findOne(ctx: Context) {
     if (!seesEveryRow(ctx)) {
@@ -38,9 +37,10 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     return super.findOne(ctx);
   },
 
-  // The edit screen has to show which option is currently marked correct, and no ordinary read can
-  // carry that: private strips the field on the way out for everybody, the author included. So the
-  // key has a route of its own, behind the same ownership policy as the writes.
+
+  // private endpoint — returns correctIndex for the quiz builder screen only.
+  // sanitizeOutput strips that field from every other route, so this is the only
+  // safe way for an instructor to see which answer is marked correct.
   async answers(ctx: Context) {
     const quiz = await strapi.documents(UID).findOne({
       documentId: ctx.params.id,
@@ -49,19 +49,18 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     if (!quiz) return ctx.notFound();
 
-    // Neither sanitizeOutput nor transformResponse: the first is what removes correctIndex, and this
-    // is an answer key rather than a document for a page to render.
     return {
       data: {
-        title: quiz.title,
-        questions: (quiz.questions ?? []).map((question) => ({
-          text: question.text,
-          options: question.options,
-          correctIndex: question.correctIndex,
+        title:     quiz.title,
+        questions: (quiz.questions ?? []).map((q) => ({
+          text:         q.text,
+          options:      q.options,
+          correctIndex: q.correctIndex,
         })),
       },
     };
   },
+
 
   async delete(ctx: Context) {
     const quiz = await strapi.documents(UID).findOne({
@@ -71,13 +70,12 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     if (!quiz) return ctx.notFound();
 
-    const me = caller(ctx).id;
+    // instructors may only delete quizzes from their own courses
+    const me      = caller(ctx).id;
     const isOwner = (quiz.course as { owner?: { id?: number } } | null)?.owner?.id === me;
-    if (!seesEveryRow(ctx) && !isOwner) {
-      return ctx.forbidden();
-    }
+    if (!seesEveryRow(ctx) && !isOwner) return ctx.forbidden();
 
-    // Cascade delete quiz results
+    // remove any submitted results first to avoid orphaned rows
     const results = await strapi.documents('api::quiz-result.quiz-result').findMany({
       filters: { quiz: { documentId: quiz.documentId } },
     });
@@ -88,4 +86,5 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     await strapi.documents(UID).delete({ documentId: ctx.params.id });
     return ctx.send({ data: { documentId: ctx.params.id, deleted: true } });
   },
+
 }));

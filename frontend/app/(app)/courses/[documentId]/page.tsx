@@ -4,49 +4,43 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  ArrowRight,
-  CheckCircle2,
-  ClipboardList,
-  Pencil,
-  Users,
-  ShieldAlert,
-  BookOpen,
-  Sparkles,
-  Award,
-  Clock,
-  Unlock,
-  Video,
-  FileText,
+  ArrowRight, CheckCircle2, ClipboardList, Pencil, Users,
+  ShieldAlert, BookOpen, Sparkles, Award, Clock, Unlock, Video, FileText,
 } from 'lucide-react';
 
 import { api, errorMessage } from '@/lib/api';
 import { hasRole, useAuth } from '@/lib/auth';
 import { useApi } from '@/lib/use-api';
 import type { Collection, Course, Enrollment, LessonProgress, QuizResult, Single, User } from '@/lib/types';
-import { Alert, Button, buttonStyle, Card, Empty, LoadingState, ProgressBar } from '@/components/ui';
+import { Alert, Button, Card, Empty, LoadingState, ProgressBar } from '@/components/ui';
 import { DetailHeader } from '@/components/course/detail-header';
 import { CourseCover } from '@/components/course-cover';
 import { JoinForm } from '@/components/course/join-form';
 import { Syllabus } from '@/components/course/syllabus';
 import { toast } from '@/components/toast';
 
+
 const Detail = ({ documentId }: { documentId: string }) => {
   const router = useRouter();
   const { user, loading: knowingUser } = useAuth();
-  const isStudent = hasRole(user, 'Student');
-  const isAdmin = hasRole(user, 'Admin');
+
+  // role flags used throughout the render
+  const isStudent        = hasRole(user, 'Student');
+  const isAdmin          = hasRole(user, 'Admin');
   const isContentManager = hasRole(user, 'Content Manager');
 
-  const [busy, setBusy] = useState(false);
+  const [busy,        setBusy]        = useState(false);
   const [actionError, setActionError] = useState('');
-  const [countdown, setCountdown] = useState<number | null>(null);
+  const [countdown,   setCountdown]   = useState<number | null>(null);
+
+
+  // --- data fetching ---
 
   const course = useApi<Single<Course>>(`/courses/${documentId}`);
 
-  const mine = `/enrollments?filters[course][documentId][$eq]=${documentId}`;
-
+  const mine        = `/enrollments?filters[course][documentId][$eq]=${documentId}`;
   const enrollments = useApi<Collection<Enrollment>>(isStudent ? mine : null);
-  const enrollment = enrollments.data?.data?.[0];
+  const enrollment  = enrollments.data?.data?.[0];
 
   const finished = useApi<Collection<LessonProgress>>(
     enrollment
@@ -56,7 +50,7 @@ const Detail = ({ documentId }: { documentId: string }) => {
 
   const completed = new Set((finished.data?.data ?? []).map((row) => row.lesson?.documentId));
 
-  const detail = course.data?.data;
+  const detail      = course.data?.data;
   const quizResults = useApi<Collection<QuizResult>>(
     enrollment && detail?.quiz
       ? `/quiz-results?filters[quiz][documentId][$eq]=${detail.quiz.documentId}&sort=createdAt:desc`
@@ -64,6 +58,36 @@ const Detail = ({ documentId }: { documentId: string }) => {
   );
   const lastQuizResult = quizResults.data?.data?.[0];
 
+
+  // --- progress calculation (not stored in DB — computed fresh on every render) ---
+
+  const lessons          = detail?.lessons ?? [];
+  const hasVideos        = lessons.some((l) => Boolean(l.videoUrl?.trim()));
+  const hasQuiz          = Boolean(detail?.quiz);
+
+  // each lesson is one milestone; the quiz counts as one extra if the course has one
+  const totalMilestones     = lessons.length + (hasQuiz ? 1 : 0);
+  const completedMilestones = completed.size + (lastQuizResult ? 1 : 0);
+  const percent             = totalMilestones > 0
+    ? Math.round((completedMilestones / totalMilestones) * 100)
+    : 0;
+
+
+  // --- derived state ---
+
+  const isAuthor         = Boolean(detail?.owned) || isAdmin || isContentManager;
+  const isEnrolledStudent = isStudent && Boolean(enrollment);
+
+  // the first incomplete lesson in order — this is where the student picks up
+  const nextUp = lessons.findIndex((lesson) => !completed.has(lesson.documentId));
+  const next   = nextUp === -1 ? null : lessons[nextUp];
+
+  const quizLink = detail?.quiz ? `/quizzes/${detail.quiz.documentId}` : '';
+
+
+  // --- actions ---
+
+  // wraps an async action with loading state and error handling
   const act = async (run: () => Promise<unknown>) => {
     setBusy(true);
     setActionError('');
@@ -86,6 +110,7 @@ const Detail = ({ documentId }: { documentId: string }) => {
     });
   };
 
+  // called after a guest registers or logs in on this page
   const joined = async (who: User) => {
     await course.reload();
 
@@ -100,27 +125,16 @@ const Detail = ({ documentId }: { documentId: string }) => {
     }
   };
 
-  const lessons = detail?.lessons ?? [];
-  const hasVideos = lessons.some((lesson) => Boolean(lesson.videoUrl && lesson.videoUrl.trim() !== ''));
-  const hasQuiz = Boolean(detail?.quiz);
-  const totalMilestones = lessons.length + (hasQuiz ? 1 : 0);
-  const completedMilestones = completed.size + (lastQuizResult ? 1 : 0);
-  const percent = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
 
-  const isAuthor = Boolean(detail?.owned) || isAdmin || isContentManager;
-  const isEnrolledStudent = isStudent && Boolean(enrollment);
-
-  const nextUp = lessons.findIndex((lesson) => !completed.has(lesson.documentId));
-  const next = nextUp === -1 ? null : lessons[nextUp];
-
-  // Automated 3-second redirect countdown to Lesson 1 upon successful enrollment
+  // counts down from 3 after enrolment, then redirects to Lesson 1
   useEffect(() => {
     if (countdown === null) return;
 
     if (countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
-      }, 1000);
+      const timer = setTimeout(
+        () => setCountdown((prev) => (prev !== null && prev > 0 ? prev - 1 : 0)),
+        1000
+      );
       return () => clearTimeout(timer);
     }
 
@@ -129,27 +143,27 @@ const Detail = ({ documentId }: { documentId: string }) => {
     }
   }, [countdown, next, router]);
 
-  const isOpen = (index: number) =>
-    isEnrolledStudent && (nextUp === -1 || index <= nextUp);
 
-  const quizLink = detail?.quiz ? `/quizzes/${detail.quiz.documentId}` : '';
+  // a lesson is "open" if the student is enrolled and has completed all earlier lessons
+  const isOpen = (index: number) => isEnrolledStudent && (nextUp === -1 || index <= nextUp);
 
-  if (course.loading) {
-    return <LoadingState />;
-  }
 
-  if (course.error) return <Alert>{course.error}</Alert>;
+  // --- early returns ---
 
-  if (!detail) return <Empty>This course does not exist.</Empty>;
+  if (course.loading)  return <LoadingState />;
+  if (course.error)    return <Alert>{course.error}</Alert>;
+  if (!detail)         return <Empty>This course does not exist.</Empty>;
+
+
+  // --- sidebar action block (what shows in the right column) ---
 
   const action = () => {
+    // authors see manage buttons instead of an enrol button
     if (isAuthor) {
       return (
         <div className="space-y-3">
           <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-3.5 text-xs text-sky-400">
-            <p className="font-bold flex items-center gap-1.5">
-              <span>Course Author & Management</span>
-            </p>
+            <p className="font-bold flex items-center gap-1.5">Course Author & Management</p>
             <p className="mt-1 text-muted text-[11px] leading-relaxed">
               You manage this course. Use the studio below to edit lessons, update quiz answers, and monitor enrolled students.
             </p>
@@ -174,6 +188,7 @@ const Detail = ({ documentId }: { documentId: string }) => {
       );
     }
 
+    // enrolled student sees their progress + a continue/quiz button
     if (enrollment) {
       return (
         <div className="space-y-3.5">
@@ -181,15 +196,14 @@ const Detail = ({ documentId }: { documentId: string }) => {
             <span className="font-bold text-primary flex items-center gap-1.5">
               <CheckCircle2 className="size-4 text-emerald-400" />
               <span>
-                {completed.size} of {lessons.length} lessons {hasQuiz ? `• Quiz ${lastQuizResult ? 'Graded' : 'Pending'}` : 'done'}
+                {completed.size} of {lessons.length} lessons{' '}
+                {hasQuiz ? `• Quiz ${lastQuizResult ? 'Graded' : 'Pending'}` : 'done'}
               </span>
             </span>
             <span className="font-bold text-brand">{percent}%</span>
           </div>
 
-          <div>
-            <ProgressBar percent={percent} />
-          </div>
+          <ProgressBar percent={percent} />
 
           {lastQuizResult && (
             <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3 text-xs shadow-2xs">
@@ -198,7 +212,11 @@ const Detail = ({ documentId }: { documentId: string }) => {
                 <span>Track Completed & Graded</span>
               </p>
               <p className="mt-1 text-[11px] text-secondary">
-                Quiz Score: <strong className="font-bold text-primary">{lastQuizResult.score} / {lastQuizResult.total}</strong> ({Math.round((lastQuizResult.score / lastQuizResult.total) * 100)}%)
+                Quiz Score:{' '}
+                <strong className="font-bold text-primary">
+                  {lastQuizResult.score} / {lastQuizResult.total}
+                </strong>{' '}
+                ({Math.round((lastQuizResult.score / lastQuizResult.total) * 100)}%)
               </p>
             </div>
           )}
@@ -230,6 +248,7 @@ const Detail = ({ documentId }: { documentId: string }) => {
       );
     }
 
+    // unenrolled student sees the enrol button
     if (isStudent) {
       return (
         <div className="space-y-3">
@@ -254,6 +273,7 @@ const Detail = ({ documentId }: { documentId: string }) => {
       );
     }
 
+    // logged-in non-student (Instructor etc.) — explain why they can't enrol
     if (user) {
       return (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-400">
@@ -262,26 +282,32 @@ const Detail = ({ documentId }: { documentId: string }) => {
             <span>Role Notice</span>
           </p>
           <p className="mt-1 text-[11px] text-muted leading-relaxed">
-            Course enrollment and quiz grading are reserved for <strong>Student</strong> accounts. Your account is logged in as <strong>{user.role?.name ?? 'Staff'}</strong>.
+            Course enrollment and quiz grading are reserved for <strong>Student</strong> accounts.
+            Your account is logged in as <strong>{user.role?.name ?? 'Staff'}</strong>.
           </p>
         </div>
       );
     }
 
+    // still loading the auth state
     if (knowingUser) return <p className="text-sm text-muted">One moment...</p>;
 
+    // guest — show the login / register form inline
     return <JoinForm onAuthenticated={joined} />;
   };
 
+
+  // --- render ---
+
   return (
     <div className="space-y-8">
-      {/* Course Banner Header */}
       <DetailHeader course={detail} lessons={lessons.length} />
 
       <Alert>{actionError}</Alert>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        {/* Main Syllabus & Curriculum Section */}
+
+        {/* main content column — syllabus + quiz */}
         <div className="space-y-8 lg:col-span-2">
           <section>
             <div className="flex items-center justify-between mb-3">
@@ -316,7 +342,7 @@ const Detail = ({ documentId }: { documentId: string }) => {
             )}
           </section>
 
-          {/* Quiz Assessment Section */}
+          {/* quiz section — only shown when the course has one */}
           {detail.quiz && (
             <section>
               <h2 className="mb-3 text-lg font-bold text-primary flex items-center gap-2">
@@ -378,10 +404,11 @@ const Detail = ({ documentId }: { documentId: string }) => {
           )}
         </div>
 
-        {/* Sticky Sidebar Column: Cover Preview + Features List + Enrollment Action */}
+
+        {/* sticky sidebar — cover image + action block + features list */}
         <aside className="lg:col-span-1 lg:sticky lg:top-24 self-start space-y-4">
           <div className="rounded-xl border border-theme bg-surface overflow-hidden shadow-md">
-            {/* Course Cover Image Banner */}
+
             <div className="relative">
               <CourseCover
                 title={detail.title}
@@ -395,12 +422,10 @@ const Detail = ({ documentId }: { documentId: string }) => {
               </div>
             </div>
 
-            {/* Action Area */}
             <div className="p-5 border-b border-theme">
               {action()}
             </div>
 
-            {/* "This Course Includes" Value Proposition */}
             <div className="p-5 bg-elevated/40 space-y-3">
               <h4 className="text-xs font-bold uppercase tracking-wider text-secondary">
                 This Course Track Includes
@@ -444,15 +469,17 @@ const Detail = ({ documentId }: { documentId: string }) => {
                 </li>
               </ul>
             </div>
+
           </div>
         </aside>
+
       </div>
     </div>
   );
 };
 
+
 export default function CourseDetailPage() {
   const params = useParams<{ documentId: string }>();
-
   return <Detail documentId={params.documentId} />;
 }

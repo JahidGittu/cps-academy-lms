@@ -1,19 +1,13 @@
 // @ts-nocheck
-/**
- * Strapi Users & Permissions Plugin Extension
- */
-
-declare global {
-  var strapi: any;
-}
 
 export default (plugin: any) => {
   const { me, destroy } = plugin.controllers.user;
 
-  // Custom register controller to ensure new signups are ALWAYS created as Student role
+
+  // override register so every public signup lands in the Student role
   plugin.controllers.auth.register = async (ctx: any) => {
     const pluginStore = await strapi.store({ type: 'plugin', name: 'users-permissions' });
-    const settings = await pluginStore.get({ key: 'advanced' });
+    const settings    = await pluginStore.get({ key: 'advanced' });
 
     if (settings && settings.allow_register === false) {
       return ctx.badRequest('Register action is currently disabled');
@@ -21,77 +15,56 @@ export default (plugin: any) => {
 
     const { email, username, password } = ctx.request?.body || {};
 
-    if (!email || !email.trim()) return ctx.badRequest('Email is required');
-    if (!username || !username.trim()) return ctx.badRequest('Username is required');
+    if (!email    || !email.trim())      return ctx.badRequest('Email is required');
+    if (!username || !username.trim())   return ctx.badRequest('Username is required');
     if (!password || password.length < 6) return ctx.badRequest('Password must be at least 6 characters');
 
-    const cleanEmail = email.toLowerCase().trim();
+    const cleanEmail    = email.toLowerCase().trim();
     const cleanUsername = username.trim();
 
-    // Check if username is already taken
-    const userWithSameUsername = await strapi.db.query('plugin::users-permissions.user').findOne({
-      where: { username: cleanUsername },
-    });
+    // uniqueness checks
+    const takenUsername = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { username: cleanUsername } });
+    if (takenUsername) return ctx.badRequest('Username or Name is already taken. Please choose another.');
 
-    if (userWithSameUsername) {
-      return ctx.badRequest('Username or Name is already taken. Please choose another.');
-    }
+    const takenEmail = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { email: cleanEmail } });
+    if (takenEmail) return ctx.badRequest('An account with this email address already exists.');
 
-    // Check if email is already taken
-    const userWithSameEmail = await strapi.db.query('plugin::users-permissions.user').findOne({
-      where: { email: cleanEmail },
-    });
-
-    if (userWithSameEmail) {
-      return ctx.badRequest('An account with this email address already exists.');
-    }
-
-    // Find Student role
-    let studentRole = await strapi.db.query('plugin::users-permissions.role').findOne({
-      where: { type: 'student' },
-    });
+    // find the Student role — fall back to type=authenticated if it doesn't exist yet
+    let studentRole = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { type: 'student' } });
 
     if (!studentRole) {
-      studentRole = await strapi.db.query('plugin::users-permissions.role').findOne({
-        where: { name: 'Student' },
-      });
+      studentRole = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { name: 'Student' } });
     }
 
     if (!studentRole) {
-      studentRole = await strapi.db.query('plugin::users-permissions.role').findOne({
-        where: { type: 'authenticated' },
-      });
+      studentRole = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { type: 'authenticated' } });
     }
 
-    if (!studentRole) {
-      return ctx.badRequest('Student role is not configured in database.');
-    }
+    if (!studentRole) return ctx.badRequest('Student role is not configured in database.');
 
-    // Create user securely via users-permissions service to hash password
+    // create the user via the plugin service so the password is hashed properly
     const newUser = await strapi.plugin('users-permissions').service('user').add({
-      username: cleanUsername,
-      email: cleanEmail,
+      username:  cleanUsername,
+      email:     cleanEmail,
       password,
-      provider: 'local',
+      provider:  'local',
       confirmed: true,
-      role: studentRole.id,
+      role:      studentRole.id,
     });
 
-    // Issue JWT token
-    const jwt = strapi.plugin('users-permissions').service('jwt').issue({
-      id: newUser.id,
-    });
+    // issue a JWT immediately so the client doesn't need a separate login step
+    const jwt = strapi.plugin('users-permissions').service('jwt').issue({ id: newUser.id });
 
     return ctx.send({
       jwt,
       user: {
-        id: newUser.id,
-        username: newUser.username,
-        email: newUser.email,
+        id:        newUser.id,
+        username:  newUser.username,
+        email:     newUser.email,
         confirmed: newUser.confirmed,
-        blocked: newUser.blocked,
+        blocked:   newUser.blocked,
         role: {
-          id: studentRole.id,
+          id:   studentRole.id,
           name: studentRole.name,
           type: studentRole.type,
         },
@@ -99,14 +72,11 @@ export default (plugin: any) => {
     });
   };
 
-  // The output sanitizer removes every relation the caller is not allowed to read, and reading
-  // the role collection is an Admin-only permission, so /users/me answered without a role for
-  // the three roles that need it most. The role the request was already authenticated with is
-  // put back here rather than by widening that permission.
+
+  // /users/me normally strips the role relation (admin-only permission) — put it back manually
   plugin.controllers.user.me = async (ctx: any) => {
     await me(ctx);
 
-    // ctx.body is typed as unknown, so the shape being added to is stated here.
     const user = ctx.body as { role?: unknown } | null;
     const role = ctx.state?.user?.role;
 
@@ -115,66 +85,56 @@ export default (plugin: any) => {
     }
   };
 
-  // Dedicated controller for authenticated user to update their own profile username safely
+
+  // lets an authenticated user rename themselves without touching any other field
   plugin.controllers.user.updateMe = async (ctx: any) => {
     const authUser = ctx.state?.user;
-    if (!authUser) {
-      return ctx.unauthorized();
-    }
+    if (!authUser) return ctx.unauthorized();
 
     const { username } = (ctx.request?.body as { username?: string }) || {};
-
-    if (!username || !username.trim()) {
-      return ctx.badRequest('Username cannot be empty.');
-    }
+    if (!username || !username.trim()) return ctx.badRequest('Username cannot be empty.');
 
     const cleanUsername = username.trim();
 
-    // Check if username is already taken by another user
+    // make sure the new name isn't taken by someone else
     const existing = await strapi.db.query('plugin::users-permissions.user').findOne({
-      where: {
-        username: cleanUsername,
-        id: { $ne: authUser.id },
-      },
+      where: { username: cleanUsername, id: { $ne: authUser.id } },
     });
 
-    if (existing) {
-      return ctx.badRequest('Username is already taken. Please choose another username.');
-    }
+    if (existing) return ctx.badRequest('Username is already taken. Please choose another username.');
 
     const updatedUser = await strapi.db.query('plugin::users-permissions.user').update({
       where: { id: authUser.id },
-      data: { username: cleanUsername },
+      data:  { username: cleanUsername },
     });
 
     return ctx.send({
-      id: updatedUser.id,
+      id:       updatedUser.id,
       username: updatedUser.username,
-      email: updatedUser.email,
-      role: authUser.role ? { id: authUser.role.id, name: authUser.role.name } : undefined,
+      email:    updatedUser.email,
+      role:     authUser.role ? { id: authUser.role.id, name: authUser.role.name } : undefined,
     });
   };
 
-  // Register PUT /users/me endpoint in users-permissions router
+
+  // expose PUT /users/me in the content-api router
   if (plugin.routes?.['content-api']?.routes) {
     plugin.routes['content-api'].routes.push({
-      method: 'PUT',
-      path: '/users/me',
+      method:  'PUT',
+      path:    '/users/me',
       handler: 'user.updateMe',
-      config: {
-        prefix: '',
-        policies: [],
-      },
+      config:  { prefix: '', policies: [] },
     });
   }
 
-  // Cascade delete all student-related data when an account is deleted
+
+  // cascade delete all student data when their account is removed
   plugin.controllers.user.destroy = async (ctx: any) => {
     const targetUserId = Number(ctx.params?.id);
 
     if (targetUserId) {
       try {
-        // 1. Delete user enrollments
+        // enrollments
         const enrollments = await strapi.documents('api::enrollment.enrollment').findMany({
           filters: { student: { id: targetUserId } },
         });
@@ -182,7 +142,7 @@ export default (plugin: any) => {
           await strapi.documents('api::enrollment.enrollment').delete({ documentId: e.documentId });
         }
 
-        // 2. Delete user lesson progresses
+        // lesson progress records
         const progresses = await strapi.documents('api::lesson-progress.lesson-progress').findMany({
           filters: { student: { id: targetUserId } },
         });
@@ -190,7 +150,7 @@ export default (plugin: any) => {
           await strapi.documents('api::lesson-progress.lesson-progress').delete({ documentId: lp.documentId });
         }
 
-        // 3. Delete user quiz results
+        // quiz results
         const quizResults = await strapi.documents('api::quiz-result.quiz-result').findMany({
           filters: { student: { id: targetUserId } },
         });
@@ -204,6 +164,7 @@ export default (plugin: any) => {
 
     await destroy(ctx);
   };
+
 
   return plugin;
 };

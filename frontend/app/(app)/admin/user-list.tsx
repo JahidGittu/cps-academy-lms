@@ -9,25 +9,30 @@ import { useApi } from '@/lib/use-api';
 import type { Role, User } from '@/lib/types';
 import { Alert, LoadingState } from '@/components/ui';
 
+
+// badge colors keyed by role name
 const roleBadgeColor: Record<string, string> = {
-  Admin: 'bg-purple-50 text-purple-700 border-purple-200',
+  'Admin':           'bg-purple-50 text-purple-700 border-purple-200',
   'Content Manager': 'bg-amber-50 text-amber-700 border-amber-200',
-  Instructor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  Student: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  'Instructor':      'bg-indigo-50 text-indigo-700 border-indigo-200',
+  'Student':         'bg-emerald-50 text-emerald-700 border-emerald-200',
 };
+
 
 export const UserList = ({ onChanged }: { onChanged?: () => void }) => {
   const { user: me } = useAuth();
-  const [busyId, setBusyId] = useState<number | null>(null);
+  const [busyId,      setBusyId]      = useState<number | null>(null);
   const [actionError, setActionError] = useState('');
-  const [successId, setSuccessId] = useState<number | null>(null);
+  const [successId,   setSuccessId]   = useState<number | null>(null);
 
   const users = useApi<User[]>('/users?populate=role&sort=createdAt:desc');
   const roles = useApi<{ roles: Role[] }>('/users-permissions/roles');
 
-  const rows = users.data ?? [];
+  const rows           = users.data ?? [];
   const availableRoles = roles.data?.roles ?? [];
 
+
+  // sends the new role to Strapi, then reloads the list and triggers a brief success flash
   const changeRole = async (targetUserId: number, roleId: number) => {
     setBusyId(targetUserId);
     setActionError('');
@@ -46,11 +51,10 @@ export const UserList = ({ onChanged }: { onChanged?: () => void }) => {
     }
   };
 
-  if (users.loading) {
-    return <LoadingState />;
-  }
 
-  if (users.error) return <Alert>{users.error}</Alert>;
+  if (users.loading) return <LoadingState />;
+  if (users.error)   return <Alert>{users.error}</Alert>;
+
 
   return (
     <section>
@@ -76,12 +80,14 @@ export const UserList = ({ onChanged }: { onChanged?: () => void }) => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {rows.map((row) => {
-                const self = row.id === me?.id;
-                const roleName = row.role?.name ?? 'Student';
+                const self       = row.id === me?.id;
+                const roleName   = row.role?.name ?? 'Student';
                 const badgeStyle = roleBadgeColor[roleName] ?? 'bg-slate-50 text-slate-700 border-slate-200';
 
                 return (
                   <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
+
+                    {/* user avatar + name + email */}
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <span className="flex size-9 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700 uppercase">
@@ -96,6 +102,7 @@ export const UserList = ({ onChanged }: { onChanged?: () => void }) => {
                       </div>
                     </td>
 
+                    {/* current role badge */}
                     <td className="px-5 py-4">
                       <span className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-xs font-semibold ${badgeStyle}`}>
                         {roleName === 'Admin' ? <Shield className="size-3" /> : <UserCheck className="size-3" />}
@@ -103,6 +110,7 @@ export const UserList = ({ onChanged }: { onChanged?: () => void }) => {
                       </span>
                     </td>
 
+                    {/* role change dropdown — locked on own account */}
                     <td className="px-5 py-4">
                       {self ? (
                         <span className="text-xs text-slate-400 italic">Self role protected</span>
@@ -122,6 +130,7 @@ export const UserList = ({ onChanged }: { onChanged?: () => void }) => {
                       )}
                     </td>
 
+                    {/* status feedback — spinner / success flash */}
                     <td className="px-5 py-4 text-right">
                       {busyId === row.id ? (
                         <span className="text-xs font-semibold text-brand-600 animate-pulse">Updating...</span>
@@ -132,6 +141,7 @@ export const UserList = ({ onChanged }: { onChanged?: () => void }) => {
                         </span>
                       ) : null}
                     </td>
+
                   </tr>
                 );
               })}

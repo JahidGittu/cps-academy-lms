@@ -3,23 +3,24 @@ import type { Context } from 'koa';
 
 import { caller, narrow, roleName, seesEveryRow } from '../../../utils/caller';
 
+
 const UID = 'api::enrollment.enrollment';
 
+
 export default factories.createCoreController(UID, ({ strapi }) => ({
-  // Attach student from auth session, ignore client-provided user id
+
+  // studentId is always taken from the JWT — never trusted from the request body
   async create(ctx: Context) {
-    const me = caller(ctx).id;
-    const body = ctx.request.body as { data?: { course?: unknown } };
+    const me     = caller(ctx).id;
+    const body   = ctx.request.body as { data?: { course?: unknown } };
     const courseId = body.data?.course;
 
-    if (typeof courseId !== 'string') {
-      return ctx.badRequest('data.course must be a course documentId');
-    }
+    if (typeof courseId !== 'string') return ctx.badRequest('data.course must be a course documentId');
 
     const course = await strapi.documents('api::course.course').findOne({ documentId: courseId });
-
     if (!course) return ctx.notFound('course not found');
 
+    // prevent duplicate enrollments
     const [duplicate] = await strapi.documents(UID).findMany({
       filters: { student: { id: me }, course: { documentId: courseId } },
       limit: 1,
@@ -36,22 +37,24 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     return super.transformResponse(await super.sanitizeOutput(enrollment, ctx));
   },
 
+
   async find(ctx: Context) {
     await super.validateQuery(ctx);
     const query = await super.sanitizeQuery(ctx);
 
     if (!seesEveryRow(ctx)) {
       const me = caller(ctx).id;
-
-      narrow(
-        query,
-        roleName(ctx) === 'Student' ? { student: { id: me } } : { course: { owner: { id: me } } }
+      // students see their own enrollments; instructors see enrollments for their courses
+      narrow(query, roleName(ctx) === 'Student'
+        ? { student: { id: me } }
+        : { course: { owner: { id: me } } }
       );
     }
 
     const { results, pagination } = await strapi.service(UID).find(query);
     return super.transformResponse(await super.sanitizeOutput(results, ctx), { pagination });
   },
+
 
   async findOne(ctx: Context) {
     if (!seesEveryRow(ctx)) {
@@ -69,7 +72,9 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     return super.findOne(ctx);
   },
 
+
   async delete(ctx: Context) {
+    // admin can delete any enrollment; others can only delete their own
     if (roleName(ctx) !== 'Admin') {
       const me = caller(ctx).id;
 
@@ -83,4 +88,5 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     return super.delete(ctx);
   },
+
 }));

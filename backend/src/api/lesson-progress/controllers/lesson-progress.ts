@@ -4,8 +4,11 @@ import type { Context } from 'koa';
 import { caller, narrow, roleName, seesEveryRow } from '../../../utils/caller';
 import { unfinishedLessonBefore } from '../../../utils/sequence';
 
+
 const UID = 'api::lesson-progress.lesson-progress';
 
+
+// decides which rows a non-admin caller may see
 const visibleTo = (ctx: Context) => {
   const me = caller(ctx).id;
   return roleName(ctx) === 'Student'
@@ -13,9 +16,11 @@ const visibleTo = (ctx: Context) => {
     : { lesson: { course: { owner: { id: me } } } };
 };
 
+
 export default factories.createCoreController(UID, ({ strapi }) => ({
+
   async create(ctx: Context) {
-    const body = ctx.request.body as { data?: { lesson?: unknown } };
+    const body     = ctx.request.body as { data?: { lesson?: unknown } };
     const lessonId = body.data?.lesson;
 
     if (typeof lessonId !== 'string') return ctx.badRequest('data.lesson must be a document id');
@@ -29,7 +34,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     if (!lesson?.course) return ctx.notFound();
 
-    // Verify enrollment
+    // student must be enrolled first
     const [enrolled] = await strapi.documents('api::enrollment.enrollment').findMany({
       filters: { student: { id: me }, course: { documentId: lesson.course.documentId } },
       limit: 1,
@@ -37,17 +42,11 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     if (!enrolled) return ctx.forbidden('enroll in the course before completing its lessons');
 
-    // Enforce sequential unlock order
-    const blocking = await unfinishedLessonBefore(
-      strapi,
-      me,
-      lesson.course.documentId,
-      lesson.order
-    );
-
+    // enforce sequential unlock — can't skip ahead
+    const blocking = await unfinishedLessonBefore(strapi, me, lesson.course.documentId, lesson.order);
     if (blocking) return ctx.forbidden(`finish "${blocking.title}" first`);
 
-    // Prevent duplicate completion records
+    // if already completed, just return the existing record
     const [already] = await strapi.documents(UID).findMany({
       filters: { student: { id: me }, lesson: { documentId: lessonId } },
       limit: 1,
@@ -63,6 +62,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     return super.transformResponse(await super.sanitizeOutput(progress, ctx));
   },
 
+
   async find(ctx: Context) {
     await super.validateQuery(ctx);
     const query = await super.sanitizeQuery(ctx);
@@ -72,6 +72,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     const { results, pagination } = await strapi.service(UID).find(query);
     return super.transformResponse(await super.sanitizeOutput(results, ctx), { pagination });
   },
+
 
   async findOne(ctx: Context) {
     if (!seesEveryRow(ctx)) {
@@ -86,6 +87,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     return super.findOne(ctx);
   },
 
+
   async delete(ctx: Context) {
     if (!seesEveryRow(ctx)) {
       const [visible] = await strapi.documents(UID).findMany({
@@ -98,4 +100,5 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     return super.delete(ctx);
   },
+
 }));

@@ -3,37 +3,36 @@
 import { useState, useRef, useEffect } from 'react';
 import type { ChangeEvent, DragEvent } from 'react';
 import {
-  Upload,
-  Link as LinkIcon,
-  Image as ImageIcon,
-  X,
-  Sparkles,
-  Layers,
-  FolderOpen,
+  Upload, Link as LinkIcon, Image as ImageIcon,
+  X, Sparkles, Layers, FolderOpen,
 } from 'lucide-react';
+
 import { FALLBACK_IMAGE, resolveImageUrl } from '@/components/course-cover';
 import { MediaLibraryModal } from '@/components/media-library-modal';
 import { uploadImage } from '@/lib/upload';
 
+
 export const ImagePicker = ({
-  label = 'Cover Image / Thumbnail',
+  label    = 'Cover Image / Thumbnail',
   value,
   onChange,
   category = 'general',
 }: {
-  label?: string;
-  value: string;
-  onChange: (url: string) => void;
+  label?:    string;
+  value:     string;
+  onChange:  (url: string) => void;
   category?: 'course' | 'blog' | 'general';
-  presets?: unknown;
+  presets?:  unknown;
 }) => {
-  const [tab, setTab] = useState<'upload' | 'url'>('upload');
-  const [dragOver, setDragOver] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [imageError, setImageError] = useState(false);
+  const [tab,         setTab]         = useState<'upload' | 'url'>('upload');
+  const [dragOver,    setDragOver]    = useState(false);
+  const [loading,     setLoading]     = useState(false);
+  const [imageError,  setImageError]  = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+
+  // switch to URL tab when an external URL is loaded in (e.g. from the media library)
   useEffect(() => {
     setImageError(false);
     if (value && !value.startsWith('/uploads/') && !value.startsWith('data:')) {
@@ -41,6 +40,8 @@ export const ImagePicker = ({
     }
   }, [value]);
 
+
+  // uploads the file to Strapi; falls back to a base64 data URL if upload fails
   const processFile = async (file: File) => {
     if (!file.type.startsWith('image/')) return;
 
@@ -54,8 +55,9 @@ export const ImagePicker = ({
       return;
     }
 
+    // fallback: read as base64 so the preview still works offline
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload  = (event) => {
       if (typeof event.target?.result === 'string') onChange(event.target.result);
       setLoading(false);
     };
@@ -77,8 +79,11 @@ export const ImagePicker = ({
 
   const displayUrl = value ? resolveImageUrl(value) : '';
 
+
   return (
     <div className="space-y-3">
+
+      {/* label row with media library trigger + upload/url tab switcher */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <label className="block text-xs sm:text-sm font-bold text-primary flex items-center gap-1.5">
           <ImageIcon className="size-4 text-sky-400" />
@@ -86,7 +91,6 @@ export const ImagePicker = ({
         </label>
 
         <div className="flex items-center gap-2">
-          {/* Media Library Modal Trigger Button */}
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
@@ -97,15 +101,12 @@ export const ImagePicker = ({
             <span>Media Library</span>
           </button>
 
-          {/* Inline Tab Switcher */}
           <div className="flex items-center rounded-lg bg-canvas p-0.5 border border-theme text-xs">
             <button
               type="button"
               onClick={() => setTab('upload')}
               className={`flex items-center gap-1 rounded-md px-2 py-0.5 transition cursor-pointer text-[11px] font-bold ${
-                tab === 'upload'
-                  ? 'bg-surface text-brand shadow-2xs'
-                  : 'text-secondary hover:text-primary'
+                tab === 'upload' ? 'bg-surface text-brand shadow-2xs' : 'text-secondary hover:text-primary'
               }`}
             >
               <Upload className="size-3" />
@@ -116,9 +117,7 @@ export const ImagePicker = ({
               type="button"
               onClick={() => setTab('url')}
               className={`flex items-center gap-1 rounded-md px-2 py-0.5 transition cursor-pointer text-[11px] font-bold ${
-                tab === 'url'
-                  ? 'bg-surface text-brand shadow-2xs'
-                  : 'text-secondary hover:text-primary'
+                tab === 'url' ? 'bg-surface text-brand shadow-2xs' : 'text-secondary hover:text-primary'
               }`}
             >
               <LinkIcon className="size-3" />
@@ -128,13 +127,11 @@ export const ImagePicker = ({
         </div>
       </div>
 
+
       {tab === 'upload' ? (
-        /* File Upload Drag & Drop Area */
+        /* drag-and-drop zone */
         <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
@@ -160,30 +157,28 @@ export const ImagePicker = ({
             {loading
               ? 'Uploading to Railway Cloud...'
               : displayUrl
-                ? 'Click or drag & drop to replace image'
-                : 'Click to upload from device'}
+              ? 'Click or drag & drop to replace image'
+              : 'Click to upload from device'}
           </p>
           <p className="text-[11px] text-muted mt-0.5">
             PNG, JPG, WebP up to 10MB (Stores in Railway backend)
           </p>
         </div>
       ) : (
-        /* Direct URL Input */
+        /* direct URL input */
         <div>
           <input
             type="text"
             value={value.startsWith('data:') ? '' : value}
-            onChange={(e) => {
-              setImageError(false);
-              onChange(e.target.value);
-            }}
+            onChange={(e) => { setImageError(false); onChange(e.target.value); }}
             placeholder="https://images.unsplash.com/... or https://..."
             className="w-full rounded-xl border border-theme bg-surface px-3.5 py-2 text-xs text-primary outline-none transition-all placeholder:text-muted focus:border-active focus:ring-2 focus:ring-brand-500/20 shadow-2xs"
           />
         </div>
       )}
 
-      {/* Live Thumbnail Preview & Clear Action */}
+
+      {/* live thumbnail preview with remove and browse library shortcuts */}
       <div className="overflow-hidden rounded-xl border border-theme bg-canvas p-3 shadow-2xs">
         <div className="flex items-center justify-between mb-2">
           <p className="flex items-center gap-1.5 text-xs font-bold text-primary">
@@ -204,10 +199,7 @@ export const ImagePicker = ({
             {displayUrl && (
               <button
                 type="button"
-                onClick={() => {
-                  setImageError(false);
-                  onChange('');
-                }}
+                onClick={() => { setImageError(false); onChange(''); }}
                 className="inline-flex items-center gap-1 text-[11px] text-red-500 hover:text-red-400 font-bold cursor-pointer"
               >
                 <X className="size-3" />
@@ -225,11 +217,7 @@ export const ImagePicker = ({
               src={imageError ? FALLBACK_IMAGE : displayUrl}
               alt="Thumbnail Preview"
               className="h-full w-full object-cover transition-all duration-300"
-              onError={() => {
-                if (!imageError) {
-                  setImageError(true);
-                }
-              }}
+              onError={() => { if (!imageError) setImageError(true); }}
             />
           ) : (
             <div className="flex flex-col items-center justify-center p-6 text-center text-muted">
@@ -247,17 +235,16 @@ export const ImagePicker = ({
         </div>
       </div>
 
-      {/* Interactive Media Library Modal */}
+
+      {/* media library modal */}
       <MediaLibraryModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSelect={(newUrl) => {
-          setImageError(false);
-          onChange(newUrl);
-        }}
+        onSelect={(newUrl) => { setImageError(false); onChange(newUrl); }}
         currentUrl={value}
         initialCategory={category}
       />
+
     </div>
   );
 };

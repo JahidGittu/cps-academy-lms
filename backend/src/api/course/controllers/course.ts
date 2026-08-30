@@ -3,45 +3,48 @@ import type { Context } from 'koa';
 
 import { caller, narrow, roleName, seesEveryRow } from '../../../utils/caller';
 
+
 const UID = 'api::course.course';
 
-// Safe course relations shape to expose
+
+// relations pulled on every course read — lessons sorted by order
 const INSIDE = {
   lessons: { fields: 'title,order', sort: 'order:asc' },
-  quiz: { fields: 'title' },
-  owner: { fields: 'username' },
+  quiz:    { fields: 'title' },
+  owner:   { fields: 'username' },
 } as const;
 
+
+// true when the caller created the course or is an Admin/CM
 const mayEdit = (ctx: Context, ownerId?: string | number | null) => {
   if (!ctx.state.user) return false;
   return seesEveryRow(ctx) || ownerId === caller(ctx).id;
 };
 
+
 type Enrolled = { student?: { id: string | number; username?: string | null } | null };
 
 type Raw = {
   documentId: string;
-  owner?: { id: string | number; username?: string | null } | null;
+  owner?:   { id: string | number; username?: string | null } | null;
   lessons?: { id: number; documentId: string; title: string; order: number }[];
-  quiz?: { id: number; documentId: string; title: string } | null;
+  quiz?:    { id: number; documentId: string; title: string } | null;
 };
 
+
+// fields appended to each course after sanitization
 const extras = (ctx: Context, course: Raw) => ({
-  owned: mayEdit(ctx, course.owner?.id),
+  owned:      mayEdit(ctx, course.owner?.id),
   instructor: course.owner?.username ?? null,
-  lessons: (course.lessons ?? []).map(({ id, documentId, title, order }) => ({
-    id,
-    documentId,
-    title,
-    order,
-  })),
-  quiz: course.quiz
-    ? { id: course.quiz.id, documentId: course.quiz.documentId, title: course.quiz.title }
-    : null,
+  lessons:    (course.lessons ?? []).map(({ id, documentId, title, order }) => ({ id, documentId, title, order })),
+  quiz:       course.quiz ? { id: course.quiz.id, documentId: course.quiz.documentId, title: course.quiz.title } : null,
 });
+
 
 type Writable = { title?: string; description?: string; coverImageUrl?: string };
 
+
+// builds a map of studentId → completedLessonCount for the progress endpoint
 const completionsPerStudent = (rows: Enrolled[]) => {
   const counts = new Map<string | number, number>();
 
@@ -53,7 +56,9 @@ const completionsPerStudent = (rows: Enrolled[]) => {
   return counts;
 };
 
+
 export default factories.createCoreController(UID, ({ strapi }) => ({
+
   async create(ctx: Context) {
     const body = ctx.request.body as { data?: Writable };
     const { title, description, coverImageUrl } = body.data ?? {};
@@ -68,6 +73,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     return super.transformResponse(await super.sanitizeOutput(course, ctx));
   },
 
+
   async update(ctx: Context) {
     const body = ctx.request.body as { data?: Writable };
     const { title, description, coverImageUrl } = body.data ?? {};
@@ -81,6 +87,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     return super.transformResponse(await super.sanitizeOutput(course, ctx));
   },
 
+
   async delete(ctx: Context) {
     const course = await strapi.documents(UID).findOne({
       documentId: ctx.params.id,
@@ -89,11 +96,11 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     if (!course) return ctx.notFound();
 
+    // only the owner or an Admin/CM may delete
     const me = caller(ctx).id;
-    if (!seesEveryRow(ctx) && course.owner?.id !== me) {
-      return ctx.forbidden();
-    }
+    if (!seesEveryRow(ctx) && course.owner?.id !== me) return ctx.forbidden();
 
+    // cascade: enrollments
     const enrollments = await strapi.documents('api::enrollment.enrollment').findMany({
       filters: { course: { documentId: course.documentId } },
     });
@@ -101,6 +108,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
       await strapi.documents('api::enrollment.enrollment').delete({ documentId: e.documentId });
     }
 
+    // cascade: lessons + their progresses
     if (course.lessons?.length) {
       for (const lesson of course.lessons) {
         const progresses = await strapi.documents('api::lesson-progress.lesson-progress').findMany({
@@ -113,6 +121,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
       }
     }
 
+    // cascade: quiz + its results
     if (course.quiz) {
       const results = await strapi.documents('api::quiz-result.quiz-result').findMany({
         filters: { quiz: { documentId: course.quiz.documentId } },
@@ -128,7 +137,9 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     return ctx.send({ data: { documentId: ctx.params.id, deleted: true } });
   },
 
+
   async find(ctx: Context) {
+    // ?mine=true returns only the caller's own courses
     const mine = ctx.query.mine === 'true';
     delete ctx.query.mine;
 
@@ -139,6 +150,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     const { results, pagination } = await strapi.service(UID).find({ ...query, populate: INSIDE });
 
+    // build a lookup of extra fields, then merge them in after sanitization
     const added = new Map(
       (results as Raw[]).map((course) => [course.documentId, extras(ctx, course)])
     );
@@ -150,6 +162,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
       { pagination }
     );
   },
+
 
   async findOne(ctx: Context) {
     const course = await strapi.documents(UID).findOne({
@@ -163,6 +176,7 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     return super.transformResponse({ ...row, ...extras(ctx, course as Raw) });
   },
 
+
   async progress(ctx: Context) {
     const course = await strapi.documents(UID).findOne({
       documentId: ctx.params.id,
@@ -171,20 +185,21 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     if (!course) return ctx.notFound();
 
-    const me = caller(ctx).id;
+    const me       = caller(ctx).id;
     const isStudent = roleName(ctx) === 'Student';
 
+    // students must be enrolled; instructors must own the course
     if (isStudent) {
       const [enrolled] = await strapi.documents('api::enrollment.enrollment').findMany({
         filters: { student: { id: me }, course: { documentId: course.documentId } },
         limit: 1,
       });
-
       if (!enrolled) return ctx.notFound();
     } else if (!seesEveryRow(ctx) && course.owner?.id !== me) {
       return ctx.notFound();
     }
 
+    // students see only their own row; instructors see all enrolled students
     const mineOnly = isStudent ? { student: { id: me } } : {};
 
     const enrollments = await strapi.documents('api::enrollment.enrollment').findMany({
@@ -206,24 +221,25 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
       : [];
 
     const totalLessons = (course.lessons ?? []).length;
-    const completed = completionsPerStudent(completions);
+    const completed    = completionsPerStudent(completions);
 
     const students = enrollments.map((enrollment) => {
       const student = enrollment.student;
-      const id = student?.id ?? 0;
-      const done = completed.get(id) ?? 0;
+      const id      = student?.id ?? 0;
+      const done    = completed.get(id) ?? 0;
       const attempt = attempts.find((row) => row.student?.id === id);
 
       return {
         id,
-        username: student?.username ?? null,
+        username:         student?.username ?? null,
         completedLessons: done,
-        percentComplete: totalLessons ? Math.round((done / totalLessons) * 100) : 0,
-        quizScore: attempt?.score ?? null,
-        quizTotal: attempt?.total ?? null,
+        percentComplete:  totalLessons ? Math.round((done / totalLessons) * 100) : 0,
+        quizScore:        attempt?.score ?? null,
+        quizTotal:        attempt?.total ?? null,
       };
     });
 
     return { data: { totalLessons, students } };
   },
+
 }));
