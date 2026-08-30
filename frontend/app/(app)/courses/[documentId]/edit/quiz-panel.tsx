@@ -35,9 +35,15 @@ export const QuizPanel = ({
   onSaved?: () => Promise<void>;
   courseId?: string;
 }) => {
-  const quizDocId = course.quiz?.documentId;
+  // Track quiz documentId locally so the first save doesn't need a course reload
+  const [localQuizDocId, setLocalQuizDocId] = useState<string | null>(
+    course.quiz?.documentId ?? null
+  );
+
+  const effectiveQuizDocId = localQuizDocId ?? course.quiz?.documentId;
+
   const quizData = useApi<Single<Quiz>>(
-    quizDocId ? `/quizzes/${quizDocId}/answers` : null
+    effectiveQuizDocId ? `/quizzes/${effectiveQuizDocId}/answers` : null
   );
 
   const [title, setTitle] = useState('');
@@ -61,8 +67,8 @@ export const QuizPanel = ({
 
   // Sync server quiz data when initially loaded or switched
   useEffect(() => {
-    if (quizData.data?.data && loadedQuizIdRef.current !== quizDocId) {
-      loadedQuizIdRef.current = quizDocId || 'loaded';
+    if (quizData.data?.data && loadedQuizIdRef.current !== effectiveQuizDocId) {
+      loadedQuizIdRef.current = effectiveQuizDocId || 'loaded';
       const q = quizData.data.data;
       const initialTitle = q.title || '';
       const initialQuestions =
@@ -92,7 +98,7 @@ export const QuizPanel = ({
         questions: JSON.parse(JSON.stringify(defaultQuestions)),
       };
     }
-  }, [quizData.data?.data, quizDocId, course.quiz, course.title]);
+  }, [quizData.data?.data, effectiveQuizDocId, course.quiz, course.title]);
 
   // Determine if form is dirty (unsaved user modifications)
   const isDirty =
@@ -235,11 +241,15 @@ export const QuizPanel = ({
       course: course.documentId,
     };
 
-    if (course.quiz?.documentId) {
-      await api.put(`/quizzes/${course.quiz.documentId}`, { data });
+    if (effectiveQuizDocId) {
+      await api.put(`/quizzes/${effectiveQuizDocId}`, { data });
     } else {
-      await api.post('/quizzes', { data });
-      if (onSaved) await onSaved();
+      const res = await api.post<Single<Quiz>>('/quizzes', { data });
+      const newDocId = res.data.data?.documentId;
+      if (newDocId) setLocalQuizDocId(newDocId);
+
+      // Silently sync the course in the background — no await = no loading flash
+      if (onSaved) onSaved().catch(() => null);
     }
 
     lastSavedRef.current = {
@@ -284,7 +294,7 @@ export const QuizPanel = ({
     }
   };
 
-  if (quizDocId && quizData.loading && !quizData.data) {
+  if (effectiveQuizDocId && quizData.loading && !quizData.data) {
     return <LoadingState />;
   }
 
