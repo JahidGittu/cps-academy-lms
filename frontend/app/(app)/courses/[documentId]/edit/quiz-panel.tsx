@@ -155,7 +155,10 @@ export const QuizPanel = ({
         } else {
           const res = await api.post<Single<Quiz>>('/quizzes', { data });
           const newDocId = res.data.data?.documentId;
-          if (newDocId) setLocalQuizDocId(newDocId);
+          if (newDocId) {
+            setLocalQuizDocId(newDocId);
+            loadedQuizIdRef.current = newDocId;
+          }
           // Silently sync course in background — no await = no loading flash
           if (onSaved) onSaved().catch(() => null);
         }
@@ -255,7 +258,10 @@ export const QuizPanel = ({
     } else {
       const res = await api.post<Single<Quiz>>('/quizzes', { data });
       const newDocId = res.data.data?.documentId;
-      if (newDocId) setLocalQuizDocId(newDocId);
+      if (newDocId) {
+        setLocalQuizDocId(newDocId);
+        loadedQuizIdRef.current = newDocId;
+      }
 
       // Silently sync the course in the background — no await = no loading flash
       if (onSaved) onSaved().catch(() => null);
@@ -303,7 +309,7 @@ export const QuizPanel = ({
     }
   };
 
-  if (effectiveQuizDocId && quizData.loading && !quizData.data) {
+  if (effectiveQuizDocId && quizData.loading && !quizData.data && !loadedQuizIdRef.current) {
     return <LoadingState />;
   }
 
