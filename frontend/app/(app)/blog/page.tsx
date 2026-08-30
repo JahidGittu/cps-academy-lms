@@ -10,21 +10,18 @@ import type { BlogPost, Collection } from '@/lib/types';
 import { Alert, Card, Empty, LoadingState } from '@/components/ui';
 import { resolveImageUrl } from '@/components/course-cover';
 
-const listQuery = '/blog-posts?sort=createdAt:desc';
+const listQuery = '/blog-posts?filters[publishState][$eq]=published&sort=createdAt:desc';
 const TOPICS = ['All', 'Architecture', 'Security', 'Tutorial', 'Database', 'DevOps'];
-
-const DEFAULT_POST_COVERS = [
-  'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80',
-];
 
 export default function PublicBlogPage() {
   const [query, setQuery] = useState('');
   const [activeTopic, setActiveTopic] = useState('All');
 
   const posts = useApi<Collection<BlogPost>>(listQuery);
-  const rows = posts.data?.data ?? [];
+  const rows = useMemo(
+    () => (posts.data?.data ?? []).filter((p) => p.publishState === 'published'),
+    [posts.data]
+  );
 
   // Dynamic count calculation for each topic
   const topicCounts = useMemo(() => {

@@ -4,10 +4,10 @@ import { useState, useRef, useEffect } from 'react';
 import type { ChangeEvent, DragEvent } from 'react';
 import {
   Upload, Link as LinkIcon, Image as ImageIcon,
-  X, Sparkles, Layers, FolderOpen,
+  X, Sparkles, Layers, FolderOpen, AlertCircle,
 } from 'lucide-react';
 
-import { FALLBACK_IMAGE, resolveImageUrl } from '@/components/course-cover';
+import { resolveImageUrl } from '@/components/course-cover';
 import { MediaLibraryModal } from '@/components/media-library-modal';
 import { uploadImage } from '@/lib/upload';
 
@@ -210,15 +210,21 @@ export const ImagePicker = ({
         </div>
 
         <div className="relative h-44 w-full overflow-hidden rounded-lg bg-black/40 shadow-2xs flex items-center justify-center border border-theme">
-          {displayUrl ? (
+          {displayUrl && !imageError ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
               key={displayUrl}
-              src={imageError ? FALLBACK_IMAGE : displayUrl}
+              src={displayUrl}
               alt="Thumbnail Preview"
               className="h-full w-full object-cover transition-all duration-300"
-              onError={() => { if (!imageError) setImageError(true); }}
+              onError={() => setImageError(true)}
             />
+          ) : imageError ? (
+            <div className="flex flex-col items-center justify-center p-6 text-center text-rose-400 space-y-1">
+              <AlertCircle className="size-7 opacity-90 text-rose-400" />
+              <p className="text-xs font-bold">Image failed to load</p>
+              <p className="text-[11px] text-muted">Please check if the image URL is accessible or choose another image.</p>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center p-6 text-center text-muted">
               <ImageIcon className="size-8 mb-1.5 opacity-40 text-muted" />

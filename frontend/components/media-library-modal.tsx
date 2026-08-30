@@ -34,6 +34,7 @@ export const MediaLibraryModal = ({
   const [customUrl, setCustomUrl] = useState('');
   const [drag, setDrag] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<MediaAsset | null>(null);
+  const [failedIds, setFailedIds] = useState<Set<string | number>>(new Set());
   const fileRef = useRef<HTMLInputElement>(null);
 
   const lib = useMediaLibrary(isOpen);
@@ -195,11 +196,25 @@ export const MediaLibraryModal = ({
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {displayed.map((item) => {
                   const isSelected = selected === item.url;
+                  const isFailed = failedIds.has(item.id);
                   return (
                     <div key={item.id} onClick={() => setSelected(item.url)} className={`group relative rounded-xl border overflow-hidden cursor-pointer transition-all flex flex-col bg-canvas ${isSelected ? 'border-brand ring-2 ring-brand-500/40 shadow-lg scale-[1.02]' : 'border-theme hover:border-active hover:shadow-md'}`}>
-                      <div className="relative aspect-video w-full overflow-hidden bg-slate-950">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={resolveImageUrl(item.url)} alt={item.name} className="size-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                      <div className="relative aspect-video w-full overflow-hidden bg-slate-950 flex items-center justify-center">
+                        {!isFailed ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={resolveImageUrl(item.url)}
+                            alt={item.name}
+                            className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            loading="lazy"
+                            onError={() => setFailedIds(prev => new Set(prev).add(item.id))}
+                          />
+                        ) : (
+                          <div className="flex size-full flex-col items-center justify-center p-3 text-center text-slate-500 bg-slate-900">
+                            <ImageIcon className="size-6 mb-1 opacity-50 text-slate-400" />
+                            <span className="text-[10px] text-muted line-clamp-1">{item.name}</span>
+                          </div>
+                        )}
                         {isSelected && (
                           <div className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full bg-brand text-white shadow-md">
                             <Check className="size-3.5 stroke-[3]" />

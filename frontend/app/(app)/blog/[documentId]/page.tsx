@@ -10,20 +10,7 @@ import type { BlogPost, Single } from '@/lib/types';
 import { Alert, Empty, LoadingState } from '@/components/ui';
 import { RichContent } from '@/components/rich-content';
 
-const DEFAULT_POST_COVERS = [
-  'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=1200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=1200&auto=format&fit=crop&q=80',
-];
-
-const getBlogCover = (documentId: string, customUrl?: string | null) => {
-  if (customUrl) return customUrl;
-  let hash = 0;
-  for (let i = 0; i < documentId.length; i++) {
-    hash = (hash + documentId.charCodeAt(i)) % DEFAULT_POST_COVERS.length;
-  }
-  return DEFAULT_POST_COVERS[hash];
-};
+import { resolveImageUrl } from '@/components/course-cover';
 
 const Post = ({ documentId }: { documentId: string }) => {
   const { user } = useAuth();
@@ -51,7 +38,21 @@ const Post = ({ documentId }: { documentId: string }) => {
   if (!detail) return <Empty>No content available.</Empty>;
 
   const canEdit = hasRole(user, 'Content Manager', 'Admin');
-  const coverImage = getBlogCover(detail.documentId, detail.coverImageUrl);
+  const isDraft = detail.publishState === 'draft';
+
+  // Protect draft posts from being viewed by regular users/guests:
+  if (isDraft && !canEdit) {
+    return (
+      <Empty>
+        <p className="font-semibold text-primary">Post not found</p>
+        <p className="mt-1 text-sm text-muted">
+          This post either does not exist or has not been published yet.
+        </p>
+      </Empty>
+    );
+  }
+
+  const coverImage = detail.coverImageUrl ? resolveImageUrl(detail.coverImageUrl) : null;
 
   return (
     <article className="space-y-6 max-w-4xl mx-auto">
@@ -76,11 +77,11 @@ const Post = ({ documentId }: { documentId: string }) => {
       </div>
 
       {/* High-res Blog Cover Image Banner (Only if image provided) */}
-      {detail.coverImageUrl && (
+      {coverImage && (
         <div className="overflow-hidden rounded-lg border border-theme shadow-sm bg-black/40">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={detail.coverImageUrl}
+            src={coverImage}
             alt={detail.title}
             className="h-64 sm:h-80 md:h-96 w-full object-cover"
           />

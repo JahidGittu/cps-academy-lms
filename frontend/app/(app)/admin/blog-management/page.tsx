@@ -28,12 +28,6 @@ import { resolveImageUrl } from '@/components/course-cover';
 
 const TOPICS = ['All Topics', 'Tutorial', 'DevOps', 'Security', 'Database', 'Architecture'];
 
-const DEFAULT_POST_COVERS = [
-  'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80',
-];
-
 type BlogSortOption = 'newest' | 'oldest' | 'title_asc' | 'title_desc';
 
 const BlogManagement = () => {

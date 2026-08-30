@@ -1,24 +1,24 @@
 'use client';
 
+import { useMemo } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Calendar, User } from 'lucide-react';
+import { ArrowRight, Calendar, User, Newspaper } from 'lucide-react';
 
 import { useApi } from '@/lib/use-api';
 import { excerpt } from '@/lib/excerpt';
+import { resolveImageUrl } from '@/components/course-cover';
 import type { Collection, BlogPost } from '@/lib/types';
 import { Card } from '@/components/ui';
 
-const listQuery = '/blog-posts?sort=createdAt:desc&pagination[pageSize]=3';
-
-const blogCovers = [
-  'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80',
-];
+const listQuery =
+  '/blog-posts?filters[publishState][$eq]=published&sort=createdAt:desc&pagination[pageSize]=3';
 
 export const LatestPosts = () => {
   const posts = useApi<Collection<BlogPost>>(listQuery);
-  const rows = posts.data?.data ?? [];
+  const rows = useMemo(
+    () => (posts.data?.data ?? []).filter((p) => p.publishState === 'published'),
+    [posts.data]
+  );
 
   if (posts.loading || posts.error || !rows.length) return null;
 
@@ -45,25 +45,32 @@ export const LatestPosts = () => {
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {rows.map((post, idx) => {
+          {rows.map((post) => {
             const date = new Date(post.createdAt).toLocaleDateString('en-US', {
               month: 'short',
               day: 'numeric',
               year: 'numeric',
             });
-            const coverImage = post.coverImageUrl ?? blogCovers[idx % blogCovers.length];
+            const coverImage = post.coverImageUrl ? resolveImageUrl(post.coverImageUrl) : null;
 
             return (
               <Link key={post.documentId} href={`/blog/${post.documentId}`} className="group block">
                 <Card className="h-full flex flex-col justify-between overflow-hidden border-theme bg-surface transition-all duration-200 group-hover:-translate-y-1 group-hover:border-active group-hover:shadow-xl p-0 rounded-xl shadow-md">
-                  {/* High-res Editorial Cover Image */}
-                  <div className="relative h-44 w-full overflow-hidden bg-canvas">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={coverImage}
-                      alt={post.title}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
+                  {/* Cover Image or Branded Card Banner */}
+                  <div className="relative h-44 w-full overflow-hidden bg-canvas flex items-center justify-center">
+                    {coverImage ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={coverImage}
+                        alt={post.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex size-full flex-col items-center justify-center brand-gradient p-6 text-center text-white/90">
+                        <Newspaper className="size-8 mb-1.5 opacity-70" />
+                        <span className="text-xs font-bold line-clamp-1 text-white">{post.title}</span>
+                      </div>
+                    )}
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   </div>
 
