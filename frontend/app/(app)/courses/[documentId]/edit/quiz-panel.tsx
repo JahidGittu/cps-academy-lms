@@ -361,7 +361,7 @@ export const QuizPanel = ({
 
           <Button
             type="submit"
-            disabled={busy || saveStatus === 'saving' || (!isDirty && saveStatus !== 'saving')}
+            disabled={busy || saveStatus === 'saving' || !isDirty}
             className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-2.5 shadow-md shadow-sky-600/25 hover:shadow-sky-500/35 transition-all inline-flex items-center gap-2"
           >
             {(busy || saveStatus === 'saving') && (
@@ -545,7 +545,7 @@ export const QuizPanel = ({
         <div className="flex items-center gap-3">
           <Button
             type="submit"
-            disabled={busy || saveStatus === 'saving' || (!isDirty && saveStatus !== 'saving')}
+            disabled={busy || saveStatus === 'saving' || !isDirty}
             className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/25 hover:shadow-sky-500/35 transition-all cursor-pointer inline-flex items-center gap-2"
           >
             {(busy || saveStatus === 'saving') && (

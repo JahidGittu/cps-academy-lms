@@ -257,7 +257,7 @@ export const LessonEditor = ({
           <div className="flex items-center gap-3">
             <Button
               type="submit"
-              disabled={busy || saveStatus === 'saving' || (Boolean(lesson) && !isDirty && saveStatus !== 'saving')}
+              disabled={busy || saveStatus === 'saving' || (Boolean(lesson) && !isDirty)}
               className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2.5 shadow-md shadow-sky-600/20 hover:shadow-sky-500/30 transition-all inline-flex items-center gap-2"
             >
               {(busy || saveStatus === 'saving') && (
