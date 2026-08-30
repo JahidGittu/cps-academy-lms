@@ -17,7 +17,7 @@ import {
 
 import { api, errorMessage } from '@/lib/api';
 import { useApi } from '@/lib/use-api';
-import type { Collection, Course, Enrollment } from '@/lib/types';
+import type { Collection, Course, Enrollment, User } from '@/lib/types';
 import { Alert, Button, Empty } from '@/components/ui';
 import { ManagedCoursesSkeleton } from '@/components/page-skeletons';
 import { CourseCover } from '@/components/course-cover';
@@ -38,6 +38,9 @@ export const ManagedCourses = () => {
 
   const courses = useApi<Collection<Course>>('/courses?mine=true');
   const enrollments = useApi<Collection<Enrollment>>('/enrollments?populate[0]=course&populate[1]=student');
+  // Fetch users with role to show role badge next to instructor name
+  // Silently ignored if the current role doesn't have list-user permission
+  const usersApi = useApi<User[]>('/users?populate=role&fields[0]=username&fields[1]=role');
 
   const confirmDelete = async () => {
     if (!deletingCourse) return;
@@ -84,6 +87,21 @@ export const ManagedCourses = () => {
     () => rows.reduce((sum, c) => sum + (c.lessons?.length ?? 0), 0),
     [rows]
   );
+
+  // username → role name map for the instructor badge
+  const roleMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const u of usersApi.data ?? []) {
+      if (u.username && u.role?.name) map.set(u.username, u.role.name);
+    }
+    return map;
+  }, [usersApi.data]);
+
+  const roleBadge: Record<string, string> = {
+    Admin:             'bg-purple-500/10 text-purple-400 border-purple-500/20',
+    'Content Manager': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    Instructor:        'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+  };
 
   const filteredCourses = useMemo(() => {
     return rows
@@ -351,12 +369,21 @@ export const ManagedCourses = () => {
 
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-2">
-                          <span className="flex size-6 items-center justify-center rounded-full bg-canvas text-[10px] font-bold text-primary uppercase border border-theme">
+                          <span className="flex size-6 items-center justify-center rounded-full bg-canvas text-[10px] font-bold text-primary uppercase border border-theme shrink-0">
                             {(course.instructor ?? 'CPS').slice(0, 2)}
                           </span>
-                          <span className="font-semibold text-secondary text-xs">
-                            {course.instructor ?? 'Platform Admin'}
-                          </span>
+                          <div className="min-w-0">
+                            <p className="font-semibold text-secondary text-xs truncate">
+                              {course.instructor ?? 'Platform Admin'}
+                            </p>
+                            {course.instructor && roleMap.has(course.instructor) && (
+                              <span className={`mt-0.5 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold border ${
+                                roleBadge[roleMap.get(course.instructor)!] ?? 'bg-canvas text-muted border-theme'
+                              }`}>
+                                {roleMap.get(course.instructor)}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
 
