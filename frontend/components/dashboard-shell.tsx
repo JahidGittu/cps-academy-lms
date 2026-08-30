@@ -189,7 +189,6 @@ export const DashboardShell = ({
             href: '/admin',
             label: 'Overview',
             icon: Shield,
-            badge: 'Admin',
           },
           {
             href: '/admin/course-management',
@@ -290,12 +289,12 @@ export const DashboardShell = ({
                       href={item.href}
                       className={`flex items-center justify-between gap-2.5 rounded-md px-3 py-2 text-xs font-semibold transition-all ${
                         active
-                          ? 'bg-brand-subtle text-brand font-bold shadow-sm shadow-brand-500/25'
+                          ? 'bg-indigo-500/15 text-indigo-400 font-bold shadow-sm shadow-indigo-500/20'
                           : 'text-secondary hover:bg-elevated hover:text-primary'
                       }`}
                     >
                       <span className="flex items-center gap-2.5 min-w-0">
-                        <Icon className={`size-4 shrink-0 ${active ? 'text-brand' : 'text-muted'}`} />
+                        <Icon className={`size-4 shrink-0 ${active ? 'text-indigo-400' : 'text-muted'}`} />
                         <span className="truncate">{item.label}</span>
                       </span>
                       {item.badge && (
@@ -387,11 +386,11 @@ export const DashboardShell = ({
                   href="/"
                   className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs sm:text-sm font-semibold transition ${
                     pathname === '/'
-                      ? 'bg-brand-subtle text-brand font-bold shadow-sm shadow-brand-500/25'
+                      ? 'bg-indigo-500/15 text-indigo-400 font-bold shadow-sm shadow-indigo-500/20'
                       : 'text-secondary hover:bg-elevated hover:text-primary'
                   }`}
                 >
-                  <Home className={`size-3.5 sm:size-4 ${pathname === '/' ? 'text-brand' : 'text-muted'}`} />
+                  <Home className={`size-3.5 sm:size-4 ${pathname === '/' ? 'text-indigo-400' : 'text-muted'}`} />
                   <span>Home</span>
                 </Link>
 
@@ -399,11 +398,11 @@ export const DashboardShell = ({
                   href="/courses"
                   className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs sm:text-sm font-semibold transition ${
                     pathname.startsWith('/courses')
-                      ? 'bg-brand-subtle text-brand font-bold shadow-sm shadow-brand-500/25'
+                      ? 'bg-indigo-500/15 text-indigo-400 font-bold shadow-sm shadow-indigo-500/20'
                       : 'text-secondary hover:bg-elevated hover:text-primary'
                   }`}
                 >
-                  <Compass className={`size-3.5 sm:size-4 ${pathname.startsWith('/courses') ? 'text-brand' : 'text-muted'}`} />
+                  <Compass className={`size-3.5 sm:size-4 ${pathname.startsWith('/courses') ? 'text-indigo-400' : 'text-muted'}`} />
                   <span>Courses</span>
                 </Link>
 
@@ -411,11 +410,11 @@ export const DashboardShell = ({
                   href="/blog"
                   className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs sm:text-sm font-semibold transition ${
                     pathname.startsWith('/blog')
-                      ? 'bg-brand-subtle text-brand font-bold shadow-sm shadow-brand-500/25'
+                      ? 'bg-indigo-500/15 text-indigo-400 font-bold shadow-sm shadow-indigo-500/20'
                       : 'text-secondary hover:bg-elevated hover:text-primary'
                   }`}
                 >
-                  <Newspaper className={`size-3.5 sm:size-4 ${pathname.startsWith('/blog') ? 'text-brand' : 'text-muted'}`} />
+                  <Newspaper className={`size-3.5 sm:size-4 ${pathname.startsWith('/blog') ? 'text-indigo-400' : 'text-muted'}`} />
                   <span>Blog</span>
                 </Link>
               </nav>
