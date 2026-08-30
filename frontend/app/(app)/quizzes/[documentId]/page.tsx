@@ -165,21 +165,26 @@ const Taking = ({ documentId }: { documentId: string }) => {
 
   return (
     <div className="max-w-4xl mx-auto flex flex-col justify-center space-y-4">
-      {/* Top Breadcrumb & Quiz Title Combined Compact Row */}
+      {/* Breadcrumb: My Courses → Course Name → Quiz */}
       <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-subtle">
-        <div className="flex items-center gap-2 min-w-0">
+        <nav className="flex items-center gap-1.5 min-w-0 text-xs text-muted flex-wrap">
+          <Link href="/dashboard" className="hover:text-brand-500 transition-colors shrink-0 font-medium">
+            My Courses
+          </Link>
+          <span className="text-subtle shrink-0">/</span>
           {course && (
-            <Link
-              href={`/courses/${course.documentId}`}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-muted hover:text-brand-500 transition-colors shrink-0"
-            >
-              <ArrowLeft className="size-3.5" />
-              <span className="truncate max-w-[140px] sm:max-w-xs">{course.title}</span>
-            </Link>
+            <>
+              <Link
+                href={`/courses/${course.documentId}`}
+                className="hover:text-brand-500 transition-colors font-medium truncate max-w-[160px] sm:max-w-sm"
+              >
+                {course.title}
+              </Link>
+              <span className="text-subtle shrink-0">/</span>
+            </>
           )}
-          <span className="text-subtle">/</span>
-          <span className="text-xs sm:text-sm font-bold text-primary">Quiz</span>
-        </div>
+          <span className="font-bold text-primary shrink-0">Quiz</span>
+        </nav>
 
         <div className="flex items-center gap-2 shrink-0">
           <span className="rounded-md bg-brand-500/10 border border-brand-500/30 px-2.5 py-0.5 text-xs font-bold text-brand-400">
