@@ -211,26 +211,14 @@ export const LessonManager = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {onNext && (
-            <button
-              type="button"
-              onClick={onNext}
-              className="flex items-center gap-2 rounded-xl border border-sky-500/40 bg-sky-500/10 text-sky-400 px-4 py-2.5 text-xs font-bold hover:bg-sky-500/20 cursor-pointer transition-all"
-            >
-              Next: Quiz →
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => handleSelect('new')}
-            className="flex items-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white px-4 py-2.5 text-xs font-bold shadow-md shadow-sky-600/25 hover:shadow-sky-500/35 cursor-pointer transition-all"
-          >
-            <Plus className="size-4" />
-            <span>Add New Lesson</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => handleSelect('new')}
+          className="flex items-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white px-4 py-2.5 text-xs font-bold shadow-md shadow-sky-600/25 hover:shadow-sky-500/35 cursor-pointer transition-all"
+        >
+          <Plus className="size-4" />
+          <span>Add New Lesson</span>
+        </button>
       </div>
 
       <Alert>{actionError}</Alert>
@@ -254,6 +242,7 @@ export const LessonManager = ({
             key={selected}
             lesson={editing}
             onSave={save}
+            onNext={onNext}
             onCancel={() => handleSelect(rows.length > 0 ? rows[0].documentId : 'new')}
           />
         ) : (
