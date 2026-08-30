@@ -47,13 +47,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
 
-  // wire up the global sign-out handler so the interceptor can redirect on refresh failure
+  // wire up the global sign-out handler so the interceptor resets user on refresh failure
   useEffect(() => {
     setSignedOutHandler(() => {
       setUser(null);
-      router.push('/login');
     });
-  }, [router]);
+  }, []);
 
 
   // load the user once on mount
