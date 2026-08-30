@@ -39,7 +39,7 @@ const matrix: Record<string, Record<string, string[]>> = {
     'api::enrollment.enrollment':           ['find', 'findOne', 'create', 'delete'],
     'api::lesson-progress.lesson-progress': ['find', 'findOne', 'create', 'delete'],
     'api::quiz-result.quiz-result':         ['find', 'findOne', 'create'],
-    'plugin::users-permissions.user':       ['me', 'update'],
+    'plugin::users-permissions.user':       ['me', 'update', 'updateMe'],
     'plugin::users-permissions.auth':       ['logout', 'changePassword'],
   },
 
@@ -52,7 +52,7 @@ const matrix: Record<string, Record<string, string[]>> = {
     'api::lesson-progress.lesson-progress': READ,
     'api::quiz-result.quiz-result':         READ,
     'plugin::upload.content-api':           ['upload', 'destroy', 'find', 'findOne'],
-    'plugin::users-permissions.user':       ['me', 'update'],
+    'plugin::users-permissions.user':       ['me', 'update', 'updateMe'],
     'plugin::users-permissions.auth':       ['logout', 'changePassword'],
   },
 
@@ -65,7 +65,7 @@ const matrix: Record<string, Record<string, string[]>> = {
     'api::lesson-progress.lesson-progress': READ,
     'api::quiz-result.quiz-result':         READ,
     'plugin::upload.content-api':           ['upload', 'destroy', 'find', 'findOne'],
-    'plugin::users-permissions.user':       ['me', 'update'],
+    'plugin::users-permissions.user':       ['me', 'update', 'updateMe'],
     'plugin::users-permissions.auth':       ['logout', 'changePassword'],
   },
 
@@ -78,7 +78,7 @@ const matrix: Record<string, Record<string, string[]>> = {
     'api::lesson-progress.lesson-progress': ['find', 'findOne', 'delete'],
     'api::quiz-result.quiz-result':         ['find', 'findOne', 'delete'],
     'plugin::upload.content-api':           ['upload', 'destroy', 'find', 'findOne'],
-    'plugin::users-permissions.user':       ['me', 'find', 'findOne', 'count', 'create', 'update', 'destroy'],
+    'plugin::users-permissions.user':       ['me', 'find', 'findOne', 'count', 'create', 'update', 'updateMe', 'destroy'],
     'plugin::users-permissions.role':       READ,
     'plugin::users-permissions.auth':       ['logout', 'changePassword'],
     'api::stats.stats':                     ['find'],
