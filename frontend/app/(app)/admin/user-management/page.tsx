@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Shield,
   UserCheck,
@@ -42,7 +42,14 @@ const UserManagement = () => {
   const users = useApi<User[]>('/users?populate=role&sort=createdAt:desc');
   const roles = useApi<{ roles: Role[] }>('/users-permissions/roles');
 
-  const rows = users.data ?? [];
+  // Local copy of the user list — updated optimistically so the table never reloads
+  const [localUsers, setLocalUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    if (users.data) setLocalUsers(users.data);
+  }, [users.data]);
+
+  const rows = localUsers;
   const allRoles = roles.data?.roles ?? [];
 
   // Filter out internal roles like Authenticated, Public
@@ -79,16 +86,29 @@ const UserManagement = () => {
   };
 
   const changeRole = async (targetUserId: number, roleId: number) => {
+    const newRole = availableRoles.find((r) => r.id === roleId);
+    if (!newRole) return;
+
     setBusyId(targetUserId);
     setActionError('');
     setSuccessId(null);
 
+    // Optimistic: instantly update the badge in the table — no page reload
+    const previous = localUsers;
+    setLocalUsers((prev) =>
+      prev.map((u) =>
+        u.id === targetUserId
+          ? { ...u, role: { id: newRole.id, name: newRole.name, type: newRole.type ?? '' } }
+          : u
+      )
+    );
+
     try {
       await api.put(`/users/${targetUserId}`, { role: roleId });
-      await users.reload();
       setSuccessId(targetUserId);
       setTimeout(() => setSuccessId(null), 3000);
     } catch (caught) {
+      setLocalUsers(previous); // revert on error
       setActionError(errorMessage(caught, 'Could not update user role'));
     } finally {
       setBusyId(null);
@@ -101,11 +121,15 @@ const UserManagement = () => {
     setDeleteBusy(true);
     setActionError('');
 
+    // Optimistic: remove the row immediately from the local list
+    const previous = localUsers;
+    setLocalUsers((prev) => prev.filter((u) => u.id !== deletingUser.id));
+    setDeletingUser(null);
+
     try {
       await api.delete(`/users/${deletingUser.id}`);
-      setDeletingUser(null);
-      await users.reload();
     } catch (caught) {
+      setLocalUsers(previous); // revert on error
       setActionError(errorMessage(caught, 'Could not delete user account'));
     } finally {
       setDeleteBusy(false);
